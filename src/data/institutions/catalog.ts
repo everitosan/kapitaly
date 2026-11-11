@@ -7,9 +7,9 @@ import type { InstitutionCatalog } from '@/domain/institution';
  * Reglas: los ids no cambian ni se reutilizan; una institución que sale del catálogo se marca
  * `retired: true` en lugar de borrarse. Cualquier cambio sube `version`.
  *
- * PENDIENTE DE CONFIRMAR (tarea 2.6): los colores de marca son aproximados, y no están verificados
- * los usos de Invex (receive), Dinn (receive) y Kubo (pay). Confirmados: Invex sin inversión,
- * Dinn con inversión, Finsus con tarjeta de débito ("Sin Fronteras"), Bitso sin tarjeta desde 2025.
+ * Usos confirmados con el usuario: Invex solo tarjeta de crédito; Dinn recibe e invierte; Kubo y
+ * Finsus con tarjeta de débito; Bitso sin tarjeta desde 2025. PENDIENTE: los colores de marca son
+ * aproximados y deben validarse.
  */
 export const INSTITUTION_CATALOG: InstitutionCatalog = {
   version: 1,
@@ -90,7 +90,7 @@ export const INSTITUTION_CATALOG: InstitutionCatalog = {
       id: 'invex-mx',
       name: 'Invex',
       kind: 'bank',
-      uses: ['pay', 'receive'],
+      uses: ['pay'], // solo tarjeta de crédito
       baseColor: '#E30613',
       monogram: 'I',
     },

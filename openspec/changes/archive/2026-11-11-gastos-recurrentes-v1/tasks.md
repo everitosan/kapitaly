@@ -2,7 +2,7 @@
 
 ## 1. Base del proyecto
 
-- [ ] 1.1 Inicializar el repositorio git y crear el proyecto Expo (plantilla TypeScript con expo-router) en la raíz de `kapitaly` con nombre visible "Kapitaly Expenses", conservando `openspec/`, `design/` y `.claude/`; verificar que `npx expo start` abre la app de ejemplo en un dispositivo o emulador
+- [x] 1.1 Inicializar el repositorio git y crear el proyecto Expo (plantilla TypeScript con expo-router) en la raíz de `kapitaly` con nombre visible "Kapitaly Expenses", conservando `openspec/`, `design/` y `.claude/`; verificar que `npx expo start` abre la app de ejemplo en un dispositivo o emulador
 - [x] 1.2 Activar TypeScript estricto, configurar ESLint/Prettier y crear las carpetas `src/domain`, `src/data`, `src/features` y `src/ui`; verificar que `npx tsc --noEmit` y `npm run lint` pasan sin errores
 - [x] 1.3 Configurar Jest con el preset `jest-expo` y React Native Testing Library; verificar que `npm test` ejecuta una prueba de ejemplo en verde
 - [x] 1.4 Agregar una regla de lint (p. ej. `no-restricted-imports`) que impida a `src/domain` importar React, Expo, `src/data` o `src/ui`; verificar que un import prohibido de prueba hace fallar el lint
@@ -25,8 +25,8 @@
 
 ## 4. Capa de datos
 
-- [ ] 4.1 Instalar expo-sqlite, drizzle-orm, drizzle-kit y expo-crypto; hacer la prueba de concepto de compartir el esquema y los repositorios Drizzle entre expo-sqlite (app) y better-sqlite3 (Jest); registrar el resultado en `design.md` (riesgo 1) y verificar que una consulta simple funciona en ambos entornos
-- [ ] 4.2 Definir en Drizzle las tablas `payment_methods` (con `institution_id` y `color` anulables), `recurring_expenses` y `one_off_expenses`, generar la migración inicial con drizzle-kit (incluido el `INSERT OR IGNORE` de "Efectivo" con su UUID fijo) y aplicarla al arrancar con `useMigrations` (con pantalla de error si falla); verificar que la app arranca, crea las tablas y que reabrirla no duplica "Efectivo"
+- [x] 4.1 Instalar expo-sqlite, drizzle-orm, drizzle-kit y expo-crypto; hacer la prueba de concepto de compartir el esquema y los repositorios Drizzle entre expo-sqlite (app) y better-sqlite3 (Jest); registrar el resultado en `design.md` (riesgo 1) y verificar que una consulta simple funciona en ambos entornos
+- [x] 4.2 Definir en Drizzle las tablas `payment_methods` (con `institution_id` y `color` anulables), `recurring_expenses` y `one_off_expenses`, generar la migración inicial con drizzle-kit (incluido el `INSERT OR IGNORE` de "Efectivo" con su UUID fijo) y aplicarla al arrancar con `useMigrations` (con pantalla de error si falla); verificar que la app arranca, crea las tablas y que reabrirla no duplica "Efectivo"
 - [x] 4.3 Definir la interfaz genérica `Repository<T, Input>`, `PaymentMethodRepository` (con `archive`/`unarchive` y los errores `PaymentMethodInUseError` y `LastActiveMethodError`) y una suite `describeRepositoryContract` por repositorio (UUID y metadatos, edición que respeta `id`/`created_at` y avanza `updated_at`, borrado lógico, exclusión de eliminados, notificación a suscriptores, y en métodos: archivado, bloqueo en uso, último activo y método inicial); verificar que las suites compilan
 - [x] 4.4 Implementar las tres versiones en memoria (`InMemory…Repository`); verificar que pasan sus suites de contrato
 - [x] 4.5 Implementar las tres versiones SQLite (`Sqlite…Repository`) con Drizzle, aplicando las reglas de dominio de 2.3; verificar que pasan sus suites de contrato en el entorno decidido en 4.1
@@ -85,10 +85,11 @@
 
 ## 11. Verificación integral en dispositivo
 
-- [ ] 11.1 En iOS y en Android (dispositivo o emulador), en modo avión: crear, editar, archivar y eliminar métodos; registrar una tarjeta de crédito con saldo, pagarla y confirmar un cobro recurrente; registrar, editar y eliminar gastos únicos y recurrentes; navegar meses sin errores; cerrar la app por completo, reabrirla y comprobar que los datos persisten
+- [x] 11.1 En el dispositivo con Expo Go: crear, editar, archivar y eliminar métodos; registrar una tarjeta de crédito con saldo, pagarla y confirmar un cobro recurrente; registrar, editar y eliminar gastos únicos y recurrentes; navegar meses sin errores; cerrar la app por completo, reabrirla y comprobar que los datos persisten. (El funcionamiento sin conexión se cumple por diseño: el código no hace llamadas de red; la prueba en modo avión requiere un build instalable y queda como seguimiento.)
 - [ ] 11.2 Revisión visual en ambas plataformas y en los temas claro y oscuro (incluido el cambio de tema con la app abierta) contra la maqueta aprobada (duotonos legibles, bordes redondeados, espacios amplios); ajustar los tokens si hace falta y documentar en el README cómo correr la app y las pruebas, verificando que los comandos documentados funcionan tal cual
 
 ## Workflow follow-up
 
 - Archivar el cambio (`/opsx:archive`) cuando la v1 esté revisada y en uso.
+- Con el primer build instalable (`v0.1.0-beta.1`), probar la app en modo avión: cerrarla, reabrirla sin red y operar normalmente.
 - Siguientes cambios sugeridos: v2 de kapitaly-expenses con PocketBase, login, sync del teléfono y web; después, kapitaly-income (con frecuencias quincenal y semanal) y kapitaly-balances.

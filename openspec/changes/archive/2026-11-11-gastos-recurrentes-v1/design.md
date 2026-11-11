@@ -221,10 +221,10 @@ interface Institution {
 | `stori-mx` | Stori | fintech | pay, receive, invest | `#00A88E` |
 | `openbank-mx` | Openbank | banco | pay, receive, invest | `#E4002B` |
 | `mifel-mx` | Mifel | banco | pay, receive, invest | `#00594F` |
-| `invex-mx` | Invex | banco | pay, receive? | `#E30613` |
+| `invex-mx` | Invex | banco | pay (solo tarjeta de crédito) | `#E30613` |
 | `cetes-mx` | Cetesdirecto | inversión | receive, invest | `#0B5E3C` |
-| `dinn-mx` | Dinn | inversión | receive?, invest | `#5B2EFF` |
-| `kubo-mx` | Kubo | inversión | pay?, receive, invest | `#00B2A9` |
+| `dinn-mx` | Dinn | inversión | receive, invest | `#5B2EFF` |
+| `kubo-mx` | Kubo | inversión | pay (débito), receive, invest | `#00B2A9` |
 | `bitso-mx` | Bitso | inversión | receive, invest (su tarjeta se desactivó en mayo de 2025) | `#1AC37F` |
 | `finsus-mx` | Finsus | inversión | pay (débito "Sin Fronteras"), receive, invest | `#2D2A7B` |
 
