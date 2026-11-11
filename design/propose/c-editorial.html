@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta C · Editorial</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --paper: #FFFFFF; --ink: #17171A; --muted: #8B8B93; --soft: #F4F4F6; --sep: #EDEDF0;
+    --tangerine: #FF6A3D; --indigo: #2F2BE0; --danger: #E5243B;
+    --f1: #FF6A3D; --f2: #FFD23F; --f3: #3DDC97; --f6: #7B61FF; --f12: #2F2BE0; --fx: #FF8FC7;
+    --r-xl: 32px; --r-lg: 20px; --r-md: 16px;
+  }
+  body { background: #EDEAE6; color: var(--ink); }
+  .p-tags span { background: var(--ink); color: #fff; }
+  .p-tags span:nth-child(2) { background: var(--tangerine); color: var(--ink); }
+  .p-tags span:nth-child(3) { background: var(--indigo); color: #fff; }
+  .p-tags span:nth-child(4) { background: var(--f2); color: var(--ink); }
+
+  .screen { background: var(--paper); color: var(--ink); }
+
+  /* Encabezado de color */
+  .hero { padding: 0 24px 54px; transition: background .3s, color .3s; flex: none; }
+  .hero.this { background: var(--tangerine); color: var(--ink); }
+  .hero.avg { background: var(--indigo); color: #fff; }
+  .mrow { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 22px; }
+  .mrow .mname { font-size: 17px; font-weight: 700; }
+  .cbtn { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; font-weight: 600; background: rgba(255,255,255,.22); }
+  .hero.this .cbtn { background: rgba(23,23,26,.1); }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; border-radius: 999px; padding: 4px; background: rgba(23,23,26,.1); margin-bottom: 30px; }
+  .hero.avg .seg { background: rgba(255,255,255,.16); }
+  .seg button { height: 40px; border-radius: 999px; font-size: 15px; font-weight: 700; opacity: .75; }
+  .seg button.on { opacity: 1; background: var(--paper); color: var(--ink); }
+  .h-lbl { font-size: 15px; font-weight: 600; opacity: .8; }
+  .h-amt { font-size: 60px; font-weight: 800; letter-spacing: -.045em; line-height: 1; margin: 8px 0 12px; }
+  .h-amt small { font-size: 30px; opacity: .55; letter-spacing: -.02em; }
+  .h-meta { font-size: 15px; font-weight: 600; opacity: .85; display: flex; gap: 14px; flex-wrap: wrap; }
+  .h-meta b { font-weight: 800; }
+
+  /* Hoja */
+  .sheet { background: var(--paper); border-radius: var(--r-xl) var(--r-xl) 0 0; margin-top: -30px; position: relative; padding: 26px 20px 120px; min-height: 60%; }
+  .s-lbl { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin: 0 4px 6px; }
+  .it { display: flex; align-items: center; gap: 14px; padding: 14px 4px; }
+  .it + .it { border-top: 1px solid var(--sep); }
+  .blk { width: 48px; height: 48px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; font-weight: 800; }
+  .blk b { font-size: 19px; line-height: 1; }
+  .blk span { font-size: 10px; text-transform: uppercase; margin-top: 2px; opacity: .8; }
+  .it .txt { flex: 1; min-width: 0; }
+  .it .name { font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .it .sub { font-size: 14px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+  .it .sub b { color: var(--ink); font-weight: 700; }
+  .it .amt { font-size: 17px; font-weight: 800; text-align: right; }
+  .it .amt small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .empty { padding: 40px 10px; text-align: center; color: var(--muted); font-weight: 600; }
+
+  .fab-bar { position: absolute; left: 24px; right: 24px; bottom: 30px; }
+  .btn { height: 58px; border-radius: 999px; font-size: 17px; font-weight: 700; width: 100%; }
+  .btn-primary { background: var(--ink); color: #fff; box-shadow: 0 14px 28px -12px rgba(0,0,0,.45); }
+  .btn-soft { background: var(--soft); }
+  .btn-danger { background: transparent; color: var(--danger); }
+
+  /* Formulario */
+  .fhero { padding: 0 24px 50px; transition: background .3s, color .3s; flex: none; }
+  .fnav { display: flex; justify-content: space-between; align-items: center; padding: 6px 0 28px; font-size: 16px; font-weight: 600; }
+  .fnav b { font-size: 17px; font-weight: 700; }
+  .fhero .lbl { font-size: 14px; font-weight: 600; opacity: .8; }
+  .fhero .big { font-size: 64px; font-weight: 800; letter-spacing: -.045em; line-height: 1.05; }
+  .fhero .big .cents { opacity: .45; }
+  .fhero .per { font-size: 15px; font-weight: 600; opacity: .85; margin-top: 6px; }
+  .fsheet { flex: 1; background: var(--paper); border-radius: var(--r-xl) var(--r-xl) 0 0; margin-top: -30px; position: relative; padding: 24px 20px 110px; display: flex; flex-direction: column; gap: 18px; }
+  .flbl { font-size: 13px; font-weight: 700; color: var(--muted); margin: 0 4px 8px; }
+  .input { background: var(--soft); border-radius: var(--r-md); height: 54px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 600; }
+  .input input { border: 0; outline: 0; background: transparent; font-size: 17px; font-weight: 600; width: 100%; }
+  .input.err { background: #FDECEE; box-shadow: inset 0 0 0 2px var(--danger); }
+  .msg { font-size: 13px; color: var(--danger); font-weight: 600; margin: 6px 4px 0; }
+  .fgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .fopt { height: 64px; border-radius: var(--r-md); padding: 10px 12px; text-align: left; font-size: 14px; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .fopt small { font-size: 11px; font-weight: 600; opacity: .7; }
+  .fopt.on::after { content: "✓"; position: absolute; top: 8px; right: 10px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); color: var(--ink); font-size: 12px; display: grid; place-items: center; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .switch { width: 51px; height: 31px; border-radius: 999px; background: #DADADF; position: relative; flex: none; transition: background .2s; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.2); transition: transform .2s; }
+  .switch.on { background: var(--ink); }
+  .switch.on::after { transform: translateX(20px); }
+
+  .comp { background: var(--paper); }
+  .demo-hero { border-radius: 24px; overflow: hidden; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">Propuesta C</div>
+    <h1 class="p-title">Editorial</h1>
+    <p class="p-desc">Un gran bloque de color con el total, en tipografía de revista, y debajo una hoja blanca redondeada con la lista. Cada vista tiene su color (mandarina para "Este mes", índigo para "Promedio"), así que el cambio se nota con solo mirar. En el formulario, el bloque superior toma el color de la frecuencia elegida.</p>
+    <div class="p-tags"><span>Número gigante</span><span>Mandarina = este mes</span><span>Índigo = promedio</span><span>Lista limpia</span></div>
+  </header>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="ph1"></div></div><div class="ph-cap">Balance · Este mes (interactivo)</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="ph2"></div></div><div class="ph-cap">Balance · Promedio (interactivo)</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="ph3"></div></div><div class="ph-cap">Nuevo gasto · elige frecuencia y cambia el color</div></div>
+  </div>
+
+  <section class="section">
+    <h2 class="s-title">Componentes</h2>
+    <p class="s-desc">Las piezas base que se implementarían en <code>src/ui</code>, con sus tokens.</p>
+    <div class="comps" id="comps"></div>
+  </section>
+</div>
+
+<script src="engine.js"></script>
+<script>
+  const FC = (k) => ({ 1: ['var(--f1)', '#17171A'], 2: ['var(--f2)', '#17171A'], 3: ['var(--f3)', '#17171A'], 6: ['var(--f6)', '#fff'], 12: ['var(--f12)', '#fff'] })[k] || ['var(--fx)', '#17171A'];
+  const money = (c) => { const [a, b] = K.fmtParts(c); return `${a}<small>${b}</small>`; };
+  const seg = (v) => `<div class="seg"><button data-act="view" data-v="this" class="${v === 'this' ? 'on' : ''}">Este mes</button><button data-act="view" data-v="avg" class="${v === 'avg' ? 'on' : ''}">Promedio</button></div>`;
+
+  const itThis = (it, m) => { const [bg, fg] = FC(K.months(it.e)); return `
+    <div class="it"><div class="blk" style="background:${bg};color:${fg}"><b>${it.day}</b><span>${K.MON[m - 1]}</span></div>
+      <div class="txt"><div class="name">${it.e.name}</div><div class="sub">${K.freqLabel(it.e)}</div></div>
+      <div class="amt num">${K.fmt(it.e.cents)}</div></div>`; };
+  const itAvg = (it) => { const [bg, fg] = FC(it.k); return `
+    <div class="it"><div class="blk" style="background:${bg};color:${fg}"><b>${it.k === 12 ? '1' : it.k}</b><span>${it.k === 12 ? 'año' : it.k === 1 ? 'mes' : 'meses'}</span></div>
+      <div class="txt"><div class="name">${it.e.name}</div>
+        <div class="sub">${it.k > 1 ? (it.next ? `<b>${K.fmt(it.e.cents)}</b> el ${K.dateLabel(it.next)}` : 'Sin cobros próximos') : 'Cada mes'}</div></div>
+      <div class="amt num">${K.fmt(it.monthly)}<small>al mes</small></div></div>`; };
+
+  function balance(st) {
+    let hero, list;
+    if (st.view === 'this') {
+      const r = K.thisMonth(st.y, st.m);
+      hero = `<div class="h-lbl">Sale de tu cuenta en ${K.MONTHS[st.m - 1]}</div><div class="h-amt num">${money(r.total)}</div><div class="h-meta"><span><b>${r.count}</b> ${r.count === 1 ? 'cargo' : 'cargos'}</span></div>`;
+      list = `<div class="s-lbl">Por fecha</div>${r.items.length ? r.items.map((it) => itThis(it, st.m)).join('') : '<div class="empty">No hay cargos este mes</div>'}`;
+    } else {
+      const r = K.average(st.y, st.m);
+      hero = `<div class="h-lbl">Te cuesta en promedio al mes</div><div class="h-amt num">${money(r.total)}</div><div class="h-meta"><span>Fijos <b>${K.fmt(r.fixed)}</b></span><span>Prorrateados <b>${K.fmt(r.prorated)}</b></span></div>`;
+      list = `<div class="s-lbl">Proporcional por gasto</div>${r.items.length ? r.items.map(itAvg).join('') : '<div class="empty">Sin gastos vigentes</div>'}`;
+    }
+    const sbc = st.view === 'this' ? '#17171A' : '#fff';
+    return `<div data-scroll>
+        <div class="hero ${st.view}">${STATUS_BAR(sbc)}
+          <div class="mrow"><button class="cbtn" data-act="prev">‹</button><span class="mname">${K.cap(K.MONTHS[st.m - 1])} ${st.y}</span><button class="cbtn" data-act="next">›</button></div>
+          ${seg(st.view)}${hero}
+        </div>
+        <div class="sheet">${list}</div>
+      </div>
+      <div class="fab-bar"><button class="btn btn-primary">+ Agregar gasto</button></div>
+      <div class="home-ind" style="color:#17171A"></div>`;
+  }
+  mountPhone(document.getElementById('ph1'), balance, { view: 'this' });
+  mountPhone(document.getElementById('ph2'), balance, { view: 'avg' });
+
+  /* Formulario */
+  const OPTS = [[1, 'Mensual', 'cada mes'], [2, 'Bimestral', 'cada 2'], [3, 'Trimestral', 'cada 3'], [6, 'Semestral', 'cada 6'], [12, 'Anual', 'cada 12'], [4, 'Otro', 'cada N']];
+  const form = { k: 2, end: false };
+  function drawForm() {
+    const [bg, fg] = FC(form.k);
+    const per = form.k === 1 ? 'Se cobra cada mes' : `${K.fmt(Math.round(45000 / form.k))} al mes en promedio`;
+    document.getElementById('ph3').innerHTML = `
+      <div class="fhero" style="background:${bg};color:${fg}">${STATUS_BAR(fg)}
+        <div class="fnav"><button style="opacity:.8">Cancelar</button><b>Nuevo gasto</b><span style="width:64px"></span></div>
+        <div class="lbl">Monto</div>
+        <div class="big num">$450<span class="cents">.00</span></div>
+        <div class="per">${per}</div>
+      </div>
+      <div class="fsheet">
+        <div><div class="flbl">Nombre</div><div class="input"><input value="Internet"></div></div>
+        <div><div class="flbl">Frecuencia</div><div class="fgrid">
+          ${OPTS.map(([k, l, s]) => { const [b, f] = FC(k); const on = k === 4 ? ![1, 2, 3, 6, 12].includes(form.k) : form.k === k; return `<button class="fopt ${on ? 'on' : ''}" data-k="${k}" style="background:${b};color:${f}">${l}<small>${s}</small></button>`; }).join('')}
+        </div></div>
+        <div class="two">
+          <div><div class="flbl">Fecha de cobro</div><div class="input">28 sep 2026</div></div>
+          <div><div class="flbl">Fecha de fin</div><div class="input" style="padding-right:8px"><span style="color:${form.end ? 'inherit' : 'var(--muted)'}">${form.end ? '28 sep 2027' : 'Sin fin'}</span><button class="switch ${form.end ? 'on' : ''}" data-end></button></div></div>
+        </div>
+      </div>
+      <div class="fab-bar"><button class="btn btn-primary">Guardar</button></div>
+      <div class="home-ind" style="color:#17171A"></div>`;
+  }
+  document.getElementById('ph3').addEventListener('click', (e) => {
+    const c = e.target.closest('[data-k]'); if (c) form.k = +c.dataset.k;
+    if (e.target.closest('[data-end]')) form.end = !form.end;
+    drawForm();
+  });
+  drawForm();
+
+  /* Catálogo */
+  const r = K.thisMonth(2026, 11), a = K.average(2026, 11);
+  document.getElementById('comps').innerHTML = `
+    <div class="comp"><div class="comp-label">Botones</div><div class="comp-stack">
+      <button class="btn btn-primary">+ Agregar gasto</button><button class="btn btn-soft">Cancelar</button><button class="btn btn-danger">Eliminar gasto</button></div></div>
+    <div class="comp"><div class="comp-label">Encabezado · Este mes / Promedio</div>
+      <div class="demo-hero"><div class="hero this" style="padding:20px 20px 24px">${seg('this')}<div class="h-lbl">Sale de tu cuenta en noviembre</div><div class="h-amt num" style="font-size:48px">${money(r.total)}</div></div></div>
+      <div class="demo-hero" style="margin-top:12px"><div class="hero avg" style="padding:20px 20px 24px">${seg('avg')}<div class="h-lbl">Te cuesta en promedio al mes</div><div class="h-amt num" style="font-size:48px">${money(a.total)}</div></div></div></div>
+    <div class="comp"><div class="comp-label">Fila · Este mes</div>${r.items.slice(0, 4).map((it) => itThis(it, 11)).join('')}</div>
+    <div class="comp"><div class="comp-label">Fila · Promedio con pista</div>${a.items.filter((i) => i.k > 1).map(itAvg).join('')}</div>
+    <div class="comp"><div class="comp-label">Selector de frecuencia</div><div class="fgrid">
+      ${OPTS.map(([k, l, s], i) => { const [b, f] = FC(k); return `<div class="fopt ${i === 1 ? 'on' : ''}" style="background:${b};color:${f}">${l}<small>${s}</small></div>`; }).join('')}</div></div>
+    <div class="comp"><div class="comp-label">Campos</div><div class="comp-stack">
+      <div class="input"><input value="Renta"></div>
+      <div><div class="input err"><input value="$0.00"></div><div class="msg">El monto debe ser mayor que cero</div></div>
+      <div class="input"><span>Fecha de fin</span><span class="switch on"></span></div></div></div>
+    <div class="comp"><div class="comp-label">Paleta</div><div class="swatches">
+      ${[['Mandarina · Mensual', '#FF6A3D'], ['Amarillo · Bimestral', '#FFD23F'], ['Menta · Trimestral', '#3DDC97'], ['Violeta · Semestral', '#7B61FF', '#fff'], ['Índigo · Anual', '#2F2BE0', '#fff'], ['Rosa · Cada N', '#FF8FC7'], ['Papel', '#FFFFFF'], ['Suave', '#F4F4F6'], ['Tinta', '#17171A', '#fff']]
+        .map(([n, c, t]) => `<div class="sw" style="background:${c};color:${t || '#17171A'};${c === '#FFFFFF' || c === '#F4F4F6' ? 'box-shadow:inset 0 0 0 1px #e2e2e6' : ''}"><b>${n}</b>${c}</div>`).join('')}</div></div>
+    <div class="comp"><div class="comp-label">Tipografía · radios</div>
+      <div style="font-size:60px;font-weight:800;letter-spacing:-.045em;line-height:1">$6,968</div>
+      <div style="font-size:17px;font-weight:700;margin-top:10px">Fila 17 · bold</div>
+      <div style="font-size:14px;color:var(--muted)">Secundario 14</div>
+      <p style="font-size:14px;color:var(--muted);margin-top:10px">Radios 32 / 20 / 16 / 999 · márgenes de pantalla 24 · la hoja se monta 30 px sobre el bloque de color</p></div>`;
+</script>
+</body>
+</html>

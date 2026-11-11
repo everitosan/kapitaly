@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kapitaly · Propuestas de UI</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  body { background: #F2EFE9; color: #141414; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 20px; }
+  .card { border-radius: 32px; padding: 28px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 14px; min-height: 340px; transition: transform .2s; }
+  .card:hover { transform: translateY(-4px); }
+  .card .k { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .7; }
+  .card h2 { font-size: 40px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .card p { font-size: 15px; opacity: .85; flex: 1; }
+  .card .go { font-weight: 700; }
+  .mini { display: flex; gap: 6px; }
+  .mini i { width: 34px; height: 34px; border-radius: 11px; }
+  .a { background: #2B4BF2; color: #fff; }
+  .b { background: #0F3D2E; color: #D9FF66; }
+  .c { background: #FF6A3D; color: #141414; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 24px; overflow: hidden; font-size: 15px; }
+  th, td { padding: 14px 18px; text-align: left; vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #6E695F; background: #FAF8F4; }
+  tr + tr td { border-top: 1px solid #EEE9DF; }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+  .tbl-wrap { overflow-x: auto; border-radius: 24px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <div class="p-kicker">Kapitaly · gastos-recurrentes-v1</div>
+    <h1 class="p-title">Tres propuestas de UI</h1>
+    <p class="p-desc">Las tres siguen la línea acordada (estética iOS, bordes muy redondeados, mucho aire y color blocking) y usan los mismos datos de ejemplo de noviembre 2026. Las pantallas de balance funcionan: puedes cambiar de mes y alternar entre "Este mes" y "Promedio".</p>
+  </header>
+
+  <div class="cards">
+    <a class="card a" href="a-bloques.html">
+      <div class="k">Propuesta A</div><h2>Bloques</h2>
+      <p>Cada gasto es un bloque de color pastel según su frecuencia y el total ocupa un gran bloque cobalto o ámbar. Es la opción más expresiva y lúdica.</p>
+      <div class="mini"><i style="background:#D4F26B"></i><i style="background:#A8D8FF"></i><i style="background:#CDBBFF"></i><i style="background:#FFC59A"></i><i style="background:#FFA8CF"></i></div>
+      <span class="go">Ver propuesta ›</span>
+    </a>
+    <a class="card b" href="b-bento.html">
+      <div class="k">Propuesta B</div><h2>Bento</h2>
+      <p>Un mosaico de tarjetas de color con el total, el número de cargos y el próximo cobro, sobre una lista agrupada nativa de iOS. Es la opción más familiar y la que más información resume.</p>
+      <div class="mini"><i style="background:#D9FF66"></i><i style="background:#FF7A1A"></i><i style="background:#8DB7FF"></i><i style="background:#FFE45C"></i><i style="background:#E3D5FF"></i></div>
+      <span class="go">Ver propuesta ›</span>
+    </a>
+    <a class="card c" href="c-editorial.html">
+      <div class="k">Propuesta C</div><h2>Editorial</h2>
+      <p>Un encabezado de color a todo lo ancho con un número gigante; la vista cambia el color completo (mandarina o índigo) y abajo queda una lista limpia. Es la opción más elegante y minimalista.</p>
+      <div class="mini"><i style="background:#2F2BE0"></i><i style="background:#FFD23F"></i><i style="background:#3DDC97"></i><i style="background:#7B61FF"></i><i style="background:#fff"></i></div>
+      <span class="go">Ver propuesta ›</span>
+    </a>
+  </div>
+
+  <section class="section">
+    <h2 class="s-title">Variantes de A con degradados</h2>
+    <p class="s-desc">La misma estructura de Bloques, cambiando solo cómo se pinta el color.</p>
+    <div class="cards">
+      <a class="card" href="a-1-duotono.html" style="background:linear-gradient(135deg,#2B4BF2,#7B3CF0);color:#fff;min-height:240px">
+        <div class="k">Propuesta A-1</div><h2>Duotono</h2>
+        <p>Cada bloque es un degradado diagonal de dos tonos vecinos. Da volumen y sigue siendo nítido.</p>
+        <div class="mini"><i style="background:linear-gradient(135deg,#E6F87C,#9EE36A)"></i><i style="background:linear-gradient(135deg,#C4E6FF,#82B4FF)"></i><i style="background:linear-gradient(135deg,#E1D1FF,#A98BFF)"></i><i style="background:linear-gradient(135deg,#FFD9AE,#FF9E78)"></i><i style="background:linear-gradient(135deg,#FFC9E0,#FF7FB2)"></i></div>
+        <span class="go">Ver propuesta ›</span>
+      </a>
+      <a class="card" href="a-2-blending.html" style="background:radial-gradient(80% 90% at 10% 10%,#6F8BFF,transparent 60%),radial-gradient(70% 80% at 95% 15%,#B06CFF,transparent 60%),radial-gradient(90% 90% at 80% 110%,#FF6FB5,transparent 55%),#2B4BF2;color:#fff;min-height:240px">
+        <div class="k">Propuesta A-2</div><h2>Blending</h2>
+        <p>Los colores se mezclan con manchas difusas (mesh gradient), sobre un fondo con destellos y controles translúcidos. Es más suave y atmosférica.</p>
+        <div class="mini"><i style="background:radial-gradient(at 0 0,#FFF6A8,transparent 60%),radial-gradient(at 100% 100%,#9EEBCF,transparent 60%),#D4F26B"></i><i style="background:radial-gradient(at 0 0,#E3D5FF,transparent 60%),radial-gradient(at 100% 100%,#9EEBCF,transparent 60%),#A8D8FF"></i><i style="background:radial-gradient(at 0 0,#FFC9E0,transparent 60%),radial-gradient(at 100% 100%,#A8D8FF,transparent 60%),#CDBBFF"></i><i style="background:radial-gradient(at 0 0,#FFE9A8,transparent 60%),radial-gradient(at 100% 100%,#FFA8CF,transparent 60%),#FFC59A"></i><i style="background:radial-gradient(at 0 0,#FFD0A8,transparent 60%),radial-gradient(at 100% 100%,#CDBBFF,transparent 60%),#FFA8CF"></i></div>
+        <span class="go">Ver propuesta ›</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="s-title">Comparación rápida</h2>
+    <p class="s-desc">Para decidir cuál usar o qué mezclar.</p>
+    <div class="tbl-wrap"><table>
+      <tr><th></th><th>A · Bloques</th><th>B · Bento</th><th>C · Editorial</th></tr>
+      <tr><td>Dónde va el color</td><td>En todo: total y cada fila</td><td>En el mosaico superior; la lista va en blanco</td><td>En el encabezado y en un pequeño bloque por fila</td></tr>
+      <tr><td>Densidad</td><td>Media-baja; filas grandes</td><td>Alta; más datos de un vistazo</td><td>Baja; mucho aire</td></tr>
+      <tr><td>Cambio de vista</td><td>El total cambia de cobalto a ámbar</td><td>El mosaico cambia de contenido</td><td>Toda la parte superior cambia de color</td></tr>
+      <tr><td>Pista del cobro real</td><td>Pastilla dentro del bloque</td><td>Etiqueta bajo el nombre</td><td>Línea "$6,000 el 15 mar 2027"</td></tr>
+      <tr><td>Agregar gasto</td><td>Botón flotante abajo</td><td>Botón "+" en la barra superior</td><td>Botón flotante abajo</td></tr>
+      <tr><td>Esfuerzo en RN</td><td>Bajo</td><td>Medio (mosaico y lista agrupada)</td><td>Bajo-medio (hoja montada sobre el encabezado)</td></tr>
+      <tr><td>Riesgo</td><td>Puede verse recargado con muchos gastos</td><td>Más genérica y menos personalidad</td><td>Con muchos gastos, el encabezado ocupa espacio</td></tr>
+    </table></div>
+  </section>
+</div>
+</body>
+</html>

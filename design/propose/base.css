@@ -1,0 +1,47 @@
+/* Marco de presentación común (no forma parte de la propuesta visual). */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.35;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+input { font: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+
+.page { max-width: 1320px; margin: 0 auto; padding: 40px 16px 80px; }
+.p-head { max-width: 760px; margin: 0 auto 40px; text-align: center; }
+.p-back { display: inline-block; font-size: 14px; opacity: .7; text-decoration: none; color: inherit; margin-bottom: 16px; }
+.p-kicker { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; opacity: .65; font-weight: 600; }
+.p-title { font-size: clamp(32px, 6vw, 52px); letter-spacing: -.03em; line-height: 1.05; margin: 8px 0 14px; font-weight: 800; }
+.p-desc { font-size: 17px; opacity: .8; }
+.p-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+.p-tags span { font-size: 13px; padding: 6px 12px; border-radius: 999px; font-weight: 600; }
+
+.phones { display: flex; flex-wrap: wrap; gap: 40px 32px; justify-content: center; }
+.ph-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; width: min(395px, 100%); }
+.ph-cap { font-size: 14px; font-weight: 600; opacity: .7; text-align: center; }
+.phone {
+  width: 100%; height: 820px; border-radius: 56px; padding: 11px; background: #0b0b0c;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,.35), inset 0 0 0 2px #2a2a2d;
+}
+.screen { position: relative; height: 100%; border-radius: 46px; overflow: hidden; display: flex; flex-direction: column; }
+[data-scroll] { flex: 1; overflow-y: auto; scrollbar-width: none; }
+[data-scroll]::-webkit-scrollbar { display: none; }
+
+.sb { height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 30px 0 36px; position: relative; font-weight: 600; font-size: 16px; }
+.sb-island { position: absolute; left: 50%; top: 11px; transform: translateX(-50%); width: 120px; height: 34px; border-radius: 20px; background: #000; }
+.sb-icons { display: flex; gap: 6px; align-items: center; }
+.home-ind { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; background: currentColor; opacity: .85; }
+
+.section { margin-top: 72px; }
+.s-title { font-size: 28px; letter-spacing: -.02em; font-weight: 800; margin-bottom: 6px; }
+.s-desc { font-size: 15px; opacity: .7; margin-bottom: 24px; }
+.comps { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 20px; }
+.comp { border-radius: 28px; padding: 22px; }
+.comp-label { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; opacity: .55; margin-bottom: 16px; }
+.comp-stack { display: flex; flex-direction: column; gap: 12px; }
+.swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.sw { border-radius: 18px; padding: 14px 12px; min-height: 84px; display: flex; flex-direction: column; justify-content: flex-end; font-size: 12px; font-weight: 600; }
+.sw b { font-size: 13px; }

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A-2 · Blending</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3;
+    --cobalt: #2B4BF2; --amber: #FFC93C; --danger: #D7263D;
+    --f1: radial-gradient(120% 140% at 0% 0%, #FFF6A8 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #9EEBCF 0%, transparent 60%), #D4F26B; --f2: radial-gradient(120% 140% at 0% 0%, #E3D5FF 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #9EEBCF 0%, transparent 60%), #A8D8FF; --f3: radial-gradient(120% 140% at 0% 0%, #FFC9E0 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #A8D8FF 0%, transparent 60%), #CDBBFF; --f6: radial-gradient(120% 140% at 0% 0%, #FFE9A8 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #FFA8CF 0%, transparent 60%), #FFC59A; --f12: radial-gradient(120% 140% at 0% 0%, #FFD0A8 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #CDBBFF 0%, transparent 60%), #FFA8CF; --fx: radial-gradient(120% 140% at 0% 0%, #D4F26B 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #A8D8FF 0%, transparent 60%), #9EEBCF;
+    --r-xl: 30px; --r-lg: 22px; --r-md: 16px;
+  }
+  body { background: #E6E0D3; color: var(--ink); }
+  .p-tags span { background: var(--ink); color: var(--bg); }
+  .p-tags span:nth-child(2) { background: var(--cobalt); color: #fff; }
+  .p-tags span:nth-child(3) { background: var(--f1); color: var(--ink); }
+  .p-tags span:nth-child(4) { background: var(--f12); color: var(--ink); }
+
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 120px; }
+
+  /* MonthSwitcher */
+  .month { display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 4px 22px; }
+  .month .m { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .month .y { font-size: 15px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+  .arrows { display: flex; gap: 8px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .round:active { transform: scale(.94); }
+
+  /* SegmentedControl */
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-bottom: 18px; }
+  .seg button { height: 42px; border-radius: 999px; font-size: 15px; font-weight: 700; color: var(--muted); transition: background .2s, color .2s; }
+  .seg button.on { background: var(--ink); color: var(--bg); }
+
+  /* Tarjeta de total */
+  .total { border-radius: var(--r-xl); padding: 24px 24px 22px; margin-bottom: 26px; }
+  .total.this { background: radial-gradient(80% 90% at 10% 10%, #6F8BFF 0%, transparent 60%), radial-gradient(70% 80% at 95% 15%, #B06CFF 0%, transparent 60%), radial-gradient(90% 90% at 80% 110%, #FF6FB5 0%, transparent 55%), #2B4BF2; color: #fff; }
+  .total.avg { background: radial-gradient(80% 90% at 0% 0%, #FFF07A 0%, transparent 60%), radial-gradient(70% 90% at 100% 20%, #FFA36B 0%, transparent 60%), radial-gradient(90% 90% at 70% 110%, #FF8FC7 0%, transparent 55%), #FFC93C; color: var(--ink); }
+  .total .lbl { font-size: 14px; font-weight: 600; opacity: .85; }
+  .total .amt { font-size: 46px; font-weight: 800; letter-spacing: -.03em; margin: 6px 0 16px; line-height: 1; }
+  .total .amt small { font-size: 26px; opacity: .7; }
+  .total .meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,.22); }
+  .total.avg .pill { background: rgba(20,20,20,.1); }
+
+  .s-lbl { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 4px 12px; }
+
+  /* ExpenseRow */
+  .row { border-radius: var(--r-lg); padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; color: var(--ink); }
+  .row.col { flex-direction: column; align-items: stretch; gap: 12px; }
+  .row .top { display: flex; align-items: center; gap: 14px; }
+  .date { width: 52px; height: 52px; border-radius: var(--r-md); background: rgba(255,255,255,.55); display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; }
+  .date b { font-size: 20px; line-height: 1; }
+  .date span { font-size: 11px; font-weight: 700; text-transform: uppercase; opacity: .7; margin-top: 2px; }
+  .mid { flex: 1; min-width: 0; }
+  .name { font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub { font-size: 13px; font-weight: 600; opacity: .65; margin-top: 2px; }
+  .ramt { font-size: 17px; font-weight: 800; text-align: right; }
+  .ramt small { font-size: 12px; font-weight: 700; opacity: .6; display: block; }
+  .hint { font-size: 13px; font-weight: 600; background: rgba(255,255,255,.55); border-radius: 12px; padding: 9px 12px; display: flex; gap: 8px; align-items: center; }
+  .hint i { font-style: normal; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); flex: none; }
+
+  .empty { background: var(--card); border-radius: var(--r-lg); padding: 34px 24px; text-align: center; color: var(--muted); font-weight: 600; }
+  .empty b { display: block; font-size: 40px; margin-bottom: 6px; }
+
+  /* Botón principal flotante */
+  .fab-bar { position: absolute; left: 20px; right: 20px; bottom: 30px; }
+  .btn { height: 58px; border-radius: 999px; font-size: 17px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .btn-primary { background: var(--ink); color: var(--bg); box-shadow: 0 12px 24px -10px rgba(20,20,20,.5); }
+  .btn-secondary { background: var(--card); color: var(--ink); }
+  .btn-danger { background: transparent; color: var(--danger); }
+  .btn .plus { width: 26px; height: 26px; border-radius: 50%; background: var(--f1); color: var(--ink); display: grid; place-items: center; font-size: 20px; line-height: 1; }
+
+  /* Formulario */
+  .sheet-bg { background: #2a2925; }
+  .sheet-peek { height: 34px; margin: 0 14px; border-radius: 30px 30px 0 0; background: #8d897f; opacity: .6; }
+  .sheet { flex: 1; background: var(--bg); border-radius: 34px 34px 0 0; display: flex; flex-direction: column; overflow: hidden; }
+  .grab { width: 40px; height: 5px; border-radius: 3px; background: #CFC9BC; margin: 10px auto 4px; }
+  .sh-nav { display: flex; justify-content: space-between; align-items: center; padding: 8px 20px 14px; font-size: 16px; }
+  .sh-nav b { font-size: 17px; }
+  .sh-nav button { color: var(--muted); font-weight: 600; }
+  .sh-body { padding: 0 20px 110px; display: flex; flex-direction: column; gap: 12px; }
+  .amount-block { border-radius: var(--r-xl); padding: 22px; text-align: center; transition: background .25s; }
+  .amount-block .lbl { font-size: 13px; font-weight: 700; opacity: .65; }
+  .amount-block .big { font-size: 52px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin: 4px 0; }
+  .amount-block .per { font-size: 14px; font-weight: 700; opacity: .7; }
+  .field { background: var(--card); border-radius: var(--r-md); padding: 12px 16px; }
+  .field label { font-size: 12px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 2px; }
+  .field input { border: 0; outline: 0; width: 100%; font-size: 17px; font-weight: 600; background: transparent; }
+  .field.err { box-shadow: inset 0 0 0 2px var(--danger); }
+  .field .msg { font-size: 13px; color: var(--danger); font-weight: 600; margin-top: 4px; }
+  .field-row { display: flex; justify-content: space-between; align-items: center; min-height: 34px; }
+  .field-row span:first-child { font-size: 16px; font-weight: 600; }
+  .val-pill { background: var(--bg); border-radius: 10px; padding: 6px 12px; font-weight: 700; font-size: 15px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .chip { height: 38px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 700; color: var(--ink); border: 2px solid transparent; }
+  .chip.on { border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--bg); }
+  .stepper { display: inline-flex; align-items: center; gap: 4px; background: var(--bg); border-radius: 999px; padding: 3px; }
+  .stepper button { width: 32px; height: 32px; border-radius: 50%; background: var(--card); font-weight: 800; }
+  .stepper b { min-width: 28px; text-align: center; }
+  .switch { width: 51px; height: 31px; border-radius: 999px; background: #D8D2C5; position: relative; transition: background .2s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); transition: transform .2s; }
+  .switch.on { background: radial-gradient(at 0% 0%, #6F8BFF, transparent 70%), radial-gradient(at 100% 100%, #B06CFF, transparent 70%), #2B4BF2; }
+  .switch.on::after { transform: translateX(20px); }
+
+  .comp { background: var(--card); }
+  .comp.dark { background: var(--bg); }
+  .type-scale div { margin-bottom: 8px; }
+
+  /* Blending: fondo con manchas difusas y superficies translúcidas */
+  .screen:not(.sheet-bg), .sheet {
+    background:
+      radial-gradient(70% 40% at 0% 0%, #FFE6C7 0%, transparent 70%),
+      radial-gradient(60% 35% at 100% 8%, #DCE4FF 0%, transparent 70%),
+      radial-gradient(70% 40% at 50% 100%, #F6E3F1 0%, transparent 70%),
+      #F4F1EA;
+  }
+  .round, .seg { background: rgba(255,255,255,.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .date, .hint { background: rgba(255,255,255,.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .total { position: relative; overflow: hidden; }
+  .total::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 1px 0 rgba(255,255,255,.35); pointer-events: none; }
+  .fab-bar::before { content: ""; position: absolute; left: -20px; right: -20px; bottom: -30px; height: 130px; background: linear-gradient(to top, rgba(244,241,234,.95), rgba(244,241,234,0)); z-index: -1; pointer-events: none; }
+  .fab-bar { z-index: 1; }
+  .btn .plus { background: radial-gradient(at 0% 0%, #FFF6A8, transparent 70%), radial-gradient(at 100% 100%, #9EEBCF, transparent 70%), #D4F26B; }
+  .field { background: rgba(255,255,255,.7); }
+  .comp.dark { background: radial-gradient(70% 50% at 0% 0%, #FFE6C7, transparent 70%), radial-gradient(60% 50% at 100% 100%, #DCE4FF, transparent 70%), #F4F1EA; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">Propuesta A-2 · variante de Bloques</div>
+    <h1 class="p-title">Blending</h1>
+    <p class="p-desc">La misma estructura de Bloques con colores que se mezclan: cada bloque combina su color base con manchas difusas de los tonos vecinos (mesh gradient). El fondo arena lleva destellos durazno y lavanda, y los controles son translúcidos con desenfoque, como los materiales de iOS. Es más suave y atmosférica que el duotono.</p>
+    <div class="p-tags"><span>Mesh gradient</span><span>Materiales translúcidos</span><span>Fondo con destellos</span><span>Color = frecuencia</span></div>
+  </header>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="ph1"></div></div><div class="ph-cap">Balance · Este mes (interactivo)</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="ph2"></div></div><div class="ph-cap">Balance · Promedio (interactivo)</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph3"></div></div><div class="ph-cap">Nuevo gasto · hoja modal</div></div>
+  </div>
+
+  <section class="section">
+    <h2 class="s-title">Componentes</h2>
+    <p class="s-desc">Las piezas base que se implementarían en <code>src/ui</code>, con sus tokens.</p>
+    <div class="comps" id="comps"></div>
+  </section>
+</div>
+
+<script src="engine.js"></script>
+<script>
+  const FC = (k) => ({ 1: 'var(--f1)', 2: 'var(--f2)', 3: 'var(--f3)', 6: 'var(--f6)', 12: 'var(--f12)' })[k] || 'var(--fx)';
+
+  const monthHeader = (st) => `
+    <header class="month">
+      <div><div class="m">${K.cap(K.MONTHS[st.m - 1])}</div><div class="y">${st.y}</div></div>
+      <div class="arrows"><button class="round" data-act="prev" aria-label="Mes anterior">‹</button><button class="round" data-act="next" aria-label="Mes siguiente">›</button></div>
+    </header>`;
+  const seg = (v) => `
+    <div class="seg"><button data-act="view" data-v="this" class="${v === 'this' ? 'on' : ''}">Este mes</button><button data-act="view" data-v="avg" class="${v === 'avg' ? 'on' : ''}">Promedio</button></div>`;
+  const money = (c) => { const [a, b] = K.fmtParts(c); return `${a}<small>${b}</small>`; };
+
+  const rowThis = (it, m) => `
+    <div class="row" style="background:${FC(K.months(it.e))}">
+      <div class="date"><b>${it.day}</b><span>${K.MON[m - 1]}</span></div>
+      <div class="mid"><div class="name">${it.e.name}</div><div class="sub">${K.freqLabel(it.e)}</div></div>
+      <div class="ramt num">${K.fmt(it.e.cents)}</div>
+    </div>`;
+  const rowAvg = (it) => `
+    <div class="row col" style="background:${FC(it.k)}">
+      <div class="top">
+        <div class="mid"><div class="name">${it.e.name}</div><div class="sub">${K.freqLabel(it.e)}</div></div>
+        <div class="ramt num">${K.fmt(it.monthly)}<small>al mes</small></div>
+      </div>
+      ${it.k > 1 ? `<div class="hint"><i></i>${it.next ? `${K.fmt(it.e.cents)} · próximo cobro ${K.dateLabel(it.next)}` : 'Sin cobros próximos'}</div>` : ''}
+    </div>`;
+
+  function balance(st) {
+    let body;
+    if (st.view === 'this') {
+      const r = K.thisMonth(st.y, st.m);
+      body = `
+        <div class="total this">
+          <div class="lbl">Cargos de ${K.MONTHS[st.m - 1]}</div>
+          <div class="amt num">${money(r.total)}</div>
+          <div class="meta"><span class="pill">${r.count} ${r.count === 1 ? 'cargo' : 'cargos'}</span></div>
+        </div>
+        <div class="s-lbl">Por fecha</div>
+        ${r.items.length ? r.items.map((it) => rowThis(it, st.m)).join('') : `<div class="empty"><b>✦</b>No hay cargos este mes</div>`}`;
+    } else {
+      const r = K.average(st.y, st.m);
+      body = `
+        <div class="total avg">
+          <div class="lbl">Costo mensual promedio</div>
+          <div class="amt num">${money(r.total)}</div>
+          <div class="meta"><span class="pill">Fijos ${K.fmt(r.fixed)}</span><span class="pill">Prorrateados ${K.fmt(r.prorated)}</span></div>
+        </div>
+        <div class="s-lbl">Proporcional por gasto</div>
+        ${r.items.length ? r.items.map(rowAvg).join('') : `<div class="empty"><b>✦</b>Sin gastos vigentes</div>`}`;
+    }
+    return `${STATUS_BAR('#141414')}
+      <div data-scroll><div class="content">${monthHeader(st)}${seg(st.view)}${body}</div></div>
+      <div class="fab-bar"><button class="btn btn-primary"><span class="plus">+</span>Agregar gasto</button></div>
+      <div class="home-ind" style="color:#141414"></div>`;
+  }
+
+  mountPhone(document.getElementById('ph1'), balance, { view: 'this' });
+  mountPhone(document.getElementById('ph2'), balance, { view: 'avg' });
+
+  /* Formulario */
+  const PRESETS = [[1, 'Mensual'], [2, 'Bimestral'], [3, 'Trimestral'], [6, 'Semestral'], [12, 'Anual']];
+  const form = { k: 1, end: false };
+  function drawForm() {
+    const el = document.getElementById('ph3');
+    const per = form.k === 1 ? 'Se cobra cada mes' : `${K.fmt(Math.round(21900 / form.k))} al mes en promedio`;
+    el.innerHTML = `${STATUS_BAR('#fff')}
+      <div class="sheet-peek"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="sh-nav"><button>Cancelar</button><b>Nuevo gasto</b><span style="width:64px"></span></div>
+        <div data-scroll><div class="sh-body">
+          <div class="amount-block" style="background:${FC(form.k)}">
+            <div class="lbl">Monto</div>
+            <div class="big num">$219<span style="opacity:.45">.00</span></div>
+            <div class="per">${per}</div>
+          </div>
+          <div class="field"><label>Nombre</label><input value="Netflix" aria-label="Nombre"></div>
+          <div class="field">
+            <label>Frecuencia</label>
+            <div class="chips">
+              ${PRESETS.map(([k, l]) => `<button class="chip ${form.k === k ? 'on' : ''}" data-k="${k}" style="background:${FC(k)}">${l}</button>`).join('')}
+              <button class="chip ${![1, 2, 3, 6, 12].includes(form.k) ? 'on' : ''}" data-k="4" style="background:var(--fx)">Cada N meses</button>
+            </div>
+            ${![1, 2, 3, 6, 12].includes(form.k) ? `<div class="field-row" style="margin-top:10px"><span>Cada</span><span class="stepper"><button data-step="-1">–</button><b>${form.k}</b><button data-step="1">+</button></span></div>` : ''}
+          </div>
+          <div class="field"><div class="field-row"><span>Fecha de cobro</span><span class="val-pill">15 nov 2026</span></div></div>
+          <div class="field">
+            <div class="field-row"><span>Fecha de fin</span><button class="switch ${form.end ? 'on' : ''}" data-end aria-label="Fecha de fin"></button></div>
+            ${form.end ? `<div class="field-row" style="margin-top:8px"><span style="color:var(--muted)">Termina</span><span class="val-pill">15 nov 2027</span></div>` : ''}
+          </div>
+        </div></div>
+        <div class="fab-bar"><button class="btn btn-primary">Guardar</button></div>
+      </div>
+      <div class="home-ind" style="color:#141414"></div>`;
+  }
+  document.getElementById('ph3').addEventListener('click', (e) => {
+    const c = e.target.closest('[data-k]'); if (c) form.k = +c.dataset.k;
+    const s = e.target.closest('[data-step]'); if (s) form.k = Math.max(1, form.k + +s.dataset.step);
+    if (e.target.closest('[data-end]')) form.end = !form.end;
+    drawForm();
+  });
+  drawForm();
+
+  /* Catálogo de componentes */
+  const r = K.thisMonth(2026, 11), a = K.average(2026, 11);
+  document.getElementById('comps').innerHTML = `
+    <div class="comp"><div class="comp-label">Botones</div><div class="comp-stack">
+      <button class="btn btn-primary"><span class="plus">+</span>Agregar gasto</button>
+      <button class="btn btn-secondary" style="background:var(--bg)">Cancelar</button>
+      <button class="btn btn-danger">Eliminar gasto</button></div></div>
+    <div class="comp dark"><div class="comp-label">SegmentedControl · MonthSwitcher</div>
+      ${seg('this')}${seg('avg')}
+      <div class="month" style="padding-bottom:0"><div><div class="m">Noviembre</div><div class="y">2026</div></div><div class="arrows"><button class="round">‹</button><button class="round">›</button></div></div></div>
+    <div class="comp"><div class="comp-label">Tarjeta de total</div>
+      <div class="total this" style="margin:0 0 12px"><div class="lbl">Cargos de noviembre</div><div class="amt num">${money(r.total)}</div><div class="meta"><span class="pill">${r.count} cargos</span></div></div>
+      <div class="total avg" style="margin:0"><div class="lbl">Costo mensual promedio</div><div class="amt num">${money(a.total)}</div></div></div>
+    <div class="comp dark"><div class="comp-label">ExpenseRow · Este mes</div>${r.items.slice(0, 3).map((it) => rowThis(it, 11)).join('')}</div>
+    <div class="comp dark"><div class="comp-label">ExpenseRow · Promedio con pista</div>${a.items.filter((i) => i.k > 1).slice(0, 3).map(rowAvg).join('')}</div>
+    <div class="comp dark"><div class="comp-label">Campos de formulario</div><div class="comp-stack">
+      <div class="field"><label>Nombre</label><input value="Renta"></div>
+      <div class="field err"><label>Monto</label><input value="$0.00"><div class="msg">El monto debe ser mayor que cero</div></div>
+      <div class="field"><div class="field-row"><span>Fecha de fin</span><span class="switch on"></span></div></div></div></div>
+    <div class="comp"><div class="comp-label">Chips de frecuencia</div><div class="chips">
+      ${PRESETS.map(([k, l], i) => `<span class="chip ${i === 0 ? 'on' : ''}" style="background:${FC(k)};display:inline-flex;align-items:center">${l}</span>`).join('')}
+      <span class="chip" style="background:var(--fx);display:inline-flex;align-items:center">Cada N meses</span></div></div>
+    <div class="comp"><div class="comp-label">Paleta</div><div class="swatches">
+      ${[['Total · este mes', 'radial-gradient(at 10% 10%,#6F8BFF,transparent 60%),radial-gradient(at 95% 15%,#B06CFF,transparent 60%),radial-gradient(at 80% 110%,#FF6FB5,transparent 55%),#2B4BF2', '#fff', 'cobalto + violeta + rosa'], ['Total · promedio', 'radial-gradient(at 0% 0%,#FFF07A,transparent 60%),radial-gradient(at 100% 20%,#FFA36B,transparent 60%),radial-gradient(at 70% 110%,#FF8FC7,transparent 55%),#FFC93C', '', 'ámbar + limón + coral'], ['Fondo', 'radial-gradient(at 0% 0%,#FFE6C7,transparent 55%),radial-gradient(at 100% 10%,#DCE4FF,transparent 50%),#F4F1EA', '', 'arena + durazno + lavanda'], ['Mensual', 'radial-gradient(120% 140% at 0% 0%, #FFF6A8 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #9EEBCF 0%, transparent 60%), #D4F26B', '', '#D4F26B + #FFF6A8 + #9EEBCF'], ['Bimestral', 'radial-gradient(120% 140% at 0% 0%, #E3D5FF 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #9EEBCF 0%, transparent 60%), #A8D8FF', '', '#A8D8FF + #E3D5FF + #9EEBCF'], ['Trimestral', 'radial-gradient(120% 140% at 0% 0%, #FFC9E0 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #A8D8FF 0%, transparent 60%), #CDBBFF', '', '#CDBBFF + #FFC9E0 + #A8D8FF'], ['Semestral', 'radial-gradient(120% 140% at 0% 0%, #FFE9A8 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #FFA8CF 0%, transparent 60%), #FFC59A', '', '#FFC59A + #FFE9A8 + #FFA8CF'], ['Anual', 'radial-gradient(120% 140% at 0% 0%, #FFD0A8 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #CDBBFF 0%, transparent 60%), #FFA8CF', '', '#FFA8CF + #FFD0A8 + #CDBBFF'], ['Cada N', 'radial-gradient(120% 140% at 0% 0%, #D4F26B 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #A8D8FF 0%, transparent 60%), #9EEBCF', '', '#9EEBCF + #D4F26B + #A8D8FF']]
+        .map(([n, c, t, h]) => `<div class="sw" style="background:${c};color:${t || '#141414'}"><b>${n}</b>${h}</div>`).join('')}</div></div>
+    <div class="comp"><div class="comp-label">Tipografía · radios · espacio</div><div class="type-scale">
+      <div style="font-size:46px;font-weight:800;letter-spacing:-.03em;line-height:1">$6,968</div>
+      <div style="font-size:34px;font-weight:800;letter-spacing:-.03em">Título 34</div>
+      <div style="font-size:17px;font-weight:700">Cuerpo 17 · semibold</div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted)">Secundario 13</div></div>
+      <p style="font-size:14px;color:var(--muted);margin-top:10px">Radios 30 / 22 / 16 / 999 · márgenes de pantalla 20 · interior 18–24</p></div>`;
+</script>
+</body>
+</html>

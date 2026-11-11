@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta B · Bento</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F2F2F7; --ink: #1C1C1E; --muted: #8A8A8E; --card: #FFFFFF; --sep: #E5E5EA; --fill: #E9E9EE;
+    --forest: #0F3D2E; --lime: #D9FF66; --orange: #FF7A1A; --sun: #FFE45C; --sky: #8DB7FF; --plum: #E3D5FF; --danger: #FF3B30;
+    --r-xl: 28px; --r-lg: 22px; --r-md: 14px;
+  }
+  body { background: #E4E4EA; color: var(--ink); }
+  .p-tags span { background: var(--card); }
+  .p-tags span:nth-child(1) { background: var(--forest); color: var(--lime); }
+  .p-tags span:nth-child(2) { background: var(--orange); }
+  .p-tags span:nth-child(3) { background: var(--sun); }
+
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 0 16px 60px; }
+
+  /* Encabezado tipo "large title" de iOS */
+  .nav { display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 2px; }
+  .nav .arrows { display: flex; gap: 6px; }
+  .ibtn { width: 36px; height: 36px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; font-size: 19px; font-weight: 600; }
+  .ibtn.dark { background: var(--ink); color: #fff; font-size: 24px; font-weight: 400; }
+  .ltitle { font-size: 34px; font-weight: 800; letter-spacing: -.025em; padding: 8px 4px 16px; line-height: 1.05; }
+  .ltitle span { color: var(--muted); font-weight: 700; }
+
+  /* SegmentedControl iOS redondeado */
+  .seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; background: var(--fill); border-radius: 999px; padding: 3px; margin-bottom: 16px; }
+  .seg .thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px; background: var(--card); box-shadow: 0 3px 8px rgba(0,0,0,.12), 0 1px 1px rgba(0,0,0,.04); transition: transform .25s cubic-bezier(.3,.7,.3,1); }
+  .seg.avg .thumb { transform: translateX(100%); }
+  .seg button { position: relative; height: 36px; font-size: 15px; font-weight: 600; }
+
+  /* Bento */
+  .bento { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .tile { border-radius: var(--r-xl); padding: 18px; min-height: 124px; display: flex; flex-direction: column; justify-content: space-between; }
+  .tile.wide { grid-column: span 2; min-height: 150px; }
+  .tile .lbl { font-size: 13px; font-weight: 700; opacity: .75; }
+  .tile .big { font-size: 42px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .tile .big small { font-size: 24px; opacity: .6; }
+  .tile .mid { font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
+  .tile .foot { font-size: 13px; font-weight: 600; opacity: .7; }
+  .t-forest { background: var(--forest); color: var(--lime); }
+  .t-orange { background: var(--orange); color: var(--ink); }
+  .t-sun { background: var(--sun); color: var(--ink); }
+  .t-sky { background: var(--sky); color: var(--ink); }
+  .t-plum { background: var(--plum); color: var(--ink); }
+
+  /* Lista agrupada */
+  .g-lbl { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 16px 8px; }
+  .group { background: var(--card); border-radius: var(--r-lg); overflow: hidden; }
+  .li { display: flex; align-items: center; gap: 14px; padding: 13px 16px; position: relative; }
+  .li + .li::before { content: ""; position: absolute; top: 0; left: 72px; right: 0; height: 1px; background: var(--sep); }
+  .ico { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; font-weight: 800; font-size: 17px; flex: none; }
+  .li .txt { flex: 1; min-width: 0; }
+  .li .name { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .li .sub { font-size: 13.5px; color: var(--muted); margin-top: 1px; }
+  .li .amt { font-size: 17px; font-weight: 700; text-align: right; }
+  .li .amt small { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; margin-top: 5px; background: var(--bg); color: var(--ink); }
+  .empty { padding: 30px 20px; text-align: center; color: var(--muted); font-weight: 600; }
+
+  /* Formulario */
+  .sheet-bg { background: #8E8E93; }
+  .sheet-peek { height: 30px; margin: 0 16px; border-radius: 28px 28px 0 0; background: #c7c7cc; }
+  .sheet { flex: 1; background: var(--bg); border-radius: 30px 30px 0 0; display: flex; flex-direction: column; overflow: hidden; }
+  .sh-nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 10px; font-size: 17px; }
+  .sh-nav b { font-weight: 700; }
+  .sh-nav .save { font-weight: 700; background: var(--ink); color: #fff; border-radius: 999px; padding: 7px 16px; font-size: 15px; }
+  .sh-body { padding: 8px 16px 40px; display: flex; flex-direction: column; gap: 22px; }
+  .preview { border-radius: var(--r-xl); padding: 20px; display: flex; justify-content: space-between; align-items: flex-end; min-height: 120px; transition: background .25s, color .25s; }
+  .preview .big { font-size: 40px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .frow { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; min-height: 52px; position: relative; font-size: 17px; }
+  .frow + .frow::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: var(--sep); }
+  .frow input { border: 0; outline: 0; text-align: right; font-size: 17px; background: transparent; width: 60%; color: var(--ink); }
+  .frow .pl { color: var(--muted); }
+  .dpill { background: var(--fill); border-radius: 9px; padding: 6px 11px; font-weight: 500; }
+  .fchips { display: flex; gap: 8px; overflow-x: auto; padding: 14px 16px; scrollbar-width: none; }
+  .fchips::-webkit-scrollbar { display: none; }
+  .fchip { flex: none; height: 36px; padding: 0 15px; border-radius: 999px; background: var(--fill); font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+  .fchip i { width: 10px; height: 10px; border-radius: 4px; }
+  .fchip.on { background: var(--ink); color: #fff; }
+  .switch { width: 51px; height: 31px; border-radius: 999px; background: #E9E9EA; position: relative; transition: background .2s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.15); transition: transform .2s; }
+  .switch.on { background: #34C759; }
+  .switch.on::after { transform: translateX(20px); }
+  .err-note { font-size: 13px; color: var(--danger); padding: 6px 16px 0; font-weight: 500; }
+  .btn { height: 52px; border-radius: 999px; font-size: 17px; font-weight: 700; width: 100%; }
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-tonal { background: var(--fill); }
+  .btn-danger { background: #FFE5E3; color: var(--danger); }
+
+  .comp { background: var(--card); }
+  .comp.grey { background: var(--bg); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">Propuesta B</div>
+    <h1 class="p-title">Bento</h1>
+    <p class="p-desc">Lo más cercano a iOS nativo. Arriba, un mosaico de bloques de color con los datos clave del mes (total, número de cargos, próximo cobro); abajo, la lista agrupada clásica de Ajustes y Salud. El color se concentra en las tarjetas y la lista queda limpia.</p>
+    <div class="p-tags"><span>Mosaico de datos</span><span>Lista agrupada iOS</span><span>Color en tarjetas</span><span>Título grande</span></div>
+  </header>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="ph1"></div></div><div class="ph-cap">Balance · Este mes (interactivo)</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="ph2"></div></div><div class="ph-cap">Balance · Promedio (interactivo)</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph3"></div></div><div class="ph-cap">Nuevo gasto · hoja modal</div></div>
+  </div>
+
+  <section class="section">
+    <h2 class="s-title">Componentes</h2>
+    <p class="s-desc">Las piezas base que se implementarían en <code>src/ui</code>, con sus tokens.</p>
+    <div class="comps" id="comps"></div>
+  </section>
+</div>
+
+<script src="engine.js"></script>
+<script>
+  const FC = (k) => ({ 1: ['var(--lime)', 'var(--ink)'], 2: ['var(--orange)', 'var(--ink)'], 3: ['var(--sky)', 'var(--ink)'], 6: ['var(--sun)', 'var(--ink)'], 12: ['var(--forest)', 'var(--lime)'] })[k] || ['var(--plum)', 'var(--ink)'];
+  const ico = (e) => { const [bg, fg] = FC(K.months(e)); return `<div class="ico" style="background:${bg};color:${fg}">${e.name[0]}</div>`; };
+  const money = (c) => { const [a, b] = K.fmtParts(c); return `${a}<small>${b}</small>`; };
+
+  const seg = (v) => `<div class="seg ${v}"><span class="thumb"></span><button data-act="view" data-v="this">Este mes</button><button data-act="view" data-v="avg">Promedio</button></div>`;
+
+  const liThis = (it, m) => `
+    <div class="li">${ico(it.e)}
+      <div class="txt"><div class="name">${it.e.name}</div><div class="sub">${it.day} ${K.MON[m - 1]} · ${K.freqLabel(it.e)}</div></div>
+      <div class="amt num">${K.fmt(it.e.cents)}</div></div>`;
+  const liAvg = (it) => `
+    <div class="li">${ico(it.e)}
+      <div class="txt"><div class="name">${it.e.name}</div>
+        ${it.k > 1
+          ? `<div class="sub">${K.freqLabel(it.e)} · ${K.fmt(it.e.cents)}</div><span class="tag">◷ ${it.next ? `próximo ${K.dateLabel(it.next)}` : 'sin cobros próximos'}</span>`
+          : `<div class="sub">Mensual</div>`}
+      </div>
+      <div class="amt num">${K.fmt(it.monthly)}<small>al mes</small></div></div>`;
+
+  function balance(st) {
+    let bento, list;
+    if (st.view === 'this') {
+      const r = K.thisMonth(st.y, st.m);
+      const nx = K.nextInMonth(st.y, st.m);
+      bento = `
+        <div class="tile wide t-forest"><div class="lbl">Total de cargos en ${K.MONTHS[st.m - 1]}</div><div class="big num">${money(r.total)}</div></div>
+        <div class="tile t-orange"><div class="lbl">Cargos</div><div class="big num">${r.count}</div></div>
+        <div class="tile t-sun"><div class="lbl">Próximo</div>${nx ? `<div><div class="mid">${nx.e.name}</div><div class="foot">${nx.day} ${K.MON[st.m - 1]} · ${K.fmt(nx.e.cents)}</div></div>` : `<div class="mid">—</div>`}</div>`;
+      list = `<div class="g-lbl">Por fecha</div><div class="group">${r.items.length ? r.items.map((it) => liThis(it, st.m)).join('') : '<div class="empty">No hay cargos este mes</div>'}</div>`;
+    } else {
+      const r = K.average(st.y, st.m);
+      bento = `
+        <div class="tile wide t-forest"><div class="lbl">Costo mensual promedio</div><div class="big num">${money(r.total)}</div></div>
+        <div class="tile t-sky"><div class="lbl">Fijos mensuales</div><div class="mid num">${K.fmt(r.fixed)}</div></div>
+        <div class="tile t-plum"><div class="lbl">Prorrateados</div><div class="mid num">${K.fmt(r.prorated)}</div></div>`;
+      list = `<div class="g-lbl">Proporcional por gasto</div><div class="group">${r.items.length ? r.items.map(liAvg).join('') : '<div class="empty">Sin gastos vigentes</div>'}</div>`;
+    }
+    return `${STATUS_BAR('#1C1C1E')}
+      <div data-scroll><div class="content">
+        <div class="nav"><div class="arrows"><button class="ibtn" data-act="prev">‹</button><button class="ibtn" data-act="next">›</button></div><button class="ibtn dark" aria-label="Agregar">+</button></div>
+        <div class="ltitle">${K.cap(K.MONTHS[st.m - 1])} <span>${st.y}</span></div>
+        ${seg(st.view)}
+        <div class="bento">${bento}</div>
+        ${list}
+      </div></div>
+      <div class="home-ind" style="color:#1C1C1E"></div>`;
+  }
+  mountPhone(document.getElementById('ph1'), balance, { view: 'this' });
+  mountPhone(document.getElementById('ph2'), balance, { view: 'avg' });
+
+  /* Formulario */
+  const PRESETS = [[1, 'Mensual'], [2, 'Bimestral'], [3, 'Trimestral'], [6, 'Semestral'], [12, 'Anual']];
+  const form = { k: 12, end: false };
+  function drawForm() {
+    const [bg, fg] = FC(form.k);
+    const lbl = PRESETS.find(([k]) => k === form.k)?.[1] || `Cada ${form.k} meses`;
+    document.getElementById('ph3').innerHTML = `${STATUS_BAR('#fff')}
+      <div class="sheet-peek"></div>
+      <div class="sheet">
+        <div class="sh-nav"><button>Cancelar</button><b>Nuevo gasto</b><button class="save">Guardar</button></div>
+        <div data-scroll><div class="sh-body">
+          <div class="preview" style="background:${bg};color:${fg}">
+            <div><div style="font-size:13px;font-weight:700;opacity:.75">${lbl}</div><div class="big num">$6,000</div></div>
+            <div style="text-align:right;font-weight:700;font-size:14px;opacity:.8">${K.fmt(Math.round(600000 / form.k))}<br>al mes</div>
+          </div>
+          <div class="group">
+            <div class="frow"><span>Nombre</span><input value="Seguro del auto"></div>
+            <div class="frow"><span>Monto</span><input class="num" value="$6,000.00"></div>
+          </div>
+          <div>
+            <div class="g-lbl">Frecuencia</div>
+            <div class="group"><div class="fchips">
+              ${PRESETS.map(([k, l]) => `<button class="fchip ${form.k === k ? 'on' : ''}" data-k="${k}"><i style="background:${FC(k)[0]}"></i>${l}</button>`).join('')}
+              <button class="fchip ${![1, 2, 3, 6, 12].includes(form.k) ? 'on' : ''}" data-k="4"><i style="background:var(--plum)"></i>Cada N meses</button>
+            </div></div>
+          </div>
+          <div class="group">
+            <div class="frow"><span>Fecha de cobro</span><span class="dpill">15 mar 2026</span></div>
+            <div class="frow"><span>Fecha de fin</span><button class="switch ${form.end ? 'on' : ''}" data-end></button></div>
+            ${form.end ? `<div class="frow"><span class="pl">Termina</span><span class="dpill">15 mar 2029</span></div>` : ''}
+          </div>
+        </div></div>
+      </div>
+      <div class="home-ind" style="color:#1C1C1E"></div>`;
+  }
+  document.getElementById('ph3').addEventListener('click', (e) => {
+    const c = e.target.closest('[data-k]'); if (c) form.k = +c.dataset.k;
+    if (e.target.closest('[data-end]')) form.end = !form.end;
+    drawForm();
+  });
+  drawForm();
+
+  /* Catálogo */
+  const r = K.thisMonth(2026, 11), a = K.average(2026, 11);
+  document.getElementById('comps').innerHTML = `
+    <div class="comp"><div class="comp-label">Botones</div><div class="comp-stack">
+      <button class="btn btn-primary">Guardar</button><button class="btn btn-tonal">Cancelar</button><button class="btn btn-danger">Eliminar gasto</button>
+      <div style="display:flex;gap:8px"><span class="ibtn">‹</span><span class="ibtn">›</span><span class="ibtn dark">+</span></div></div></div>
+    <div class="comp"><div class="comp-label">SegmentedControl (con animación)</div>${seg('this')}${seg('avg')}</div>
+    <div class="comp grey"><div class="comp-label">Mosaico · Este mes</div><div class="bento" style="margin:0">
+      <div class="tile wide t-forest"><div class="lbl">Total de cargos en noviembre</div><div class="big num">${money(r.total)}</div></div>
+      <div class="tile t-orange"><div class="lbl">Cargos</div><div class="big num">${r.count}</div></div>
+      <div class="tile t-sun"><div class="lbl">Próximo</div><div><div class="mid">Netflix</div><div class="foot">15 nov · $219.00</div></div></div></div></div>
+    <div class="comp grey"><div class="comp-label">Lista agrupada · Este mes</div><div class="group">${r.items.slice(0, 3).map((it) => liThis(it, 11)).join('')}</div></div>
+    <div class="comp grey"><div class="comp-label">Lista agrupada · Promedio con pista</div><div class="group">${a.items.filter((i) => i.k > 1).slice(0, 3).map(liAvg).join('')}</div></div>
+    <div class="comp grey"><div class="comp-label">Campos</div>
+      <div class="group"><div class="frow"><span>Nombre</span><input value="Renta"></div><div class="frow"><span>Monto</span><input value="$0.00"></div></div>
+      <div class="err-note">El monto debe ser mayor que cero</div>
+      <div class="group" style="margin-top:12px"><div class="frow"><span>Fecha de fin</span><span class="switch on"></span></div></div></div>
+    <div class="comp"><div class="comp-label">Paleta</div><div class="swatches">
+      ${[['Bosque', '#0F3D2E', '#D9FF66'], ['Lima · Mensual', '#D9FF66'], ['Naranja · Bimestral', '#FF7A1A'], ['Cielo · Trimestral', '#8DB7FF'], ['Sol · Semestral', '#FFE45C'], ['Bosque · Anual', '#0F3D2E', '#D9FF66'], ['Lila · Cada N', '#E3D5FF'], ['Fondo', '#F2F2F7'], ['Tinta', '#1C1C1E', '#fff']]
+        .map(([n, c, t]) => `<div class="sw" style="background:${c};color:${t || '#1C1C1E'};${c === '#F2F2F7' ? 'box-shadow:inset 0 0 0 1px #ddd' : ''}"><b>${n}</b>${c}</div>`).join('')}</div></div>
+    <div class="comp"><div class="comp-label">Tipografía · radios</div>
+      <div style="font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1">$6,968</div>
+      <div style="font-size:34px;font-weight:800;letter-spacing:-.025em;margin-top:8px">Noviembre <span style="color:var(--muted)">2026</span></div>
+      <div style="font-size:17px;font-weight:600;margin-top:6px">Fila 17 · semibold</div>
+      <div style="font-size:13.5px;color:var(--muted)">Secundario 13.5</div>
+      <p style="font-size:14px;color:var(--muted);margin-top:10px">Radios 28 / 22 / 14 / 999 · márgenes 16 · listas con separador interior</p></div>`;
+</script>
+</body>
+</html>

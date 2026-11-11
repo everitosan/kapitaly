@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A-1 · Duotono</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --on-block: #141414; --switch-off: #D8D2C5; --grab: #CFC9BC; --page: #E6E0D3; --backdrop: #2a2925; --peek: #8d897f;
+    --cobalt: #2B4BF2; --amber: #FFC93C; --danger: #D7263D;
+    --f1: linear-gradient(135deg, #E6F87C 0%, #9EE36A 100%); --f2: linear-gradient(135deg, #C4E6FF 0%, #82B4FF 100%); --f3: linear-gradient(135deg, #E1D1FF 0%, #A98BFF 100%); --f6: linear-gradient(135deg, #FFD9AE 0%, #FF9E78 100%); --f12: linear-gradient(135deg, #FFC9E0 0%, #FF7FB2 100%); --fx: linear-gradient(135deg, #BFF4DF 0%, #6FD7B5 100%);
+    --r-xl: 30px; --r-lg: 22px; --r-md: 16px;
+  }
+  body { background: var(--page); color: var(--ink); transition: background .3s, color .3s; }
+  .screen, .comp, .row, .total, .btn, .seg button { transition: background .3s, color .3s; }
+  .p-tags span { background: var(--ink); color: var(--bg); }
+  .p-tags span:nth-child(2) { background: var(--cobalt); color: #fff; }
+  .p-tags span:nth-child(3) { background: var(--f1); color: var(--ink); }
+  .p-tags span:nth-child(4) { background: var(--f12); color: var(--ink); }
+
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 120px; }
+
+  /* MonthSwitcher */
+  .month { display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 4px 22px; }
+  .month .m { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .month .y { font-size: 15px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+  .arrows { display: flex; gap: 8px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .round:active { transform: scale(.94); }
+
+  /* SegmentedControl */
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-bottom: 18px; }
+  .seg button { height: 42px; border-radius: 999px; font-size: 15px; font-weight: 700; color: var(--muted); transition: background .2s, color .2s; }
+  .seg button.on { background: var(--ink); color: var(--bg); }
+
+  /* Tarjeta de total */
+  .total { border-radius: var(--r-xl); padding: 24px 24px 22px; margin-bottom: 26px; }
+  .total.this { background: linear-gradient(135deg, #2B4BF2 0%, #7B3CF0 100%); color: #fff; }
+  .total.avg { background: linear-gradient(135deg, #FFD45C 0%, #FF9A3C 100%); color: var(--on-block); }
+  .total .lbl { font-size: 14px; font-weight: 600; opacity: .85; }
+  .total .amt { font-size: 46px; font-weight: 800; letter-spacing: -.03em; margin: 6px 0 16px; line-height: 1; }
+  .total .amt small { font-size: 26px; opacity: .7; }
+  .total .meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,.22); }
+  .total.avg .pill { background: rgba(20,20,20,.1); }
+
+  .s-lbl { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 4px 12px; }
+
+  /* ExpenseRow */
+  .row { border-radius: var(--r-lg); padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; color: var(--on-block); }
+  .row.col { flex-direction: column; align-items: stretch; gap: 12px; }
+  .row .top { display: flex; align-items: center; gap: 14px; }
+  .date { width: 52px; height: 52px; border-radius: var(--r-md); background: rgba(255,255,255,.55); display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; }
+  .date b { font-size: 20px; line-height: 1; }
+  .date span { font-size: 11px; font-weight: 700; text-transform: uppercase; opacity: .7; margin-top: 2px; }
+  .mid { flex: 1; min-width: 0; }
+  .name { font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub { font-size: 13px; font-weight: 600; opacity: .65; margin-top: 2px; }
+  .ramt { font-size: 17px; font-weight: 800; text-align: right; }
+  .ramt small { font-size: 12px; font-weight: 700; opacity: .6; display: block; }
+  .hint { font-size: 13px; font-weight: 600; background: rgba(255,255,255,.55); border-radius: 12px; padding: 9px 12px; display: flex; gap: 8px; align-items: center; }
+  .hint i { font-style: normal; width: 8px; height: 8px; border-radius: 50%; background: var(--on-block); flex: none; }
+
+  .empty { background: var(--card); border-radius: var(--r-lg); padding: 34px 24px; text-align: center; color: var(--muted); font-weight: 600; }
+  .empty b { display: block; font-size: 40px; margin-bottom: 6px; }
+
+  /* Botón principal flotante */
+  .fab-bar { position: absolute; left: 20px; right: 20px; bottom: 30px; }
+  .btn { height: 58px; border-radius: 999px; font-size: 17px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .btn-primary { background: var(--ink); color: var(--bg); box-shadow: 0 12px 24px -10px rgba(20,20,20,.5); }
+  .btn-secondary { background: var(--card); color: var(--ink); }
+  .btn-danger { background: transparent; color: var(--danger); }
+  .btn .plus { width: 26px; height: 26px; border-radius: 50%; background: var(--f1); color: var(--on-block); display: grid; place-items: center; font-size: 20px; line-height: 1; }
+
+  /* Formulario */
+  .sheet-bg { background: var(--backdrop); }
+  .sheet-peek { height: 34px; margin: 0 14px; border-radius: 30px 30px 0 0; background: var(--peek); opacity: .6; }
+  .sheet { flex: 1; background: var(--bg); border-radius: 34px 34px 0 0; display: flex; flex-direction: column; overflow: hidden; }
+  .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--grab); margin: 10px auto 4px; }
+  .sh-nav { display: flex; justify-content: space-between; align-items: center; padding: 8px 20px 14px; font-size: 16px; }
+  .sh-nav b { font-size: 17px; }
+  .sh-nav button { color: var(--muted); font-weight: 600; }
+  .sh-body { padding: 0 20px 110px; display: flex; flex-direction: column; gap: 12px; }
+  .amount-block { color: var(--on-block); border-radius: var(--r-xl); padding: 22px; text-align: center; transition: background .25s; }
+  .amount-block .lbl { font-size: 13px; font-weight: 700; opacity: .65; }
+  .amount-block .big { font-size: 52px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin: 4px 0; }
+  .amount-block .per { font-size: 14px; font-weight: 700; opacity: .7; }
+  .field { background: var(--card); border-radius: var(--r-md); padding: 12px 16px; }
+  .field label { font-size: 12px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 2px; }
+  .field input { border: 0; outline: 0; width: 100%; font-size: 17px; font-weight: 600; background: transparent; }
+  .field.err { box-shadow: inset 0 0 0 2px var(--danger); }
+  .field .msg { font-size: 13px; color: var(--danger); font-weight: 600; margin-top: 4px; }
+  .field-row { display: flex; justify-content: space-between; align-items: center; min-height: 34px; }
+  .field-row span:first-child { font-size: 16px; font-weight: 600; }
+  .val-pill { background: var(--bg); border-radius: 10px; padding: 6px 12px; font-weight: 700; font-size: 15px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .chip { height: 38px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 700; color: var(--on-block); border: 2px solid transparent; }
+  .chip.on { border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--bg); }
+  .stepper { display: inline-flex; align-items: center; gap: 4px; background: var(--bg); border-radius: 999px; padding: 3px; }
+  .stepper button { width: 32px; height: 32px; border-radius: 50%; background: var(--card); font-weight: 800; }
+  .stepper b { min-width: 28px; text-align: center; }
+  .switch { width: 51px; height: 31px; border-radius: 999px; background: var(--switch-off); position: relative; transition: background .2s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); transition: transform .2s; }
+  .switch.on { background: linear-gradient(135deg, #2B4BF2, #7B3CF0); }
+  .switch.on::after { transform: translateX(20px); }
+
+  .comp { background: var(--card); }
+  .comp.dark { background: var(--bg); }
+  .type-scale div { margin-bottom: 8px; }
+
+  /* Duotono: el degradado da volumen sin perder el bloque */
+  .row { box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+  .total { box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+  .btn .plus { box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+  .seg button.on { background: linear-gradient(135deg, #2a2a2a, #141414); }
+
+  /* ---------- Piezas nuevas: métodos de pago y gastos únicos ---------- */
+  :root {
+    --m-cobalt: linear-gradient(135deg, #2B4BF2 0%, #7B3CF0 100%);
+    --m-violet: linear-gradient(135deg, #8B5CF6 0%, #5B21B6 100%);
+    --m-ink: linear-gradient(135deg, #3A3A3F 0%, #121214 100%);
+  }
+  .round svg { display: block; }
+  .sub-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+  .sub-row .sub { margin-top: 0; }
+  .mpill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 3px 9px 3px 4px; border-radius: 999px; background: rgba(255,255,255,.55); color: var(--on-block); white-space: nowrap; }
+  .mpill i { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .upill { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; background: var(--ink); color: var(--bg); }
+  .row.one { background: var(--card); color: var(--ink); box-shadow: none; }
+  .row.one .date { background: var(--bg); }
+  .row.one .mpill { background: var(--bg); color: var(--ink); }
+
+  /* MethodBreakdownCard */
+  .bd { background: var(--card); border-radius: var(--r-lg); padding: 18px 18px 8px; margin-bottom: 26px; }
+  .bd-h { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .bd-it { padding: 10px 0; }
+  .bd-top { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; }
+  .bd-top i { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .bd-top .n { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bd-top small { color: var(--muted); font-weight: 600; font-size: 12px; margin-left: 6px; }
+  .bd-bar { height: 6px; border-radius: 999px; background: var(--bg); margin: 8px 0 0 34px; overflow: hidden; }
+  .bd-bar span { display: block; height: 100%; border-radius: 999px; }
+
+  /* Formulario: tipo y método */
+  .sh-body .seg { background: var(--card); margin: 0; }
+  .amount-block.neutral { background: var(--card); color: var(--ink); }
+  .chip.pchip { box-shadow: none; }
+  .chip.pchip.on { border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--bg); }
+  .chip.pnew { background: transparent; border: 2px dashed var(--muted); color: var(--muted); }
+  .tchip { background: var(--bg); color: var(--ink); }
+  .tchip.on { background: var(--ink); color: var(--bg); border-color: transparent; box-shadow: none; }
+
+  /* Métodos de pago */
+  .topnav { display: flex; justify-content: space-between; align-items: center; padding: 4px 0 12px; }
+  .mtitle { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; padding: 0 4px 6px; }
+  .mdesc { color: var(--muted); font-size: 15px; font-weight: 600; padding: 0 4px 20px; }
+  .mcard { border-radius: 24px; padding: 18px 20px; min-height: 124px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; margin-bottom: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+  .mcard .tp { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+  .mcard .nm { font-size: 23px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+  .mcard .ft { display: flex; justify-content: space-between; align-items: flex-end; font-size: 13px; font-weight: 700; opacity: .85; }
+  .mcard .ft .dg { font-size: 17px; letter-spacing: .14em; opacity: 1; }
+  .mcard.arch { opacity: .55; filter: saturate(.35); }
+  .mcard.big { min-height: 168px; margin: 0; }
+  .mcard.big .nm { font-size: 28px; }
+  .arch-h { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 16px 4px 12px; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+  .swatch { aspect-ratio: 1; border-radius: 50%; border: 3px solid transparent; }
+  .swatch.on { border-color: var(--ink); box-shadow: inset 0 0 0 3px var(--card); }
+  .notice { background: var(--card); border-radius: var(--r-md); padding: 14px 16px; font-size: 14px; font-weight: 600; color: var(--muted); display: flex; gap: 10px; line-height: 1.4; }
+  .notice b { color: var(--ink); }
+  .notice .ic { width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-size: 13px; font-weight: 800; flex: none; }
+  .act-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn.dim { opacity: .38; }
+
+  /* Hoja de acciones (confirmaciones) */
+  .asheet { display: flex; flex-direction: column; gap: 8px; }
+  .asheet .grp { background: var(--bg); border-radius: 18px; overflow: hidden; text-align: center; }
+  .asheet .t { padding: 14px 18px; font-size: 13px; color: var(--muted); font-weight: 600; line-height: 1.4; }
+  .asheet .t b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 2px; }
+  .asheet .grp button { display: block; width: 100%; height: 54px; font-size: 17px; font-weight: 600; border-top: 1px solid var(--line); }
+  .asheet .dgr { color: var(--danger); }
+  .asheet .cancel { height: 54px; background: var(--bg); border-radius: 18px; font-size: 17px; font-weight: 800; }
+
+  /* Instituciones */
+  .ibadge { display: inline-grid; place-items: center; border-radius: 50%; font-weight: 800; letter-spacing: -.02em; flex: none; line-height: 1; }
+  .mpill { padding-left: 3px; }
+  .chip.pchip { display: inline-flex; align-items: center; gap: 8px; padding-left: 5px; }
+  .chip.pnew { padding-left: 16px; }
+  .tp-l { display: flex; align-items: center; gap: 10px; }
+  .search { display: flex; align-items: center; gap: 8px; background: var(--bg); border-radius: 12px; padding: 10px 12px; color: var(--muted); font-weight: 600; font-size: 15px; margin-top: 8px; }
+  .inst-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .inst { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--bg); font-size: 14px; font-weight: 700; text-align: left; border: 2px solid transparent; min-width: 0; }
+  .inst span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .inst.on { border-color: var(--ink); }
+  .inst-color { display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 8px; border-radius: 16px; background: var(--bg); border: 2px solid transparent; width: 100%; font-weight: 700; font-size: 14px; margin-top: 10px; text-align: left; }
+  .inst-color.on { border-color: var(--ink); }
+  .inst-color i { width: 36px; height: 36px; border-radius: 50%; flex: none; }
+  .inst-color small { display: block; color: var(--muted); font-weight: 600; font-size: 12px; }
+  .ctx { display: flex; justify-content: space-between; gap: 10px; background: var(--card); border-radius: 14px; padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .ctx b { color: var(--ink); }
+  .sheet-peek.two { margin: 0 26px; height: 18px; opacity: .35; }
+  .cat-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .cat-row:first-child { border-top: 0; }
+  .cat-row .nm { flex: 1; min-width: 0; font-weight: 700; font-size: 15px; }
+  .cat-row .nm small { display: block; color: var(--muted); font-weight: 600; font-size: 12px; }
+  .uses { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .use { font-size: 11px; font-weight: 800; padding: 3px 7px; border-radius: 999px; background: var(--bg); color: var(--muted); opacity: .6; }
+  .use.y { background: var(--ink); color: var(--bg); opacity: 1; }
+  .use.q { background: var(--f6); color: var(--on-block); opacity: 1; }
+
+  /* Tarjetas de crédito y pendientes */
+  .cc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+  .cc-stat { background: rgba(255,255,255,.18); border-radius: 14px; padding: 9px 11px; }
+  .cc-stat small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
+  .cc-stat b { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .cc-stat.wide { grid-column: span 2; display: flex; justify-content: space-between; align-items: center; }
+  .cc-stat .mask { letter-spacing: .18em; }
+  .cc-stat button { color: inherit; font-weight: 800; font-size: 12px; opacity: .8; }
+  .cc-due { font-size: 13px; font-weight: 700; opacity: .9; }
+  .ppill { font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; background: var(--on-block); color: #F4F1EA; }
+  .banner { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 18px; padding: 12px 14px; margin-bottom: 16px; width: 100%; text-align: left; }
+  .banner .dot { width: 30px; height: 30px; border-radius: 50%; background: var(--f6); color: var(--on-block); display: grid; place-items: center; font-weight: 800; flex: none; }
+  .banner b { font-size: 15px; } .banner small { display: block; color: var(--muted); font-weight: 600; font-size: 12px; }
+  .pend { background: var(--card); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .pend-h { display: flex; align-items: center; gap: 10px; }
+  .pend-h .t { flex: 1; } .pend-h .t b { display: block; font-size: 16px; } .pend-h .t small { color: var(--muted); font-weight: 600; font-size: 13px; }
+  .pend-amount { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border-radius: 14px; padding: 10px 14px; font-weight: 700; }
+  .pend-amount input { border: 0; outline: 0; background: transparent; text-align: right; font-size: 18px; font-weight: 800; width: 50%; color: var(--ink); }
+  .pend-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pend-actions .btn { height: 46px; font-size: 15px; }
+  .pend-actions .full { grid-column: span 2; }
+  .pay-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); font-weight: 700; }
+  .pay-row:first-of-type { border-top: 0; }
+  .pay-row small { display: block; color: var(--muted); font-weight: 600; font-size: 12px; }
+  .pay-row button { color: var(--danger); font-weight: 700; font-size: 14px; }
+  .stepper-inline { display: inline-flex; align-items: center; gap: 4px; background: var(--bg); border-radius: 999px; padding: 3px; }
+  .stepper-inline button { width: 32px; height: 32px; border-radius: 50%; background: var(--card); font-weight: 800; }
+  .stepper-inline b { min-width: 30px; text-align: center; }
+
+  .ph-group { margin-bottom: 56px; }
+  .ph-group > h3 { text-align: center; font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 6px; }
+  .ph-group > p { text-align: center; font-size: 15px; color: var(--muted); margin: 0 auto 26px; max-width: 620px; }
+  .new-badge { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--f1); color: var(--on-block); vertical-align: middle; margin-left: 6px; }
+
+  /* ---------- Tema oscuro ---------- */
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28;
+    --switch-off: #3A3833; --grab: #3A3833; --page: #0A0A09; --backdrop: #000; --peek: #2E2C28;
+    --f1: linear-gradient(135deg, #D9F06A 0%, #86D457 100%); --f2: linear-gradient(135deg, #AFD9FF 0%, #6C9EF5 100%);
+    --f3: linear-gradient(135deg, #D2BFFF 0%, #9476F5 100%); --f6: linear-gradient(135deg, #FFCB98 0%, #F98A63 100%);
+    --f12: linear-gradient(135deg, #FFB8D6 0%, #F56CA2 100%); --fx: linear-gradient(135deg, #A9EDD3 0%, #57C7A2 100%);
+  }
+  html[data-theme="dark"] {
+    --m-cobalt: linear-gradient(135deg, #3354FF 0%, #8344F5 100%);
+    --m-violet: linear-gradient(135deg, #9A6BFA 0%, #6A2FD0 100%);
+    --m-ink: linear-gradient(135deg, #4A4A50 0%, #26262A 100%);
+  }
+  html[data-theme="dark"] .mpill { background: rgba(255,255,255,.45); }
+  html[data-theme="dark"] .seg button.on { background: linear-gradient(135deg, #FFFFFF, #E4DFD3); color: #141414; }
+  html[data-theme="dark"] .btn-primary { background: linear-gradient(135deg, #FFFFFF, #E4DFD3); color: #141414; box-shadow: 0 12px 28px -10px rgba(0,0,0,.8); }
+  html[data-theme="dark"] .total.this { background: linear-gradient(135deg, #3354FF 0%, #8344F5 100%); }
+  html[data-theme="dark"] .row { box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+  html[data-theme="dark"] .date, html[data-theme="dark"] .hint { background: rgba(255,255,255,.4); }
+  html[data-theme="dark"] .chip.on { border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--bg); }
+  html[data-theme="dark"] .phone { box-shadow: 0 30px 60px -20px rgba(0,0,0,.8), inset 0 0 0 2px #3a3a3d; }
+
+  .theme-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-top: 22px; }
+  .theme-toggle button { height: 40px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .theme-toggle button.on { background: var(--ink); color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">Propuesta A-1 · variante de Bloques</div>
+    <h1 class="p-title">Duotono</h1>
+    <p class="p-desc">La misma estructura de Bloques, pero cada bloque es un degradado diagonal de dos tonos vecinos (lima → verde, cielo → azul, rosa → fucsia). El total pasa de cobalto a violeta en "Este mes" y de ámbar a naranja en "Promedio". Da volumen sin perder la lectura de bloque sólido. Esta versión incluye las piezas de la v1 completa: gastos únicos, métodos de pago y el desglose por método.</p>
+    <div class="p-tags"><span>Dos tonos por bloque</span><span>Diagonal 135°</span><span>Color = frecuencia</span><span>Brillo sutil arriba</span></div>
+    <div class="theme-toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+  </header>
+
+  <div class="ph-group">
+    <h3>Balance</h3>
+    <p>Recurrentes (bloques de color por frecuencia) y únicos (bloques neutros con la marca "Único") en la misma lista, cada uno con su método de pago. "Este mes" agrega la tarjeta "Por método". El botón de tarjeta del encabezado abre "Métodos de pago".</p>
+    <div class="phones">
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph1"></div></div><div class="ph-cap">Balance · Este mes (interactivo)</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph2"></div></div><div class="ph-cap">Balance · Promedio (interactivo)</div></div>
+    </div>
+  </div>
+
+  <div class="ph-group">
+    <h3>Agregar gasto</h3>
+    <p>Un solo formulario con selector Único | Recurrente; empieza en Único para registrar rápido. Si el método tiene tarjeta digital, aparece Física | Digital con la última usada preseleccionada. El método de pago es obligatorio y viene preseleccionado con el último usado. "+ Nuevo" abre el formulario de método como segunda hoja: al guardar, el gasto conserva lo capturado y el método queda seleccionado.</p>
+    <div class="phones">
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph3"></div></div><div class="ph-cap">Nuevo gasto · Único</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph3b"></div></div><div class="ph-cap">Nuevo gasto · Recurrente</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph6"></div></div><div class="ph-cap">"+ Nuevo" · método sin salir del gasto (interactivo)</div></div>
+    </div>
+  </div>
+
+  <div class="ph-group">
+    <h3>Métodos de pago</h3>
+    <p>Cada método es una tarjeta con el monograma de su institución, su color (el de la institución en duotono o uno de la paleta), tipo, últimos 4 dígitos y número de gastos. Al editar se elige la institución (solo las que sirven para pagar; Cetesdirecto no aparece) y el color, y un aviso explica por qué un método en uso solo se puede archivar.</p>
+    <div class="phones">
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph4"></div></div><div class="ph-cap">Métodos de pago · lista</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph5"></div></div><div class="ph-cap">Editar método · en uso (interactivo)</div></div>
+    </div>
+  </div>
+
+  <div class="ph-group">
+    <h3>Tarjetas de crédito y pendientes <span class="new-badge">nuevo</span></h3>
+    <p>El usado de la tarjeta siempre está visible; el límite y el disponible van ocultos hasta tocarlos. Al abrir la app, la hoja "Pendientes" pregunta por los cobros recurrentes vencidos y por los pagos de tarjeta que ya vencieron; en el balance, los cobros sin confirmar llevan la marca "Por confirmar".</p>
+    <div class="phones">
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph7"></div></div><div class="ph-cap">Métodos · tarjeta de crédito (toca el límite)</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph8"></div></div><div class="ph-cap">Editar tarjeta · datos, pagar e historial</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph9"></div></div><div class="ph-cap">Pagar tarjeta</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph10"></div></div><div class="ph-cap">Pendientes al abrir la app (interactivo)</div></div>
+    </div>
+  </div>
+
+  <section class="section">
+    <h2 class="s-title">Componentes</h2>
+    <p class="s-desc">Las piezas base que se implementarían en <code>src/ui</code>, con sus tokens.</p>
+    <div class="comps" id="comps"></div>
+  </section>
+</div>
+
+<script src="engine.js"></script>
+<script>
+  const FC = (k) => ({ 1: 'var(--f1)', 2: 'var(--f2)', 3: 'var(--f3)', 6: 'var(--f6)', 12: 'var(--f12)' })[k] || 'var(--fx)';
+  /* Paleta de métodos de pago: clave -> [fondo, texto]. Los pasteles reutilizan los duotonos de frecuencia. */
+  const MC = {
+    cobalt: ['var(--m-cobalt)', '#fff'], violet: ['var(--m-violet)', '#fff'], ink: ['var(--m-ink)', '#fff'],
+    lime: ['var(--f1)', '#141414'], sky: ['var(--f2)', '#141414'], lilac: ['var(--f3)', '#141414'],
+    peach: ['var(--f6)', '#141414'], pink: ['var(--f12)', '#141414'], mint: ['var(--fx)', '#141414'],
+  };
+  const COLOR_NAMES = { cobalt: 'Cobalto', violet: 'Violeta', ink: 'Tinta', lime: 'Lima', sky: 'Cielo', lilac: 'Lila', peach: 'Durazno', pink: 'Rosa', mint: 'Menta' };
+  const KINDS = { credit: 'Crédito', debit: 'Débito', cash: 'Efectivo', transfer: 'Transferencia' };
+  const CARD_ICON = '<svg width="20" height="16" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="18" height="14" rx="3"/><path d="M1 6h18"/></svg>';
+  const PRESETS = [[1, 'Mensual'], [2, 'Bimestral'], [3, 'Trimestral'], [6, 'Semestral'], [12, 'Anual']];
+
+  /* Color efectivo: override de paleta, o duotono derivado del color base de la institución */
+  const ms = (m) => {
+    if (m.color) return MC[m.color];
+    const i = K.institution(m.institution);
+    if (i) { const d = K.duotoneFromBase(i.baseColor); return [`linear-gradient(135deg, ${d.from} 0%, ${d.to} 100%)`, d.fg]; }
+    return MC.ink;
+  };
+  const mono = (m) => { const i = K.institution(m.institution); return i ? i.monogram : m.kind === 'cash' ? '$' : m.name[0]; };
+  /* InstitutionBadge sobre fondo claro: color base de la institución */
+  const badge = (m, size = 18) => {
+    const i = K.institution(m.institution);
+    const [bg, fg] = i ? [i.baseColor, K.duotoneFromBase(i.baseColor).fg] : ['var(--m-ink)', '#fff'];
+    return `<span class="ibadge" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.42)}px;background:${bg};color:${fg}">${mono(m)}</span>`;
+  };
+  /* InstitutionBadge sobre el propio color del método: círculo blanco */
+  const badgeOn = (m, size = 22) => {
+    const i = K.institution(m.institution);
+    return `<span class="ibadge" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.42)}px;background:rgba(255,255,255,.94);color:${i ? i.baseColor : '#141414'}">${mono(m)}</span>`;
+  };
+  const instBadge = (i, size = 26) => badge({ institution: i.id, name: i.name }, size);
+
+  const money = (c) => { const [a, b] = K.fmtParts(c); return `${a}<small>${b}</small>`; };
+  const mp = (id, variant) => { const m = K.method(id); return `<span class="mpill">${badge(m, 18)}${K.methodLabel(m, variant)}</span>`; };
+
+  const monthHeader = (st) => `
+    <header class="month">
+      <div><div class="m">${K.cap(K.MONTHS[st.m - 1])}</div><div class="y">${st.y}</div></div>
+      <div class="arrows">
+        <button class="round" aria-label="Métodos de pago">${CARD_ICON}</button>
+        <button class="round" data-act="prev" aria-label="Mes anterior">‹</button><button class="round" data-act="next" aria-label="Mes siguiente">›</button>
+      </div>
+    </header>`;
+  const seg = (v) => `
+    <div class="seg"><button data-act="view" data-v="this" class="${v === 'this' ? 'on' : ''}">Este mes</button><button data-act="view" data-v="avg" class="${v === 'avg' ? 'on' : ''}">Promedio</button></div>`;
+
+  /* Cobro por confirmar: recurrente del mes actual con fecha ≤ hoy y sin confirmar */
+  const isPend = (it, m) => m === K.TODAY.m && K.pendingCharges().some((p) => p.e.id === it.e.id && p.day === it.day);
+
+  /* ExpenseRow: recurrente (duotono de frecuencia) o único (neutro) */
+  const rowCharge = (it, m) => it.kind === 'one' ? `
+    <div class="row one">
+      <div class="date"><b>${it.day}</b><span>${K.MON[m - 1]}</span></div>
+      <div class="mid"><div class="name">${it.label}</div><div class="sub-row"><span class="upill">Único</span>${mp(it.method)}</div></div>
+      <div class="ramt num">${K.fmt(it.cents)}</div>
+    </div>` : `
+    <div class="row" style="background:${FC(K.months(it.e))}">
+      <div class="date"><b>${it.day}</b><span>${K.MON[m - 1]}</span></div>
+      <div class="mid"><div class="name">${it.label}</div><div class="sub-row"><span class="sub">${K.freqLabel(it.e)}</span>${isPend(it, m) ? '<span class="ppill">Por confirmar</span>' : ''}${mp(it.method, it.e.variant)}</div></div>
+      <div class="ramt num">${K.fmt(it.cents)}</div>
+    </div>`;
+  const rowAvg = (it) => `
+    <div class="row col" style="background:${FC(it.k)}">
+      <div class="top">
+        <div class="mid"><div class="name">${it.e.name}</div><div class="sub-row"><span class="sub">${K.freqLabel(it.e)}</span>${mp(it.e.method, it.e.variant)}</div></div>
+        <div class="ramt num">${K.fmt(it.monthly)}<small>al mes</small></div>
+      </div>
+      ${it.k > 1 ? `<div class="hint"><i></i>${it.next ? `${K.fmt(it.e.cents)} · próximo cobro ${K.dateLabel(it.next)}` : 'Sin cobros próximos'}</div>` : ''}
+    </div>`;
+
+  /* MethodBreakdownCard */
+  const breakdown = (r) => `
+    <div class="bd">
+      <div class="bd-h"><span>Por método</span><span>${r.breakdown.length}</span></div>
+      ${r.breakdown.map((b) => `
+        <div class="bd-it">
+          <div class="bd-top">${badge(b.m, 24)}<span class="n">${K.methodLabel(b.m)}${b.m.archived ? '<small>archivado</small>' : ''}</span><span class="num">${K.fmt(b.cents)}</span></div>
+          <div class="bd-bar"><span style="width:${(b.cents / r.total * 100).toFixed(1)}%;background:${ms(b.m)[0]}"></span></div>
+        </div>`).join('')}
+    </div>`;
+
+  function balance(st) {
+    let body;
+    if (st.view === 'this') {
+      const r = K.monthAll(st.y, st.m);
+      body = `
+        <div class="total this">
+          <div class="lbl">Cargos de ${K.MONTHS[st.m - 1]}</div>
+          <div class="amt num">${money(r.total)}</div>
+          <div class="meta"><span class="pill">${r.count} ${r.count === 1 ? 'cargo' : 'cargos'}</span><span class="pill">Recurrentes ${K.fmt(r.recTotal)}</span><span class="pill">Únicos ${K.fmt(r.oneTotal)}</span></div>
+        </div>
+        ${r.count ? breakdown(r) : ''}
+        ${st.y === K.TODAY.y && st.m === K.TODAY.m && K.pendingCharges().length ? `<button class="banner"><span class="dot">${K.pendingCharges().length}</span><span><b>${K.pendingCharges().length} pendientes</b><small>Cobros por confirmar · toca para revisar</small></span></button>` : ''}
+        <div class="s-lbl">Por fecha</div>
+        ${r.items.length ? r.items.map((it) => rowCharge(it, st.m)).join('') : `<div class="empty"><b>✦</b>No hay cargos este mes</div>`}`;
+    } else {
+      const r = K.averageAll(st.y, st.m);
+      body = `
+        <div class="total avg">
+          <div class="lbl">Costo mensual promedio</div>
+          <div class="amt num">${money(r.total)}</div>
+          <div class="meta"><span class="pill">Fijos ${K.fmt(r.fixed)}</span><span class="pill">Prorrateados ${K.fmt(r.prorated)}</span><span class="pill">Únicos ${K.fmt(r.oneTotal)}</span></div>
+        </div>
+        <div class="s-lbl">Proporcional por gasto</div>
+        ${r.items.length ? r.items.map(rowAvg).join('') : `<div class="empty"><b>✦</b>Sin gastos vigentes</div>`}
+        ${r.ones.length ? `<div class="s-lbl" style="margin-top:22px">Únicos del mes</div>${r.ones.map((it) => rowCharge(it, st.m)).join('')}` : ''}`;
+    }
+    return `${STATUS_BAR('currentColor')}
+      <div data-scroll><div class="content">${monthHeader(st)}${seg(st.view)}${body}</div></div>
+      <div class="fab-bar"><button class="btn btn-primary"><span class="plus">+</span>Agregar gasto</button></div>
+      <div class="home-ind"></div>`;
+  }
+  mountPhone(document.getElementById('ph1'), balance, { view: 'this' });
+  mountPhone(document.getElementById('ph2'), balance, { view: 'avg' });
+
+  /* PaymentMethodPicker y selector de tipo */
+  const methodPicker = (sel) => `
+    <div class="field"><label>Método de pago</label><div class="chips">
+      ${K.METHODS.filter((m) => !m.archived).map((m) => { const [bg, fg] = ms(m); return `<button class="chip pchip ${sel === m.id ? 'on' : ''}" data-m="${m.id}" style="background:${bg};color:${fg}">${badgeOn(m, 26)}${K.methodLabel(m)}</button>`; }).join('')}
+      <button class="chip pnew">+ Nuevo</button>
+    </div></div>`;
+  /* Física | Digital: solo si el método elegido tiene versión digital */
+  const variantSeg = (f) => {
+    const m = K.method(f.method);
+    if (!m.hasDigital) return '';
+    const v = f.variant || 'physical';
+    return `<div class="field"><label>Tarjeta · ${m.name}</label><div class="seg" style="margin-top:8px;background:var(--bg)">
+      <button data-variant="physical" class="${v === 'physical' ? 'on' : ''}">Física ••${m.last4}</button>
+      <button data-variant="digital" class="${v === 'digital' ? 'on' : ''}">Digital ••${m.digitalLast4}</button></div></div>`;
+  };
+  const typeSeg = (t) => `<div class="seg"><button data-type="one" class="${t === 'one' ? 'on' : ''}">Único</button><button data-type="rec" class="${t === 'rec' ? 'on' : ''}">Recurrente</button></div>`;
+
+  function expenseForm(f) {
+    const isCustom = ![1, 2, 3, 6, 12].includes(f.k);
+    const per = f.k === 1 ? 'Se cobra cada mes' : `${K.fmt(Math.round(21900 / f.k))} al mes en promedio`;
+    const fields = f.type === 'one' ? `
+          <div class="amount-block neutral">
+            <div class="lbl">Monto</div>
+            <div class="big num">$100<span style="opacity:.45">.00</span></div>
+            <div class="per">Gasto único · no se repite</div>
+          </div>
+          <div class="field"><label>Descripción</label><input value="Recarga metro" aria-label="Descripción"></div>
+          <div class="field"><div class="field-row"><span>Fecha</span><span class="val-pill">Hoy · 11 nov 2026</span></div></div>
+          ${methodPicker(f.method)}${variantSeg(f)}` : `
+          <div class="amount-block" style="background:${FC(f.k)}">
+            <div class="lbl">Monto</div>
+            <div class="big num">$219<span style="opacity:.45">.00</span></div>
+            <div class="per">${per}</div>
+          </div>
+          <div class="field"><label>Nombre</label><input value="Netflix" aria-label="Nombre"></div>
+          <div class="field">
+            <label>Frecuencia</label>
+            <div class="chips">
+              ${PRESETS.map(([k, l]) => `<button class="chip ${f.k === k ? 'on' : ''}" data-k="${k}" style="background:${FC(k)}">${l}</button>`).join('')}
+              <button class="chip ${isCustom ? 'on' : ''}" data-k="4" style="background:var(--fx)">Cada N meses</button>
+            </div>
+            ${isCustom ? `<div class="field-row" style="margin-top:10px"><span>Cada</span><span class="stepper"><button data-step="-1">–</button><b>${f.k}</b><button data-step="1">+</button></span></div>` : ''}
+          </div>
+          <div class="field"><div class="field-row"><span>Fecha de cobro</span><span class="val-pill">15 nov 2026</span></div></div>
+          <div class="field">
+            <div class="field-row"><span>Fecha de fin</span><button class="switch ${f.end ? 'on' : ''}" data-end aria-label="Fecha de fin"></button></div>
+            ${f.end ? `<div class="field-row" style="margin-top:8px"><span style="color:var(--muted)">Termina</span><span class="val-pill">15 nov 2027</span></div>` : ''}
+          </div>
+          ${methodPicker(f.method)}${variantSeg(f)}`;
+    return `${STATUS_BAR('#fff')}
+      <div class="sheet-peek"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="sh-nav"><button>Cancelar</button><b>Nuevo gasto</b><span style="width:64px"></span></div>
+        <div data-scroll><div class="sh-body">${typeSeg(f.type)}${fields}</div></div>
+        <div class="fab-bar"><button class="btn btn-primary">Guardar</button></div>
+      </div>
+      <div class="home-ind"></div>`;
+  }
+  const mountForm = (id, f) => {
+    const el = document.getElementById(id);
+    const draw = () => { el.innerHTML = expenseForm(f); };
+    el.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-type]'); if (t) f.type = t.dataset.type;
+      const c = e.target.closest('[data-k]'); if (c) f.k = +c.dataset.k;
+      const s = e.target.closest('[data-step]'); if (s) f.k = Math.max(1, f.k + +s.dataset.step);
+      const m = e.target.closest('[data-m]'); if (m) f.method = m.dataset.m;
+      const vv = e.target.closest('[data-variant]'); if (vv) f.variant = vv.dataset.variant;
+      if (e.target.closest('[data-end]')) f.end = !f.end;
+      draw();
+    });
+    draw();
+  };
+  mountForm('ph3', { type: 'one', k: 1, end: false, method: 'efectivo' });
+  mountForm('ph3b', { type: 'rec', k: 1, end: false, method: 'bbva', variant: 'digital' });
+
+  /* Tarjeta de método */
+  const methodCard = (m, extra = '') => {
+    const [bg, fg] = ms(m); const n = K.methodUses(m.id); const i = K.institution(m.institution);
+    const note = m.archived ? 'Archivado' : m.id === 'efectivo' ? 'Método inicial' : '';
+    return `<div class="mcard ${m.archived ? 'arch' : ''} ${extra}" style="background:${bg};color:${fg}">
+      <div class="tp"><span class="tp-l">${badgeOn(m, 34)}<span>${i ? i.name + ' · ' : ''}${KINDS[m.kind]}</span></span><span>${n} ${n === 1 ? 'gasto' : 'gastos'}</span></div>
+      <div class="nm">${m.name}</div>
+      <div class="ft"><span>${note}</span><span class="dg num">${m.last4 ? '•••• ' + m.last4 : ''}</span></div>
+    </div>`;
+  };
+
+  /* Lista de métodos */
+  (() => {
+    const el = document.getElementById('ph4'); const st = { open: true };
+    const draw = () => {
+      const act = K.METHODS.filter((m) => !m.archived), arch = K.METHODS.filter((m) => m.archived);
+      el.innerHTML = `${STATUS_BAR('currentColor')}
+        <div data-scroll><div class="content">
+          <div class="topnav"><button class="round" aria-label="Volver">‹</button></div>
+          <div class="mtitle">Métodos de pago</div>
+          <div class="mdesc">${act.length} activos · de dónde sale cada gasto</div>
+          ${act.map((m) => methodCard(m)).join('')}
+          <button class="arch-h" data-arch><span>Archivados · ${arch.length}</span><span>${st.open ? '▴' : '▾'}</span></button>
+          ${st.open ? arch.map((m) => methodCard(m)).join('') : ''}
+        </div></div>
+        <div class="fab-bar"><button class="btn btn-primary"><span class="plus">+</span>Agregar método</button></div>
+        <div class="home-ind"></div>`;
+    };
+    el.addEventListener('click', (e) => { if (e.target.closest('[data-arch]')) { st.open = !st.open; draw(); } });
+    draw();
+  })();
+
+  /* Formulario de método: 'edit' (desde la lista) o 'new' (desde "+ Nuevo" en el gasto) */
+  function methodForm(f, mode) {
+    const i = K.institution(f.inst);
+    const preview = { id: 'x', name: f.name || (i ? i.name : 'Nuevo método'), kind: f.kind, last4: f.kind === 'cash' ? '' : f.last4, institution: f.kind === 'cash' ? null : f.inst, color: f.color };
+    const d = i ? K.duotoneFromBase(i.baseColor) : null;
+    const uses = K.methodUses('bbva');
+    return `${STATUS_BAR('#fff')}
+      <div class="sheet-peek"></div>${mode === 'new' ? '<div class="sheet-peek two"></div>' : ''}
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="sh-nav"><button>${mode === 'new' ? '‹ Gasto' : 'Cancelar'}</button><b>${mode === 'new' ? 'Nuevo método' : 'Editar método'}</b><span style="width:64px"></span></div>
+        <div data-scroll><div class="sh-body">
+          ${mode === 'new' ? '<div class="ctx"><span>Para el gasto</span><span><b>Farmacia</b> · $238.50</span></div>' : ''}
+          ${methodCard(preview, 'big')}
+          <div class="field"><label>Tipo</label><div class="chips">
+            ${Object.entries(KINDS).map(([k, l]) => `<button class="chip tchip ${f.kind === k ? 'on' : ''}" data-kind="${k}">${l}</button>`).join('')}
+          </div></div>
+          ${f.kind === 'cash' ? '' : `<div class="field"><label>Institución · opcional</label>
+            <div class="search">⌕ Buscar institución</div>
+            <div class="inst-grid">
+              ${K.institutionsFor('pay').map((x) => `<button class="inst ${f.inst === x.id ? 'on' : ''}" data-inst="${x.id}">${instBadge(x, 28)}<span>${x.name}</span></button>`).join('')}
+              <button class="inst ${!f.inst ? 'on' : ''}" data-inst=""><span class="ibadge" style="width:28px;height:28px;font-size:14px;background:var(--line);color:var(--muted)">–</span><span>Sin institución</span></button>
+            </div></div>`}
+          <div class="field"><label>Nombre</label><input value="${f.name}" placeholder="${i ? i.name : 'Nombre del método'}" aria-label="Nombre"></div>
+          ${f.kind === 'cash' ? '' : `<div class="field"><label>Últimos 4 dígitos · opcional</label><input class="num" value="${f.last4}" inputmode="numeric" aria-label="Últimos 4 dígitos"></div>`}
+          ${f.kind === 'credit' || f.kind === 'debit' ? `<div class="field"><div class="field-row"><span>Tiene tarjeta digital</span><button class="switch ${f.digital ? 'on' : ''}" data-dig aria-label="Tiene tarjeta digital"></button></div>${f.digital ? `<div style="margin-top:10px"><label style="font-size:12px;font-weight:700;color:var(--muted)">Últimos 4 dígitos de la digital · opcional</label><input class="num" value="${f.dlast4 || ''}" inputmode="numeric" style="border:0;outline:0;width:100%;font-size:17px;font-weight:600;background:transparent;color:var(--ink)"></div><div style="font-size:13px;color:var(--muted);font-weight:600;margin-top:6px">Misma cuenta y mismo saldo que la física.</div>` : ''}</div>` : ''}
+          <div class="field"><label>Color${f.color ? ' · ' + COLOR_NAMES[f.color] : i && f.kind !== 'cash' ? ' · de la institución' : ''}</label>
+            ${i && f.kind !== 'cash' ? `<button class="inst-color ${!f.color ? 'on' : ''}" data-c=""><i style="background:linear-gradient(135deg, ${d.from}, ${d.to})"></i><span>Color de ${i.name}<small>Base de la institución, en duotono</small></span></button>` : ''}
+            <div class="swatch-grid">
+              ${Object.keys(MC).map((c) => `<button class="swatch ${f.color === c ? 'on' : ''}" data-c="${c}" style="background:${MC[c][0]}" aria-label="${COLOR_NAMES[c]}"></button>`).join('')}
+            </div></div>
+          ${mode === 'edit' ? `
+          <div class="notice"><span class="ic">i</span><span>Lo usan <b>${uses} gastos</b>, así que no se puede eliminar. Si lo archivas, dejará de ofrecerse en gastos nuevos y los existentes lo conservan.</span></div>
+          <div class="act-row"><button class="btn btn-secondary">Archivar</button><button class="btn btn-danger dim" aria-disabled="true">Eliminar</button></div>` : ''}
+        </div></div>
+        <div class="fab-bar"><button class="btn btn-primary">${mode === 'new' ? 'Guardar y usar' : 'Guardar'}</button></div>
+      </div>
+      <div class="home-ind"></div>`;
+  }
+  const mountMethodForm = (id, f, mode) => {
+    const el = document.getElementById(id);
+    const draw = () => { el.innerHTML = methodForm(f, mode); };
+    el.addEventListener('click', (e) => {
+      const c = e.target.closest('[data-c]'); if (c) f.color = c.dataset.c || null;
+      const k = e.target.closest('[data-kind]'); if (k) f.kind = k.dataset.kind;
+      const dg = e.target.closest('[data-dig]'); if (dg) f.digital = !f.digital;
+      const n = e.target.closest('[data-inst]');
+      if (n) {
+        const prev = K.institution(f.inst); f.inst = n.dataset.inst || null;
+        const nx = K.institution(f.inst);
+        if (f.autoName || (prev && f.name.startsWith(prev.name))) { f.name = nx ? nx.name + (f.kind === 'debit' ? ' Débito' : f.kind === 'credit' ? ' Crédito' : '') : ''; }
+      }
+      if (c || k || n || dg) draw();
+    });
+    draw();
+  };
+  mountMethodForm('ph5', { name: 'BBVA Azul', kind: 'credit', last4: '4521', inst: 'bbva-mx', color: null, digital: true, dlast4: '7788' }, 'edit');
+  mountMethodForm('ph6', { name: 'Klar Débito', kind: 'debit', last4: '', inst: 'klar-mx', color: null, autoName: true }, 'new');
+
+  /* Catálogo de componentes */
+  const r = K.monthAll(2026, 11), a = K.averageAll(2026, 11);
+  const NEW = '<span class="new-badge">nuevo</span>';
+  document.getElementById('comps').innerHTML = `
+    <div class="comp"><div class="comp-label">Botones</div><div class="comp-stack">
+      <button class="btn btn-primary"><span class="plus">+</span>Agregar gasto</button>
+      <button class="btn btn-secondary" style="background:var(--bg)">Cancelar</button>
+      <button class="btn btn-danger">Eliminar gasto</button></div></div>
+    <div class="comp dark"><div class="comp-label">SegmentedControl · MonthSwitcher</div>
+      ${seg('this')}${seg('avg')}
+      <div class="month" style="padding-bottom:0"><div><div class="m">Noviembre</div><div class="y">2026</div></div><div class="arrows"><button class="round">${CARD_ICON}</button><button class="round">‹</button><button class="round">›</button></div></div></div>
+    <div class="comp"><div class="comp-label">Tarjeta de total</div>
+      <div class="total this" style="margin:0 0 12px"><div class="lbl">Cargos de noviembre</div><div class="amt num">${money(r.total)}</div><div class="meta"><span class="pill">${r.count} cargos</span><span class="pill">Recurrentes ${K.fmt(r.recTotal)}</span><span class="pill">Únicos ${K.fmt(r.oneTotal)}</span></div></div>
+      <div class="total avg" style="margin:0"><div class="lbl">Costo mensual promedio</div><div class="amt num">${money(a.total)}</div><div class="meta"><span class="pill">Fijos ${K.fmt(a.fixed)}</span><span class="pill">Prorrateados ${K.fmt(a.prorated)}</span><span class="pill">Únicos ${K.fmt(a.oneTotal)}</span></div></div></div>
+    <div class="comp dark"><div class="comp-label">MethodBreakdownCard ${NEW}</div>${breakdown(r).replace('class="bd"', 'class="bd" style="margin:0"')}</div>
+    <div class="comp dark"><div class="comp-label">ExpenseRow · recurrente y único con método ${NEW}</div>${r.items.filter((i) => i.kind === 'rec').slice(0, 2).map((it) => rowCharge(it, 11)).join('')}${r.items.filter((i) => i.kind === 'one').slice(0, 2).map((it) => rowCharge(it, 11)).join('')}</div>
+    <div class="comp dark"><div class="comp-label">ExpenseRow · Promedio con pista</div>${a.items.filter((i) => i.k > 1).slice(0, 3).map(rowAvg).join('')}</div>
+    <div class="comp dark"><div class="comp-label">Selector de tipo · PaymentMethodPicker ${NEW}</div><div class="sh-body" style="padding:0">${typeSeg('one')}${methodPicker('bbva')}</div></div>
+    <div class="comp dark"><div class="comp-label">Tarjeta de método · activa y archivada ${NEW}</div>${methodCard(K.method('nu'))}${methodCard(K.method('banamex'))}</div>
+    <div class="comp"><div class="comp-label">Confirmaciones (hoja de acciones) ${NEW}</div><div class="comp-stack">
+      <div class="asheet"><div class="grp"><div class="t"><b>¿Eliminar "Recarga metro"?</b>Dejará de contarse en noviembre.</div><button class="dgr">Eliminar gasto</button></div><button class="cancel">Cancelar</button></div>
+      <div class="asheet"><div class="grp"><div class="t"><b>"Nu Débito" está en uso</b>Lo usan ${K.methodUses('nu')} gastos. Puedes archivarlo para que no se ofrezca en gastos nuevos.</div><button>Archivar método</button></div><button class="cancel">Cancelar</button></div>
+      <div class="notice"><span class="ic">!</span><span><b>Debe existir al menos un método activo.</b> Agrega otro antes de archivar este.</span></div></div></div>
+    <div class="comp dark"><div class="comp-label">Campos de formulario</div><div class="comp-stack">
+      <div class="field"><label>Descripción</label><input value="Recarga metro"></div>
+      <div class="field err"><label>Monto</label><input value="$10.555"><div class="msg">El monto admite hasta dos decimales</div></div>
+      <div class="field err"><label>Últimos 4 dígitos</label><input value="45A"><div class="msg">Deben ser 4 números</div></div>
+      <div class="field"><div class="field-row"><span>Fecha de fin</span><span class="switch on"></span></div></div></div></div>
+    <div class="comp"><div class="comp-label">Chips de frecuencia</div><div class="chips">
+      ${PRESETS.map(([k, l], i) => `<span class="chip ${i === 0 ? 'on' : ''}" style="background:${FC(k)};display:inline-flex;align-items:center">${l}</span>`).join('')}
+      <span class="chip" style="background:var(--fx);display:inline-flex;align-items:center">Cada N meses</span></div></div>
+    <div class="comp"><div class="comp-label">Paleta de frecuencias</div><div class="swatches">
+      ${[['Total · este mes', 'var(--m-cobalt)', '#fff'], ['Total · promedio', 'linear-gradient(135deg,#FFD45C,#FF9A3C)', ''], ['Tinta', 'var(--ink)', 'var(--bg)'], ['Mensual', 'var(--f1)'], ['Bimestral', 'var(--f2)'], ['Trimestral', 'var(--f3)'], ['Semestral', 'var(--f6)'], ['Anual', 'var(--f12)'], ['Cada N', 'var(--fx)']]
+        .map(([n, c, t]) => `<div class="sw" style="background:${c};color:${t || '#141414'}"><b>${n}</b></div>`).join('')}</div></div>
+    <div class="comp"><div class="comp-label">Catálogo de instituciones · usos ${NEW}</div>
+      ${K.INSTITUTIONS.map((i) => `<div class="cat-row">${instBadge(i, 34)}<span class="nm">${i.name}<small>${{ bank: 'Banco', fintech: 'Fintech', investment: 'Inversión' }[i.kind]}${i.uses.includes('pay') ? '' : ' · no se ofrece en Expenses'}</small></span>
+        <span class="uses">${[['pay', 'Pagar'], ['receive', 'Ingresos'], ['invest', 'Invertir']].map(([u, l]) => `<span class="use ${i.uses.includes(u) ? ((i.unsure || []).includes(u) ? 'q' : 'y') : ''}">${l}${(i.unsure || []).includes(u) ? ' ?' : ''}</span>`).join('')}</span></div>`).join('')}
+      <p style="font-size:13px;color:var(--muted);margin-top:12px">Monogramas sobre el color base (aproximado). <b>?</b> = uso por confirmar. El logo se agregará después.</p></div>
+    <div class="comp dark"><div class="comp-label">Duotono derivado del color de marca ${NEW}</div><div class="swatches">
+      ${K.INSTITUTIONS.filter((i) => i.uses.includes('pay')).slice(0, 9).map((i) => { const d = K.duotoneFromBase(i.baseColor); return `<div class="sw" style="background:linear-gradient(135deg, ${d.from}, ${d.to});color:${d.fg}"><b>${i.name}</b>${i.baseColor}</div>`; }).join('')}</div></div>
+    <div class="comp"><div class="comp-label">Paleta de métodos de pago (override) ${NEW}</div><div class="swatches">
+      ${Object.keys(MC).map((c) => `<div class="sw" style="background:${MC[c][0]};color:${MC[c][1]}"><b>${COLOR_NAMES[c]}</b>${c}</div>`).join('')}</div></div>
+    <div class="comp"><div class="comp-label">Tipografía · radios · espacio</div><div class="type-scale">
+      <div style="font-size:46px;font-weight:800;letter-spacing:-.03em;line-height:1">$7,856</div>
+      <div style="font-size:34px;font-weight:800;letter-spacing:-.03em">Título 34</div>
+      <div style="font-size:17px;font-weight:700">Cuerpo 17 · semibold</div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted)">Secundario 13</div></div>
+      <p style="font-size:14px;color:var(--muted);margin-top:10px">Radios 30 / 24 / 22 / 16 / 999 · márgenes de pantalla 20 · interior 18–24</p></div>`;
+
+  /* Selector de tema (recuerda la elección en este navegador) */
+  (() => {
+    const root = document.documentElement;
+    const set = (t) => {
+      root.dataset.theme = t;
+      document.querySelectorAll('[data-theme-set]').forEach((b) => b.classList.toggle('on', b.dataset.themeSet === t));
+      try { localStorage.setItem('kapitaly-a1-theme', t); } catch (e) {}
+    };
+    let saved = null; try { saved = localStorage.getItem('kapitaly-a1-theme'); } catch (e) {}
+    set(saved || 'light');
+    document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => set(b.dataset.themeSet)));
+  })();
+</script>
+<script>
+  /* ---------- Tarjetas de crédito y pendientes (piezas nuevas) ---------- */
+  const bbvaCard = K.method('bbva');
+  const dot6 = '••••••';
+
+  /* Tarjeta de crédito en la lista: usado visible; límite y disponible ocultos hasta tocar */
+  const creditCard = (m, reveal) => {
+    const [bg, fg] = ms(m); const used = K.cardUsed(m); const avail = m.limitCents - used;
+    return `<div class="mcard" style="background:${bg};color:${fg}">
+      <div class="tp"><span class="tp-l">${badgeOn(m, 34)}<span>${K.institution(m.institution).name} · Crédito</span></span><span>${K.methodUses(m.id)} gastos</span></div>
+      <div class="nm">${m.name}</div>
+      <div class="cc-stats">
+        <div class="cc-stat"><small>Usado</small><b>${used >= 0 ? K.fmt(used) : K.fmt(-used) + ' a favor'}</b></div>
+        <div class="cc-stat"><small>Próximo pago</small><b>5 dic</b></div>
+        <button class="cc-stat wide" data-reveal style="text-align:left">
+          <span><small>Límite · Disponible</small><b class="${reveal ? '' : 'mask'}">${reveal ? `${K.fmt(m.limitCents)} · ${K.fmt(avail)}` : `${dot6} · ${dot6}`}</b></span>
+          <span style="font-size:12px;font-weight:800;opacity:.85">${reveal ? 'Ocultar' : 'Mostrar'}</span>
+        </button>
+      </div>
+      <div class="ft"><span></span><span class="dg num">•••• ${m.last4}</span></div>
+    </div>`;
+  };
+
+  (() => {
+    const el = document.getElementById('ph7'); const st = { reveal: false };
+    const draw = () => {
+      el.innerHTML = `${STATUS_BAR('currentColor')}
+        <div data-scroll><div class="content">
+          <div class="topnav"><button class="round" aria-label="Volver">‹</button></div>
+          <div class="mtitle">Métodos de pago</div>
+          <div class="mdesc">3 activos · de dónde sale cada gasto</div>
+          ${creditCard(bbvaCard, st.reveal)}
+          ${methodCard(K.method('nu'))}
+          ${methodCard(K.method('efectivo'))}
+        </div></div>
+        <div class="fab-bar"><button class="btn btn-primary"><span class="plus">+</span>Agregar método</button></div>
+        <div class="home-ind"></div>`;
+    };
+    el.addEventListener('click', (e) => { if (e.target.closest('[data-reveal]')) { st.reveal = !st.reveal; draw(); } });
+    draw();
+  })();
+
+  /* Editar tarjeta de crédito: datos de tarjeta, Pagar tarjeta e historial */
+  (() => {
+    const el = document.getElementById('ph8'); const st = { day: 5 };
+    const draw = () => {
+      el.innerHTML = `${STATUS_BAR('#fff')}
+        <div class="sheet-peek"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="sh-nav"><button>Cancelar</button><b>Editar método</b><span style="width:64px"></span></div>
+          <div data-scroll><div class="sh-body">
+            ${creditCard(bbvaCard, false)}
+            <button class="btn btn-primary" style="height:52px">Pagar tarjeta</button>
+            <div class="field"><label>Saldo inicial · al 1 nov 2026</label><input class="num" value="$12,000.00"></div>
+            <div class="field"><label>Límite de crédito · opcional</label><input class="num" value="${dot6}" style="letter-spacing:.18em"></div>
+            <div class="field"><div class="field-row"><span>Día de pago</span><span class="stepper-inline"><button data-day="-1">–</button><b>${st.day}</b><button data-day="1">+</button></span></div></div>
+            <div class="field"><label>Pagos registrados</label>
+              ${K.CARD_PAYMENTS.map((p) => `<div class="pay-row"><span>${K.fmt(p.cents)}<small>${K.dateLabel(p.date)} · cubre el 5 nov</small></span><button>Eliminar</button></div>`).join('')}
+            </div>
+            <div class="act-row"><button class="btn btn-secondary">Archivar</button><button class="btn btn-danger dim" aria-disabled="true">Eliminar</button></div>
+          </div></div>
+          <div class="fab-bar"><button class="btn btn-primary">Guardar</button></div>
+        </div>
+        <div class="home-ind"></div>`;
+    };
+    el.addEventListener('click', (e) => { const d = e.target.closest('[data-day]'); if (d) { st.day = Math.min(31, Math.max(1, st.day + +d.dataset.day)); draw(); } });
+    draw();
+  })();
+
+  /* Pagar tarjeta */
+  (() => {
+    const used = K.cardUsed(bbvaCard); const [whole, cents] = K.fmtParts(used);
+    document.getElementById('ph9').innerHTML = `${STATUS_BAR('#fff')}
+      <div class="sheet-peek"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="sh-nav"><button>Cancelar</button><b>Pagar tarjeta</b><span style="width:64px"></span></div>
+        <div data-scroll><div class="sh-body">
+          <div class="amount-block" style="background:${ms(bbvaCard)[0]};color:${ms(bbvaCard)[1]}">
+            <div class="lbl">Monto del pago</div>
+            <div class="big num">${whole}<span style="opacity:.45">${cents}</span></div>
+            <div class="per">Propuesto: todo lo usado · puedes pagar menos</div>
+          </div>
+          <div class="field"><div class="field-row"><span>Fecha</span><span class="val-pill">Hoy · 11 nov 2026</span></div></div>
+          <div class="notice"><span class="ic">i</span><span>Este pago cubre la fecha de pago del <b>5 dic</b>, así que ese día no te preguntaremos. Los pagos no cuentan como gastos del mes.</span></div>
+        </div></div>
+        <div class="fab-bar"><button class="btn btn-primary">Registrar pago</button></div>
+      </div>
+      <div class="home-ind"></div>`;
+  })();
+
+  /* Hoja "Pendientes" al abrir la app */
+  (() => {
+    const el = document.getElementById('ph10');
+    const st = { done: new Set() };
+    const draw = () => {
+      const charges = K.pendingCharges().filter((p) => !st.done.has(p.e.id));
+      const payDone = st.done.has('pay');
+      const cards = charges.map((p) => { const m = K.method(p.e.method); return `
+        <div class="pend">
+          <div class="pend-h"><div class="date" style="background:${FC(K.months(p.e))}"><b>${p.day}</b><span>${K.MON[K.TODAY.m - 1]}</span></div>
+            <div class="t"><b>¿Ya se cobró ${p.e.name}?</b><small>${K.freqLabel(p.e)} · ${K.methodLabel(m)}</small></div></div>
+          <div class="pend-amount"><span>Monto cobrado</span><input class="num" value="${K.fmt(p.e.cents)}"></div>
+          <div class="pend-actions">
+            <button class="btn btn-primary full" data-done="${p.e.id}">Sí, se cobró</button>
+            <button class="btn btn-secondary" style="background:var(--bg)" data-done="${p.e.id}">Aún no</button>
+            <button class="btn btn-secondary" style="background:var(--bg)" data-done="${p.e.id}">No se cobró</button>
+          </div>
+        </div>`; }).join('');
+      const pay = payDone ? '' : `
+        <div class="pend">
+          <div class="pend-h">${badge(bbvaCard, 44)}<div class="t"><b>¿Ya pagaste BBVA Azul?</b><small>Ejemplo: vencía el 5 dic 2026</small></div></div>
+          <div class="pend-amount"><span>Monto pagado</span><input class="num" value="${K.fmt(K.cardUsed(bbvaCard))}"></div>
+          <div class="pend-actions">
+            <button class="btn btn-primary" data-done="pay">Sí, pagué</button>
+            <button class="btn btn-secondary" style="background:var(--bg)" data-done="pay">Aún no</button>
+          </div>
+        </div>`;
+      const empty = !cards && !pay;
+      el.innerHTML = `${STATUS_BAR('#fff')}
+        <div class="sheet-peek"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="sh-nav"><button>Cerrar</button><b>Pendientes</b><span style="width:64px"></span></div>
+          <div data-scroll><div class="sh-body">
+            ${empty ? '<div class="empty"><b>✓</b>Todo al día</div>' : `${cards}${pay}`}
+          </div></div>
+        </div>
+        <div class="home-ind"></div>`;
+    };
+    el.addEventListener('click', (e) => { const d = e.target.closest('[data-done]'); if (d) { st.done.add(d.dataset.done); draw(); } });
+    draw();
+  })();
+
+  /* Catálogo: piezas nuevas */
+  document.getElementById('comps').insertAdjacentHTML('beforeend', `
+    <div class="comp dark"><div class="comp-label">Tarjeta de crédito · límite oculto ${NEW}</div>${creditCard(bbvaCard, false)}</div>
+    <div class="comp dark"><div class="comp-label">Fila con "Por confirmar" y aviso de pendientes ${NEW}</div>
+      <button class="banner"><span class="dot">2</span><span><b>2 pendientes</b><small>Cobros por confirmar · toca para revisar</small></span></button>
+      ${K.monthAll(2026, 11).items.filter((i) => i.kind === 'rec' && isPend(i, 11)).slice(0, 1).map((it) => rowCharge(it, 11)).join('')}</div>`);
+</script>
+</body>
+</html>
