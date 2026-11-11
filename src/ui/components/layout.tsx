@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '../ThemeProvider';
+import { useKeyboardVisible } from '../useKeyboardVisible';
 
 /** Hoja modal: barra con "Cancelar"/título, contenido desplazable y un botón principal fijo abajo. */
 export function SheetLayout({
@@ -27,6 +28,10 @@ export function SheetLayout({
   footer?: ReactNode;
 }) {
   const { colors } = useTheme();
+  // En Android la ventana se redimensiona con el teclado y el botón fijo subiría encima del
+  // formulario; en iOS el teclado ya lo cubre. Se oculta mientras se escribe en ambos casos.
+  const keyboardVisible = useKeyboardVisible();
+  const showFooter = footer && !(Platform.OS === 'android' && keyboardVisible);
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.flex, { backgroundColor: colors.bg }]}>
       <KeyboardAvoidingView
@@ -51,7 +56,7 @@ export function SheetLayout({
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
-        {footer ? <View style={styles.footer}>{footer}</View> : null}
+        {showFooter ? <View style={styles.footer}>{footer}</View> : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
