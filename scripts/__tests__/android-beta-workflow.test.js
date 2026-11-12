@@ -3,7 +3,9 @@ const { join } = require('node:path');
 // js-yaml llega con Jest (istanbul); basta para validar la estructura del workflow.
 const yaml = require('js-yaml');
 
-const workflow = yaml.load(readFileSync(join(__dirname, '../../.github/workflows/android-beta.yml'), 'utf8'));
+const workflow = yaml.load(
+  readFileSync(join(__dirname, '../../.github/workflows/android-beta.yml'), 'utf8'),
+);
 const steps = workflow.jobs.beta.steps;
 const index = (name) => steps.findIndex((step) => step.name === name);
 const step = (name) => steps[index(name)];
@@ -19,8 +21,14 @@ test('fija cada acción a un SHA completo', () => {
 
 test('valida, prueba, revisa tipos y lint antes de compilar', () => {
   const build = index('Generate and build Android');
-  for (const name of ['Validate version and release branch', 'Install dependencies', 'Tests', 'Typecheck', 'Lint',
-    'Prepare signing credentials']) {
+  for (const name of [
+    'Validate version and release branch',
+    'Install dependencies',
+    'Tests',
+    'Typecheck',
+    'Lint',
+    'Prepare signing credentials',
+  ]) {
     expect(index(name)).toBeGreaterThanOrEqual(0);
     expect(index(name)).toBeLessThan(build);
   }
@@ -32,7 +40,9 @@ test('publica solo en modo tag, a la pista interna y sin cancelar ejecuciones', 
   expect(publish.if).toBe("steps.release.outputs.publish == 'true'");
   expect(publish.with).toMatchObject({ packageName: 'com.kapitaly.expenses', tracks: 'internal' });
   expect(workflow.concurrency['cancel-in-progress']).toBe(false);
-  expect(step('Prepare signing credentials').env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON).toContain("publish == 'true'");
+  expect(step('Prepare signing credentials').env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON).toContain(
+    "publish == 'true'",
+  );
 });
 
 test('verifica la firma, limita el artefacto y siempre borra credenciales', () => {
@@ -42,6 +52,17 @@ test('verifica la firma, limita el artefacto y siempre borra credenciales', () =
   expect(cleanup.if).toBe('always()');
   expect(cleanup.run).toContain('kapitaly-signing');
   expect(workflow.permissions).toEqual({ contents: 'read' });
+});
+
+test('solo cachea dependencias de Gradle, nunca build ni configuración', () => {
+  expect(step('Java').with).toMatchObject({
+    cache: 'gradle',
+    'cache-dependency-path': 'package-lock.json',
+  });
+  const build = step('Generate and build Android').run;
+  expect(build).toContain('--no-build-cache');
+  expect(build).toContain('--no-configuration-cache');
+  expect(build).toContain('-PreactNativeArchitectures=arm64-v8a');
 });
 
 test('no pasa la entrada manual directo al shell', () => {
