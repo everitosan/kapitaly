@@ -1,3 +1,10 @@
+import {
+  BUILTIN_CATEGORIES,
+  canHide,
+  canRemove as canRemoveCategory,
+  type Category,
+  type CategoryInput,
+} from '@/domain/category';
 import type { SyncMeta } from '@/domain/common';
 import type { ChargeConfirmation, ChargeConfirmationInput } from '@/domain/confirmations';
 import type { CardPayment, CardPaymentInput } from '@/domain/creditCard';
@@ -13,9 +20,17 @@ import {
 } from '@/domain/paymentMethod';
 import type { RecurringExpense, RecurringExpenseInput } from '@/domain/recurringExpense';
 
-import { assertRule, ChangeEmitter, nextTimestamp, NotFoundError } from './shared';
+import {
+  assertCategoryInput,
+  assertRule,
+  CategoryRuleError,
+  ChangeEmitter,
+  nextTimestamp,
+  NotFoundError,
+} from './shared';
 import type {
   CardPaymentRepository,
+  CategoryRepository,
   ChargeConfirmationRepository,
   OneOffExpenseRepository,
   PaymentMethodRepository,
@@ -146,6 +161,50 @@ class InMemoryPaymentMethodRepository
   }
 }
 
+class InMemoryCategoryRepository
+  extends InMemoryRepository<Category, CategoryInput>
+  implements CategoryRepository
+{
+  constructor(deps: RepositoryDeps) {
+    super('Categoría', deps, (i) => ({ ...i, builtin: false, hiddenAt: null }));
+    for (const b of BUILTIN_CATEGORIES)
+      this.rows.set(b.id, {
+        ...b,
+        builtin: true,
+        hiddenAt: null,
+        createdAt: SEED_TIMESTAMP,
+        updatedAt: SEED_TIMESTAMP,
+        deletedAt: null,
+      });
+  }
+
+  async create(input: CategoryInput): Promise<Category> {
+    return super.create(assertCategoryInput(input, [...this.rows.values()], null));
+  }
+
+  async update(id: string, input: CategoryInput): Promise<Category> {
+    const current = this.requireLive(id);
+    const value = assertCategoryInput(input, [...this.rows.values()], current);
+    this.patch(id, value);
+    return { ...this.rows.get(id)! };
+  }
+
+  async remove(id: string): Promise<void> {
+    if (!canRemoveCategory(this.requireLive(id)))
+      throw new CategoryRuleError({ category: 'locked' });
+    this.markDeleted(id);
+  }
+
+  async hide(id: string): Promise<void> {
+    if (!canHide(this.requireLive(id))) throw new CategoryRuleError({ category: 'locked' });
+    this.patch(id, { hiddenAt: this.deps.now() });
+  }
+
+  async unhide(id: string): Promise<void> {
+    this.patch(id, { hiddenAt: null });
+  }
+}
+
 class InMemoryChargeConfirmationRepository
   extends InMemoryRepository<ChargeConfirmation, ChargeConfirmationInput>
   implements ChargeConfirmationRepository
@@ -172,6 +231,7 @@ export interface InMemoryRepositories extends Repositories {
   /** Acceso a las filas crudas (incluye eliminadas), solo para pruebas. */
   raw: {
     paymentMethods: Map<string, PaymentMethod>;
+    categories: Map<string, Category>;
     recurringExpenses: Map<string, RecurringExpense>;
     oneOffExpenses: Map<string, OneOffExpense>;
     cardPayments: Map<string, CardPayment>;
@@ -197,18 +257,21 @@ export function createInMemoryRepositories(deps: RepositoryDeps): InMemoryReposi
     (i) => ({ ...i }),
   );
   const chargeConfirmations = new InMemoryChargeConfirmationRepository(deps);
+  const categories = new InMemoryCategoryRepository(deps);
   const paymentMethods = new InMemoryPaymentMethodRepository(deps, () => [
     ...recurringExpenses.rows.values(),
     ...oneOffExpenses.rows.values(),
   ]);
   return {
     paymentMethods,
+    categories,
     recurringExpenses: recurringExpenses as RecurringExpenseRepository,
     oneOffExpenses: oneOffExpenses as OneOffExpenseRepository,
     cardPayments: cardPayments as CardPaymentRepository,
     chargeConfirmations,
     raw: {
       paymentMethods: paymentMethods.rows,
+      categories: categories.rows,
       recurringExpenses: recurringExpenses.rows,
       oneOffExpenses: oneOffExpenses.rows,
       cardPayments: cardPayments.rows,

@@ -1,6 +1,7 @@
 import type { SyncMeta, Validation } from './common';
 import { compareCivilDates, isValidCivilDate, type CivilDate } from './date';
 import { parseMoneyToCents, type Cents } from './money';
+import { OTHER_CATEGORY_ID } from './category';
 import type { CardVariant } from './paymentMethod';
 
 export type IntervalUnit = 'month' | 'year';
@@ -16,6 +17,8 @@ export interface RecurringExpense extends SyncMeta {
   paymentMethodId: string;
   /** Física o digital si el método tiene versión digital; `null` si no aplica. */
   cardVariant: CardVariant | null;
+  /** Categoría; sus cobros siempre usan la categoría actual del gasto. */
+  categoryId: string;
 }
 
 export interface RecurringExpenseInput {
@@ -27,6 +30,7 @@ export interface RecurringExpenseInput {
   endDate: CivilDate | null;
   paymentMethodId: string;
   cardVariant: CardVariant | null;
+  categoryId: string;
 }
 
 /** Meses que dura un intervalo: anual = 12 × count. */
@@ -78,6 +82,8 @@ export interface RecurringExpenseDraft {
   endDate: CivilDate | null;
   paymentMethodId: string | null;
   cardVariant?: CardVariant | null;
+  /** Sin elegir = "Otro". */
+  categoryId?: string | null;
 }
 
 export interface ExpenseValidationContext {
@@ -146,6 +152,7 @@ export function validateRecurringExpenseInput(
       endDate: draft.endDate ? draft.endDate : null,
       paymentMethodId: draft.paymentMethodId!,
       cardVariant: normalizeCardVariant(draft.paymentMethodId!, draft.cardVariant, ctx),
+      categoryId: draft.categoryId || OTHER_CATEGORY_ID,
     },
   };
 }

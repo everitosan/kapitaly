@@ -1,3 +1,4 @@
+import { OTHER_CATEGORY_ID } from '../category';
 import { validateOneOffExpenseInput, type OneOffExpenseDraft } from '../oneOffExpense';
 
 const ctx = { isActiveMethod: (id: string) => id === 'efectivo' };
@@ -20,8 +21,16 @@ describe('validateOneOffExpenseInput', () => {
         paymentMethodId: 'efectivo',
         cardVariant: null,
         addsToCardBalance: true,
+        categoryId: OTHER_CATEGORY_ID,
       },
     });
+  });
+
+  it('sin elegir categoría queda en "Otro"; con una elegida, la conserva', () => {
+    const r = validateOneOffExpenseInput(draft(), ctx);
+    expect(r.ok && r.value.categoryId).toBe(OTHER_CATEGORY_ID);
+    const s = validateOneOffExpenseInput({ ...draft(), categoryId: 'comida' }, ctx);
+    expect(s.ok && s.value.categoryId).toBe('comida');
   });
 
   it('respeta "no sumar al saldo de la tarjeta"', () => {

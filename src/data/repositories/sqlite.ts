@@ -1,6 +1,13 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core';
 
+import {
+  canHide,
+  canRemove as canRemoveCategory,
+  type Category,
+  type CategoryIconKey,
+  type CategoryInput,
+} from '@/domain/category';
 import type { SyncMeta } from '@/domain/common';
 import type { ChargeConfirmation, ChargeConfirmationInput } from '@/domain/confirmations';
 import type { CardPayment, CardPaymentInput } from '@/domain/creditCard';
@@ -18,14 +25,23 @@ import type { RecurringExpense, RecurringExpenseInput } from '@/domain/recurring
 import type { AppDatabase } from '../sqlite/database';
 import {
   cardPayments,
+  categories,
   oneOffExpenses,
   paymentMethods,
   recurringChargeConfirmations,
   recurringExpenses,
 } from '../sqlite/schema';
-import { assertRule, ChangeEmitter, nextTimestamp, NotFoundError } from './shared';
+import {
+  assertCategoryInput,
+  assertRule,
+  CategoryRuleError,
+  ChangeEmitter,
+  nextTimestamp,
+  NotFoundError,
+} from './shared';
 import type {
   CardPaymentRepository,
+  CategoryRepository,
   ChargeConfirmationRepository,
   OneOffExpenseRepository,
   PaymentMethodRepository,
@@ -158,6 +174,7 @@ const toRecurring = (r: Record<string, unknown>): RecurringExpense => ({
   endDate: (r.endDate as string | null) ?? null,
   paymentMethodId: r.paymentMethodId as string,
   cardVariant: (r.cardVariant as RecurringExpense['cardVariant']) ?? null,
+  categoryId: r.categoryId as string,
 });
 
 const toOneOff = (r: Record<string, unknown>): OneOffExpense => ({
@@ -171,7 +188,54 @@ const toOneOff = (r: Record<string, unknown>): OneOffExpense => ({
   paymentMethodId: r.paymentMethodId as string,
   cardVariant: (r.cardVariant as OneOffExpense['cardVariant']) ?? null,
   addsToCardBalance: r.addsToCardBalance === undefined ? true : Boolean(r.addsToCardBalance),
+  categoryId: r.categoryId as string,
 });
+
+const toCategory = (r: Record<string, unknown>): Category => ({
+  id: r.id as string,
+  createdAt: r.createdAt as string,
+  updatedAt: r.updatedAt as string,
+  deletedAt: (r.deletedAt as string | null) ?? null,
+  name: r.name as string,
+  icon: r.icon as CategoryIconKey,
+  builtin: Boolean(r.builtin),
+  hiddenAt: (r.hiddenAt as string | null) ?? null,
+});
+
+class SqliteCategoryRepository
+  extends SqliteRepository<Category, CategoryInput>
+  implements CategoryRepository
+{
+  private allCategories(): Category[] {
+    return (this.db.select().from(categories).all() as Record<string, unknown>[]).map(toCategory);
+  }
+
+  async create(input: CategoryInput): Promise<Category> {
+    return super.create(assertCategoryInput(input, this.allCategories(), null));
+  }
+
+  async update(id: string, input: CategoryInput): Promise<Category> {
+    const current = this.requireLive(id);
+    return super.update(id, assertCategoryInput(input, this.allCategories(), current));
+  }
+
+  async remove(id: string): Promise<void> {
+    const current = this.requireLive(id);
+    if (!canRemoveCategory(current)) throw new CategoryRuleError({ category: 'locked' });
+    this.patch(id, current, { deletedAt: this.deps.now() });
+  }
+
+  async hide(id: string): Promise<void> {
+    const current = this.requireLive(id);
+    if (!canHide(current)) throw new CategoryRuleError({ category: 'locked' });
+    this.patch(id, current, { hiddenAt: this.deps.now() });
+  }
+
+  async unhide(id: string): Promise<void> {
+    const current = this.requireLive(id);
+    this.patch(id, current, { hiddenAt: null });
+  }
+}
 
 class SqlitePaymentMethodRepository
   extends SqliteRepository<PaymentMethod, PaymentMethodInput>
@@ -299,6 +363,7 @@ export function createSqliteRepositories(db: AppDatabase, deps: RepositoryDeps):
       endDate: i.endDate,
       paymentMethodId: i.paymentMethodId,
       cardVariant: i.cardVariant,
+      categoryId: i.categoryId,
     }),
   );
   const oneOffRepo = new SqliteRepository<OneOffExpense, OneOffExpenseInput>(
@@ -314,6 +379,7 @@ export function createSqliteRepositories(db: AppDatabase, deps: RepositoryDeps):
       paymentMethodId: i.paymentMethodId,
       cardVariant: i.cardVariant,
       addsToCardBalance: i.addsToCardBalance ?? true,
+      categoryId: i.categoryId,
     }),
   );
   const cardPaymentRepo = new SqliteRepository<CardPayment, CardPaymentInput>(
@@ -344,8 +410,17 @@ export function createSqliteRepositories(db: AppDatabase, deps: RepositoryDeps):
       addsToCardBalance: i.addsToCardBalance ?? true,
     }),
   );
+  const categoryRepo = new SqliteCategoryRepository(
+    db,
+    categories,
+    'Categoría',
+    deps,
+    toCategory,
+    (i: CategoryInput) => ({ name: i.name, icon: i.icon }),
+  );
   return {
     paymentMethods: paymentMethodRepo,
+    categories: categoryRepo,
     recurringExpenses: recurringRepo as RecurringExpenseRepository,
     oneOffExpenses: oneOffRepo as OneOffExpenseRepository,
     cardPayments: cardPaymentRepo as CardPaymentRepository,

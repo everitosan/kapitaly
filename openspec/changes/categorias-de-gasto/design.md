@@ -22,11 +22,11 @@
 ## Decisions
 
 **1. Tabla `categories` con semilla en migración.**
-Columnas: meta común (`id`, `created_at`, `updated_at`, `deleted_at`), `name`, `icon` (clave del set), `builtin` (boolean), `hidden_at`. La migración 0005 inserta las 8 categorías de inicio con ids fijos legibles (`otro`, `hogar`, `comida`, `transporte`, `servicios`, `suscripciones`, `salud`, `entretenimiento`), igual que "Efectivo".
+Columnas: meta común (`id`, `created_at`, `updated_at`, `deleted_at`), `name`, `icon` (clave del set), `builtin` (boolean), `hidden_at`. La migración 0005 inserta las 8 categorías de inicio con ids fijos en formato UUID (`00000000-0000-4000-8000-000000000101` … `…108`, donde `…108` es "Otro"), con la misma convención que "Efectivo" para que un backend que espere UUIDs las acepte y el sync no las duplique.
 - *Alternativa:* catálogo en código de solo lectura, como las instituciones. Se descarta porque las de inicio tienen estado del usuario (oculta, ícono) y conviven con las personalizadas en la misma lista.
 
 **2. `category_id` obligatorio en los gastos, sin FOREIGN KEY.**
-Se agrega `category_id TEXT NOT NULL DEFAULT 'otro'` a `recurring_expenses` y `one_off_expenses`. El default cubre las filas existentes en el mismo `ALTER`. Sin FK, por la misma convención del esquema: un registro sincronizado puede llegar antes que su categoría. Si la migración generada por drizzle-kit no admite el default con el `NOT NULL`, se escribe a mano el SQL.
+Se agrega `category_id TEXT NOT NULL DEFAULT '<id de Otro>'` a `recurring_expenses` y `one_off_expenses`. El default cubre las filas existentes en el mismo `ALTER`. Sin FK, por la misma convención del esquema: un registro sincronizado puede llegar antes que su categoría. Si la migración generada por drizzle-kit no admite el default con el `NOT NULL`, se escribe a mano el SQL.
 - Las confirmaciones de cobro no guardan categoría: se resuelve siempre con la del gasto (spec `recurring-expenses`).
 
 **3. Resolver la categoría en el dominio con un "Otro" de respaldo.**

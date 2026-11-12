@@ -1,6 +1,11 @@
 /** Textos de los códigos de error que devuelven los validadores del dominio. */
 const MESSAGES: Record<string, Record<string, string>> = {
-  name: { required: 'El nombre es obligatorio' },
+  name: {
+    required: 'El nombre es obligatorio',
+    duplicate: 'Ya existe una categoría con ese nombre',
+    locked: 'Las categorías de inicio no se pueden renombrar',
+  },
+  icon: { invalid: 'Elige un ícono', locked: 'Este ícono no se puede cambiar' },
   description: { required: 'La descripción es obligatoria' },
   amount: {
     required: 'Captura un monto',

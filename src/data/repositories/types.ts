@@ -1,3 +1,4 @@
+import type { Category, CategoryInput } from '@/domain/category';
 import type { ChargeConfirmation, ChargeConfirmationInput } from '@/domain/confirmations';
 import type { CardPayment, CardPaymentInput } from '@/domain/creditCard';
 import type { OneOffExpense, OneOffExpenseInput } from '@/domain/oneOffExpense';
@@ -47,8 +48,20 @@ export interface ChargeConfirmationRepository extends Repository<
   upsert(input: ChargeConfirmationInput): Promise<ChargeConfirmation>;
 }
 
+export interface CategoryRepository extends Repository<Category, CategoryInput> {
+  /**
+   * `create` y `update` lanzan `CategoryRuleError` si el nombre está vacío o repetido, si se intenta
+   * renombrar una de inicio o cambiar el ícono de "Otro". `remove` lo lanza si no es personalizada.
+   */
+  remove(id: string): Promise<void>;
+  /** Oculta una de inicio (salvo "Otro"); lanza `CategoryRuleError` si no se puede. */
+  hide(id: string): Promise<void>;
+  unhide(id: string): Promise<void>;
+}
+
 export interface Repositories {
   paymentMethods: PaymentMethodRepository;
+  categories: CategoryRepository;
   recurringExpenses: RecurringExpenseRepository;
   oneOffExpenses: OneOffExpenseRepository;
   cardPayments: CardPaymentRepository;

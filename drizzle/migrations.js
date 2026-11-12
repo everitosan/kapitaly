@@ -6,6 +6,7 @@ import m0001 from './0001_seed_cash.sql';
 import m0002 from './0002_credit_cards.sql';
 import m0003 from './0003_digital_card.sql';
 import m0004 from './0004_card_balance_flag.sql';
+import m0005 from './0005_expense_categories.sql';
 
   export default {
     journal,
@@ -14,7 +15,8 @@ import m0004 from './0004_card_balance_flag.sql';
 m0001,
 m0002,
 m0003,
-m0004
+m0004,
+m0005
     }
   }
   

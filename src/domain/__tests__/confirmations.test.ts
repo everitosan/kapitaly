@@ -1,3 +1,4 @@
+import { OTHER_CATEGORY_ID } from '../category';
 import { isPending, pendingConfirmations, validateConfirmation } from '../confirmations';
 import type { RecurringExpense } from '../recurringExpense';
 
@@ -13,6 +14,7 @@ const rec = (over: Partial<RecurringExpense> = {}): RecurringExpense => ({
   endDate: null,
   paymentMethodId: 'bbva',
   cardVariant: null,
+  categoryId: OTHER_CATEGORY_ID,
   createdAt: '2026-11-01T12:00:00Z',
   updatedAt: '2026-11-01T12:00:00Z',
   deletedAt: null,

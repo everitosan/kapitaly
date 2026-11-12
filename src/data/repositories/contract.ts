@@ -2,17 +2,29 @@
  * Suites de contrato: toda implementación de los repositorios (en memoria, SQLite y, en la v2,
  * PocketBase) debe pasarlas. Se importan desde los archivos de prueba de cada implementación.
  */
+import {
+  BUILTIN_CATEGORIES,
+  OTHER_CATEGORY_ID,
+  type Category,
+  type CategoryInput,
+} from '@/domain/category';
 import type { ChargeConfirmation, ChargeConfirmationInput } from '@/domain/confirmations';
 import type { CardPayment, CardPaymentInput } from '@/domain/creditCard';
 import type { OneOffExpenseInput } from '@/domain/oneOffExpense';
 import { CASH_METHOD_ID, NO_CARD_DATA, type PaymentMethodInput } from '@/domain/paymentMethod';
 import type { RecurringExpenseInput } from '@/domain/recurringExpense';
 
-import { LastActiveMethodError, NotFoundError, PaymentMethodInUseError } from './shared';
+import {
+  CategoryRuleError,
+  LastActiveMethodError,
+  NotFoundError,
+  PaymentMethodInUseError,
+} from './shared';
 import type { Repositories, Repository, RepositoryDeps } from './types';
 
 export type Table =
   | 'paymentMethods'
+  | 'categories'
   | 'recurringExpenses'
   | 'oneOffExpenses'
   | 'cardPayments'
@@ -34,7 +46,7 @@ export function testDeps(): RepositoryDeps {
   let n = 0;
   return {
     now: () => new Date((t += 1000)).toISOString(),
-    newId: () => `00000000-0000-4000-8000-${String(++n + 100).padStart(12, '0')}`,
+    newId: () => `10000000-0000-4000-8000-${String(++n).padStart(12, '0')}`,
   };
 }
 
@@ -60,6 +72,7 @@ export const sampleRecurring = (
   endDate: null,
   paymentMethodId,
   cardVariant: null,
+  categoryId: OTHER_CATEGORY_ID,
   ...over,
 });
 
@@ -72,6 +85,7 @@ export const sampleOneOff = (
   date: '2026-11-11',
   paymentMethodId,
   cardVariant: null,
+  categoryId: OTHER_CATEGORY_ID,
   ...over,
 });
 
@@ -82,6 +96,8 @@ interface GenericCase<T, Input> {
   input: (h: ContractHarness) => Promise<[Input, Input]>;
   /** Registros que ya existen al crear el arnés (p. ej. "Efectivo"). */
   baseline: number;
+  /** `false` si dos altas con los mismos datos se rechazan (p. ej. nombres de categoría). */
+  allowsDuplicates?: boolean;
 }
 
 function describeGenericContract<
@@ -106,13 +122,14 @@ function describeGenericContract<
       expect(await repo.get(created.id)).toEqual(created);
     });
 
-    it('dos altas con los mismos datos tienen ids distintos', async () => {
-      const [input] = await c.input(h);
-      const a = await repo.create(input);
-      const b = await repo.create(input);
-      expect(a.id).not.toBe(b.id);
-      expect(await repo.list()).toHaveLength(c.baseline + 2);
-    });
+    if (c.allowsDuplicates !== false)
+      it('dos altas con los mismos datos tienen ids distintos', async () => {
+        const [input] = await c.input(h);
+        const a = await repo.create(input);
+        const b = await repo.create(input);
+        expect(a.id).not.toBe(b.id);
+        expect(await repo.list()).toHaveLength(c.baseline + 2);
+      });
 
     it('editar conserva id y fecha de creación y avanza la de actualización', async () => {
       const [input, changed] = await c.input(h);
@@ -181,6 +198,89 @@ export function describeRepositoryContracts(name: string, factory: HarnessFactor
       }),
     ],
     baseline: 1,
+  });
+
+  describeGenericContract<Category, CategoryInput>(`${name} · categorías`, factory, {
+    table: 'categories',
+    repo: (h) => h.repos.categories,
+    input: async () => [
+      { name: 'Gimnasio', icon: 'dumbbell' },
+      { name: 'Deporte', icon: 'bag' },
+    ],
+    baseline: BUILTIN_CATEGORIES.length,
+    allowsDuplicates: false,
+  });
+
+  describe(`${name} · categorías: reglas`, () => {
+    let h: ContractHarness;
+    beforeEach(() => {
+      h = factory(testDeps());
+    });
+    const ids = Object.fromEntries(BUILTIN_CATEGORIES.map((b) => [b.name, b.id]));
+
+    it('incluye las 8 de inicio con sus ids fijos, sin ocultar', async () => {
+      const list = await h.repos.categories.list();
+      expect(list.map((c) => c.id).sort()).toEqual(BUILTIN_CATEGORIES.map((b) => b.id).sort());
+      expect(list.every((c) => c.builtin && c.hiddenAt === null)).toBe(true);
+    });
+
+    it('una nueva es personalizada y visible', async () => {
+      const gym = await h.repos.categories.create({ name: 'Gimnasio', icon: 'dumbbell' });
+      expect(gym).toMatchObject({ builtin: false, hiddenAt: null });
+    });
+
+    it('rechaza nombres vacíos o repetidos sin distinguir mayúsculas ni acentos', async () => {
+      await expect(h.repos.categories.create({ name: ' ', icon: 'dots' })).rejects.toBeInstanceOf(
+        CategoryRuleError,
+      );
+      await expect(
+        h.repos.categories.create({ name: 'COMIDA', icon: 'food' }),
+      ).rejects.toMatchObject({ errors: { name: 'duplicate' } });
+    });
+
+    it('oculta y vuelve a mostrar una de inicio; editarla conserva el estado', async () => {
+      await h.repos.categories.hide(ids.Salud);
+      expect((await h.repos.categories.get(ids.Salud))?.hiddenAt).not.toBeNull();
+      const edited = await h.repos.categories.update(ids.Salud, { name: 'Salud', icon: 'pill' });
+      expect(edited).toMatchObject({ icon: 'pill', builtin: true });
+      expect(edited.hiddenAt).not.toBeNull();
+      await h.repos.categories.unhide(ids.Salud);
+      expect((await h.repos.categories.get(ids.Salud))?.hiddenAt).toBeNull();
+    });
+
+    it('no renombra ni borra las de inicio; "Otro" no se oculta ni cambia de ícono', async () => {
+      await expect(
+        h.repos.categories.update(ids.Comida, { name: 'Restaurantes', icon: 'food' }),
+      ).rejects.toMatchObject({ errors: { name: 'locked' } });
+      await expect(h.repos.categories.remove(ids.Comida)).rejects.toBeInstanceOf(CategoryRuleError);
+      await expect(h.repos.categories.hide(OTHER_CATEGORY_ID)).rejects.toBeInstanceOf(
+        CategoryRuleError,
+      );
+      await expect(
+        h.repos.categories.update(OTHER_CATEGORY_ID, { name: 'Otro', icon: 'bag' }),
+      ).rejects.toMatchObject({ errors: { icon: 'locked' } });
+    });
+
+    it('una personalizada no se oculta, pero se renombra y se borra', async () => {
+      const gym = await h.repos.categories.create({ name: 'Gimnasio', icon: 'dumbbell' });
+      await expect(h.repos.categories.hide(gym.id)).rejects.toBeInstanceOf(CategoryRuleError);
+      expect(
+        await h.repos.categories.update(gym.id, { name: 'Deporte', icon: 'dumbbell' }),
+      ).toMatchObject({
+        name: 'Deporte',
+      });
+      await h.repos.categories.remove(gym.id);
+      expect(await h.repos.categories.get(gym.id)).toBeNull();
+    });
+
+    it('los gastos guardan su categoría', async () => {
+      const r = await h.repos.recurringExpenses.create(
+        sampleRecurring(CASH_METHOD_ID, { categoryId: ids.Suscripciones }),
+      );
+      const o = await h.repos.oneOffExpenses.create(sampleOneOff(CASH_METHOD_ID));
+      expect((await h.repos.recurringExpenses.get(r.id))?.categoryId).toBe(ids.Suscripciones);
+      expect((await h.repos.oneOffExpenses.get(o.id))?.categoryId).toBe(OTHER_CATEGORY_ID);
+    });
   });
 
   describeGenericContract(`${name} · gastos recurrentes`, factory, {

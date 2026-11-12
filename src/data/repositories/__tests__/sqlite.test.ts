@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 
 import {
   cardPayments,
+  categories,
   oneOffExpenses,
   paymentMethods,
   recurringChargeConfirmations,
@@ -13,6 +14,7 @@ import { createSqliteRepositories } from '../sqlite';
 
 const tables = {
   paymentMethods,
+  categories,
   recurringExpenses,
   oneOffExpenses,
   cardPayments,

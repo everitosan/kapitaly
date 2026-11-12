@@ -1,6 +1,7 @@
 import type { SyncMeta, Validation } from './common';
 import { isValidCivilDate, type CivilDate } from './date';
 import { parseMoneyToCents, type Cents } from './money';
+import { OTHER_CATEGORY_ID } from './category';
 import type { CardVariant } from './paymentMethod';
 import { normalizeCardVariant, type ExpenseValidationContext } from './recurringExpense';
 
@@ -14,6 +15,7 @@ export interface OneOffExpense extends SyncMeta {
   cardVariant: CardVariant | null;
   /** Si suma al usado de una tarjeta de crédito; falso = ya venía en el saldo inicial. */
   addsToCardBalance: boolean;
+  categoryId: string;
 }
 
 export interface OneOffExpenseInput {
@@ -24,6 +26,7 @@ export interface OneOffExpenseInput {
   cardVariant: CardVariant | null;
   /** Por defecto `true`. */
   addsToCardBalance?: boolean;
+  categoryId: string;
 }
 
 export type OneOffExpenseField = 'description' | 'amount' | 'date' | 'paymentMethodId';
@@ -35,6 +38,8 @@ export interface OneOffExpenseDraft {
   paymentMethodId: string | null;
   cardVariant?: CardVariant | null;
   addsToCardBalance?: boolean;
+  /** Sin elegir = "Otro". */
+  categoryId?: string | null;
 }
 
 export function validateOneOffExpenseInput(
@@ -66,6 +71,7 @@ export function validateOneOffExpenseInput(
       paymentMethodId: draft.paymentMethodId!,
       cardVariant: normalizeCardVariant(draft.paymentMethodId!, draft.cardVariant, ctx),
       addsToCardBalance: draft.addsToCardBalance ?? true,
+      categoryId: draft.categoryId || OTHER_CATEGORY_ID,
     },
   };
 }

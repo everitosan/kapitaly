@@ -1,3 +1,4 @@
+import { validateCategoryInput, type Category, type CategoryInput } from '@/domain/category';
 import type { MethodRuleResult } from '@/domain/paymentMethod';
 
 export class NotFoundError extends Error {
@@ -19,6 +20,25 @@ export class LastActiveMethodError extends Error {
     super('Debe existir al menos un método de pago activo.');
     this.name = 'LastActiveMethodError';
   }
+}
+
+/** Una regla de categorías impide el cambio (nombre vacío o repetido, categoría fija, etc.). */
+export class CategoryRuleError extends Error {
+  constructor(readonly errors: Partial<Record<'name' | 'icon' | 'category', string>>) {
+    super(`Cambio de categoría no permitido: ${JSON.stringify(errors)}`);
+    this.name = 'CategoryRuleError';
+  }
+}
+
+/** Valida contra las reglas del dominio y lanza `CategoryRuleError` si no pasan. */
+export function assertCategoryInput(
+  input: CategoryInput,
+  all: readonly Category[],
+  current: Category | null,
+): CategoryInput {
+  const r = validateCategoryInput(input, all, current);
+  if (!r.ok) throw new CategoryRuleError(r.errors);
+  return r.value;
 }
 
 /** Convierte el resultado de una regla de dominio en el error correspondiente. */

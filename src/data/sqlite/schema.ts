@@ -35,6 +35,20 @@ export const paymentMethods = sqliteTable('payment_methods', {
   digitalLast4: text('digital_last4'),
 });
 
+/** Categorías de gasto: 8 de inicio (sembradas por la migración 0005 con ids fijos) y las del usuario. */
+export const categories = sqliteTable('categories', {
+  ...meta,
+  name: text('name').notNull(),
+  /** Clave del set de íconos de la app. */
+  icon: text('icon').notNull(),
+  builtin: integer('builtin', { mode: 'boolean' }).notNull().default(false),
+  /** Solo de inicio: oculta para gastos nuevos. */
+  hiddenAt: text('hidden_at'),
+});
+
+/** Id fijo de la categoría "Otro" (ver `OTHER_CATEGORY_ID` en el dominio). */
+const OTHER_CATEGORY = '00000000-0000-4000-8000-000000000108';
+
 export const recurringExpenses = sqliteTable('recurring_expenses', {
   ...meta,
   name: text('name').notNull(),
@@ -46,6 +60,8 @@ export const recurringExpenses = sqliteTable('recurring_expenses', {
   paymentMethodId: text('payment_method_id').notNull(),
   /** 'physical' | 'digital'; NULL si el método no tiene digital (o es anterior a la 0003). */
   cardVariant: text('card_variant', { enum: ['physical', 'digital'] }),
+  /** Migración 0005: sin FOREIGN KEY, como los métodos; los gastos anteriores quedan en "Otro". */
+  categoryId: text('category_id').notNull().default(OTHER_CATEGORY),
 });
 
 export const oneOffExpenses = sqliteTable('one_off_expenses', {
@@ -57,6 +73,7 @@ export const oneOffExpenses = sqliteTable('one_off_expenses', {
   cardVariant: text('card_variant', { enum: ['physical', 'digital'] }),
   /** Si suma al usado de una tarjeta de crédito (migración 0004); falso = ya venía en el saldo inicial. */
   addsToCardBalance: integer('adds_to_card_balance', { mode: 'boolean' }).notNull().default(true),
+  categoryId: text('category_id').notNull().default(OTHER_CATEGORY),
 });
 
 /** Pagos a tarjetas de crédito (restan del usado; no son gastos). */
@@ -84,6 +101,7 @@ export const recurringChargeConfirmations = sqliteTable('recurring_charge_confir
 
 export const schema = {
   paymentMethods,
+  categories,
   recurringExpenses,
   oneOffExpenses,
   cardPayments,

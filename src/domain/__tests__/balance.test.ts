@@ -1,3 +1,4 @@
+import { OTHER_CATEGORY_ID } from '../category';
 import { buildAverageView, buildThisMonthView } from '../balance';
 import type { OneOffExpense } from '../oneOffExpense';
 import { NO_CARD_DATA, type PaymentMethod } from '../paymentMethod';
@@ -28,6 +29,7 @@ const rec = (
   endDate: null,
   paymentMethodId,
   cardVariant: null,
+  categoryId: OTHER_CATEGORY_ID,
   ...extra,
 });
 
@@ -45,6 +47,7 @@ const one = (
   date,
   paymentMethodId,
   cardVariant: null,
+  categoryId: OTHER_CATEGORY_ID,
   addsToCardBalance: true,
   ...extra,
 });

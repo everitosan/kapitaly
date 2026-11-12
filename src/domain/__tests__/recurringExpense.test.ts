@@ -1,3 +1,4 @@
+import { OTHER_CATEGORY_ID } from '../category';
 import {
   frequencyLabel,
   monthsPerInterval,
@@ -54,8 +55,16 @@ describe('validateRecurringExpenseInput', () => {
         endDate: null,
         paymentMethodId: 'bbva',
         cardVariant: null,
+        categoryId: OTHER_CATEGORY_ID,
       },
     });
+  });
+
+  it('sin elegir categoría queda en "Otro"; con una elegida, la conserva', () => {
+    const r = validateRecurringExpenseInput(draft({ categoryId: null }), ctx);
+    expect(r.ok && r.value.categoryId).toBe(OTHER_CATEGORY_ID);
+    const s = validateRecurringExpenseInput(draft({ categoryId: 'suscripciones' }), ctx);
+    expect(s.ok && s.value.categoryId).toBe('suscripciones');
   });
 
   it('monto cero', () => {

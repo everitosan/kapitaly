@@ -6,10 +6,10 @@
 
 ## 2. Datos y dominio
 
-- [ ] 2.1 Agregar `CATEGORY_ICON_KEYS`, la entidad `Category`, `validateCategoryInput` (nombre obligatorio y sin repetir ignorando mayúsculas y acentos, ícono válido), las reglas `canRename`/`canHide`/`canRemove`/`canChangeIcon` y `resolveCategory` con respaldo a "Otro" en `src/domain`; verificar con pruebas unitarias que cubran los escenarios de `expense-categories`.
-- [ ] 2.2 Agregar `categoryId` a gastos recurrentes y únicos (entidad, input y validación, con `otro` por defecto) y ajustar las pruebas de dominio existentes; verificar con `npm test` y `npm run typecheck`.
-- [ ] 2.3 Agregar la tabla `categories` y la columna `category_id` al esquema; generar la migración 0005 con la semilla de las 8 categorías y el default `otro` (ajustando el SQL a mano si drizzle-kit no lo genera bien); verificar con una prueba SQLite que una base con datos de la 0004 migra con todos los gastos en `otro`.
-- [ ] 2.4 Implementar el repositorio de categorías en SQLite y en memoria (listar, crear, actualizar, ocultar, mostrar, borrar lógico, aplicando las reglas del dominio) y agregar su contrato en `contract.ts`; mapear `categoryId` en los repositorios de gastos; verificar con las pruebas de contrato en ambas implementaciones.
+- [x] 2.1 Agregar `CATEGORY_ICON_KEYS`, la entidad `Category`, `validateCategoryInput` (nombre obligatorio y sin repetir ignorando mayúsculas y acentos, ícono válido), las reglas `canRename`/`canHide`/`canRemove`/`canChangeIcon` y `resolveCategory` con respaldo a "Otro" en `src/domain`; verificar con pruebas unitarias que cubran los escenarios de `expense-categories`.
+- [x] 2.2 Agregar `categoryId` a gastos recurrentes y únicos (entidad, input y validación, con `otro` por defecto) y ajustar las pruebas de dominio existentes; verificar con `npm test` y `npm run typecheck`.
+- [x] 2.3 Agregar la tabla `categories` y la columna `category_id` al esquema; generar la migración 0005 con la semilla de las 8 categorías y el default `otro` (ajustando el SQL a mano si drizzle-kit no lo genera bien); verificar con una prueba SQLite que una base con datos de la 0004 migra con todos los gastos en `otro`.
+- [x] 2.4 Implementar el repositorio de categorías en SQLite y en memoria (listar, crear, actualizar, ocultar, mostrar, borrar lógico, aplicando las reglas del dominio) y agregar su contrato en `contract.ts`; mapear `categoryId` en los repositorios de gastos; verificar con las pruebas de contrato en ambas implementaciones.
 
 ## 3. Íconos
 
