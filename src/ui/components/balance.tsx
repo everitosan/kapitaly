@@ -58,7 +58,16 @@ export function SegmentedControl<V extends string>({
 
 /* ---------- MonthSwitcher ---------- */
 
-function CardIcon({ color }: { color: string }) {
+/** Ícono de menú (tres líneas). */
+export function MenuIcon({ color }: { color: string }) {
+  return (
+    <Svg width={20} height={16} viewBox="0 0 20 16" fill="none">
+      <Path d="M2 2h16M2 8h16M2 14h10" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function CardIcon({ color }: { color: string }) {
   return (
     <Svg width={20} height={16} viewBox="0 0 20 16" fill="none">
       <Rect x={1} y={1} width={18} height={14} rx={3} stroke={color} strokeWidth={2} />
@@ -100,13 +109,14 @@ export function MonthSwitcher({
   month,
   onPrev,
   onNext,
-  onMethods,
+  onMenu,
 }: {
   year: number;
   month: number;
   onPrev: () => void;
   onNext: () => void;
-  onMethods?: () => void;
+  /** Abre Ajustes. */
+  onMenu?: () => void;
 }) {
   const { colors } = useTheme();
   return (
@@ -118,9 +128,9 @@ export function MonthSwitcher({
         <Text style={[styles.monthYear, { color: colors.muted }]}>{year}</Text>
       </View>
       <View style={styles.arrows}>
-        {onMethods ? (
-          <RoundButton label="Métodos de pago" onPress={onMethods}>
-            <CardIcon color={colors.ink} />
+        {onMenu ? (
+          <RoundButton label="Ajustes" onPress={onMenu}>
+            <MenuIcon color={colors.ink} />
           </RoundButton>
         ) : null}
         <RoundButton label="Mes anterior" onPress={onPrev}>

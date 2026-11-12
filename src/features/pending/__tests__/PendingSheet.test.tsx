@@ -13,7 +13,7 @@ import { pendingSession } from '../session';
 
 const renderBalance = (repos: InMemoryRepositories, today: string) =>
   renderWithProviders(
-    <BalanceScreen onAdd={jest.fn()} onOpenMethods={jest.fn()} onEdit={jest.fn()} today={today} />,
+    <BalanceScreen onAdd={jest.fn()} onOpenSettings={jest.fn()} onEdit={jest.fn()} today={today} />,
     { repos },
   );
 

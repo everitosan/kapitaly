@@ -86,7 +86,7 @@ describe('10.6 · física o digital en un gasto', () => {
     await renderWithProviders(
       <BalanceScreen
         onAdd={jest.fn()}
-        onOpenMethods={jest.fn()}
+        onOpenSettings={jest.fn()}
         onEdit={jest.fn()}
         today={TODAY}
       />,
@@ -127,7 +127,7 @@ describe('10.6 · física o digital en un gasto', () => {
     await renderWithProviders(
       <BalanceScreen
         onAdd={jest.fn()}
-        onOpenMethods={jest.fn()}
+        onOpenSettings={jest.fn()}
         onEdit={jest.fn()}
         today={TODAY}
       />,

@@ -66,7 +66,7 @@ async function novemberScenario() {
   return { repos, ids };
 }
 
-const props = () => ({ onAdd: jest.fn(), onOpenMethods: jest.fn(), onEdit: jest.fn() });
+const props = () => ({ onAdd: jest.fn(), onOpenSettings: jest.fn(), onEdit: jest.fn() });
 
 describe('8.1 · navegación y vistas', () => {
   it('abre en el mes actual, en "Este mes"', async () => {
@@ -100,9 +100,9 @@ describe('8.1 · navegación y vistas', () => {
     const p = props();
     await renderWithProviders(<BalanceScreen {...p} today={TODAY} />);
     await fireEvent.press(screen.getByText('Agregar gasto'));
-    await fireEvent.press(screen.getByLabelText('Métodos de pago'));
+    await fireEvent.press(screen.getByLabelText('Ajustes'));
     expect(p.onAdd).toHaveBeenCalled();
-    expect(p.onOpenMethods).toHaveBeenCalled();
+    expect(p.onOpenSettings).toHaveBeenCalled();
   });
 });
 

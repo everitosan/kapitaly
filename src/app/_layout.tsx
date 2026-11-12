@@ -27,6 +27,9 @@ function AppStack() {
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="settings/index" />
+      <Stack.Screen name="categories/index" />
+      <Stack.Screen name="categories/[id]" options={{ presentation: 'modal' }} />
       <Stack.Screen name="payment-methods/index" />
       <Stack.Screen name="payment-methods/[id]" options={{ presentation: 'modal' }} />
       <Stack.Screen name="expense/new" options={{ presentation: 'modal' }} />

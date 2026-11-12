@@ -7,7 +7,7 @@ export default function Index() {
   return (
     <BalanceScreen
       onAdd={() => router.push('/expense/new')}
-      onOpenMethods={() => router.push('/payment-methods')}
+      onOpenSettings={() => router.push('/settings')}
       onEdit={(kind, id) =>
         router.push(
           kind === 'oneOff'

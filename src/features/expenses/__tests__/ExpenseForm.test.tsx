@@ -34,7 +34,7 @@ async function pickDate(testID: string, year: number, month: number, day: number
 
 async function balanceShows(repos: InMemoryRepositories, text: string, monthsAhead = 0) {
   await renderWithProviders(
-    <BalanceScreen onAdd={jest.fn()} onOpenMethods={jest.fn()} onEdit={jest.fn()} today={TODAY} />,
+    <BalanceScreen onAdd={jest.fn()} onOpenSettings={jest.fn()} onEdit={jest.fn()} today={TODAY} />,
     { repos },
   );
   for (let i = 0; i < monthsAhead; i++)
@@ -295,7 +295,7 @@ describe('7.5 · Eliminar', () => {
     await renderWithProviders(
       <BalanceScreen
         onAdd={jest.fn()}
-        onOpenMethods={jest.fn()}
+        onOpenSettings={jest.fn()}
         onEdit={jest.fn()}
         today={TODAY}
       />,

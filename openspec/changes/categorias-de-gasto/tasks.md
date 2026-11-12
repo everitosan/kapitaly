@@ -13,13 +13,13 @@
 
 ## 3. Íconos
 
-- [ ] 3.1 Crear `src/ui/icons/categoryIcons.tsx` con unos 24 íconos (trazos de Lucide) para todas las claves de `CATEGORY_ICON_KEYS`, el componente `CategoryIcon` con respaldo al ícono de "Otro" y `src/ui/icons/LICENSE-lucide`; verificar con una prueba que toda clave del dominio tiene ícono.
+- [x] 3.1 Crear `src/ui/icons/categoryIcons.tsx` con unos 24 íconos (trazos de Lucide) para todas las claves de `CATEGORY_ICON_KEYS`, el componente `CategoryIcon` con respaldo al ícono de "Otro" y `src/ui/icons/LICENSE-lucide`; verificar con una prueba que toda clave del dominio tiene ícono.
 
 ## 4. Ajustes y Categorías
 
-- [ ] 4.1 Cambiar el botón de métodos de pago de `MonthSwitcher` por un botón de menú y crear la ruta y pantalla Ajustes con "Métodos de pago" y "Categorías" (con sus conteos); verificar con pruebas de UI la navegación y que Ajustes solo muestra esas dos opciones.
+- [x] 4.1 Cambiar el botón de métodos de pago de `MonthSwitcher` por un botón de menú y crear la ruta y pantalla Ajustes con "Métodos de pago" y "Categorías" (con sus conteos); verificar con pruebas de UI la navegación y que Ajustes solo muestra esas dos opciones.
 - [x] 4.2 Borrar la pantalla de desarrollo `src/app/dev/components.tsx` y su enlace del balance; verificar con `npx expo export --platform android` que el bundle ya no contiene sus textos.
-- [ ] 4.3 Crear la pantalla Categorías y la hoja de crear/editar con la cuadrícula de íconos, aplicando las reglas de "Otro", de las de inicio y de las personalizadas, con confirmación de borrado que indique cuántos gastos pasarán a "Otro"; verificar con pruebas de UI los escenarios de `expense-categories`.
+- [x] 4.3 Crear la pantalla Categorías y la hoja de crear/editar con la cuadrícula de íconos, aplicando las reglas de "Otro", de las de inicio y de las personalizadas, con confirmación de borrado que indique cuántos gastos pasarán a "Otro"; verificar con pruebas de UI los escenarios de `expense-categories`.
 
 ## 5. Formulario y balance
 

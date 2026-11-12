@@ -194,7 +194,7 @@ describe('10.3 · pagar tarjeta e historial', () => {
     await renderWithProviders(
       <BalanceScreen
         onAdd={jest.fn()}
-        onOpenMethods={jest.fn()}
+        onOpenSettings={jest.fn()}
         onEdit={jest.fn()}
         today="2026-11-11"
       />,

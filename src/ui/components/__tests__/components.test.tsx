@@ -115,7 +115,7 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
 
   it('MonthSwitcher con mes, año y botones', async () => {
     const onPrev = jest.fn();
-    const onMethods = jest.fn();
+    const onMenu = jest.fn();
     await renderIn(
       scheme,
       <MonthSwitcher
@@ -123,15 +123,15 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
         month={11}
         onPrev={onPrev}
         onNext={jest.fn()}
-        onMethods={onMethods}
+        onMenu={onMenu}
       />,
     );
     expect(screen.getByText('Noviembre')).toBeTruthy();
     expect(screen.getByText('2026')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Mes anterior'));
-    await fireEvent.press(screen.getByLabelText('Métodos de pago'));
+    await fireEvent.press(screen.getByLabelText('Ajustes'));
     expect(onPrev).toHaveBeenCalled();
-    expect(onMethods).toHaveBeenCalled();
+    expect(onMenu).toHaveBeenCalled();
   });
 
   it('TotalCard con píldoras', async () => {

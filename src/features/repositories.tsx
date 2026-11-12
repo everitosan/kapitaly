@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import type { Category } from '@/domain/category';
 import type { ChargeConfirmation } from '@/domain/confirmations';
 import type { CardPayment } from '@/domain/creditCard';
 import type { OneOffExpense } from '@/domain/oneOffExpense';
@@ -71,3 +72,7 @@ export const useCardPayments = (): LiveList<CardPayment> =>
 
 export const useChargeConfirmations = (): LiveList<ChargeConfirmation> =>
   useLiveList(useRepositories().chargeConfirmations as Repository<ChargeConfirmation, never>);
+
+/** Categorías vigentes, incluidas las ocultas (la UI decide cuáles ofrecer). */
+export const useCategories = (): LiveList<Category> =>
+  useLiveList(useRepositories().categories as Repository<Category, never>);

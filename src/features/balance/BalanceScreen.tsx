@@ -29,7 +29,7 @@ export type BalanceView = 'this' | 'avg';
 
 export interface BalanceScreenProps {
   onAdd: () => void;
-  onOpenMethods: () => void;
+  onOpenSettings: () => void;
   onEdit: (kind: 'recurring' | 'oneOff', id: string) => void;
   /** Fecha de hoy (zona local). Se inyecta en pruebas. */
   today?: CivilDate;
@@ -41,7 +41,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 export function BalanceScreen({
   onAdd,
-  onOpenMethods,
+  onOpenSettings,
   onEdit,
   today = civilDateFromLocal(new Date()),
   extra,
@@ -183,7 +183,7 @@ export function BalanceScreen({
         month={month}
         onPrev={() => go(-1)}
         onNext={() => go(1)}
-        onMethods={onOpenMethods}
+        onMenu={onOpenSettings}
       />
       <View style={styles.seg}>
         <SegmentedControl
