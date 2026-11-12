@@ -1,4 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
+import { useState } from 'react';
+import { Pressable, Text } from 'react-native';
 
 import { sampleMethod, sampleRecurring, testDeps } from '@/data/repositories/contract';
 import {
@@ -204,5 +206,38 @@ describe('10.5 · marca "Por confirmar"', () => {
     await renderBalance(repos, '2026-11-16');
     expect(await screen.findByText('1 cargo')).toBeOnTheScreen();
     expect(screen.getAllByLabelText('$219.00').length).toBeGreaterThan(0);
+  });
+});
+
+describe('Pendientes sin interrumpir el acceso rápido', () => {
+  /** Simula la ruta: el balance empieza tapado por el formulario y queda visible al volver. */
+  function Harness() {
+    const [focused, setFocused] = useState(false);
+    return (
+      <>
+        <Pressable accessibilityRole="button" onPress={() => setFocused(true)}>
+          <Text>volver al balance</Text>
+        </Pressable>
+        <BalanceScreen
+          onAdd={jest.fn()}
+          onOpenSettings={jest.fn()}
+          onEdit={jest.fn()}
+          today="2026-11-16"
+          focused={focused}
+        />
+      </>
+    );
+  }
+
+  it('sin el balance visible no se abre; al volver al balance aparece', async () => {
+    const { repos, netflix } = await withNetflix();
+    await renderWithProviders(<Harness />, { repos });
+    // Esperar a que carguen los datos antes de afirmar que la hoja no está.
+    expect(await screen.findByTestId('pending-banner')).toBeOnTheScreen();
+    expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen();
+    expect(pendingSession.autoDismissed).toBe(false);
+
+    await fireEvent.press(screen.getByText('volver al balance'));
+    expect(await screen.findByTestId(`pending-charge-${netflix.id}`)).toBeOnTheScreen();
   });
 });

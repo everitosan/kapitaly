@@ -136,10 +136,13 @@ export interface ExpenseFormProps {
   onDone: () => void;
   /** Fecha de hoy (zona local). Se inyecta en pruebas. */
   today?: CivilDate;
+  /** Captura rápida (acceso directo): el teclado se abre en el monto. */
+  autoFocusAmount?: boolean;
 }
 
 export function ExpenseForm({
   target,
+  autoFocusAmount = false,
   onDone,
   today = civilDateFromLocal(new Date()),
 }: ExpenseFormProps) {
@@ -284,6 +287,7 @@ export function ExpenseForm({
               onChangeText={(amountText) => update({ amountText })}
               caption="Gasto único · no se repite"
               error={errorMessage('amount', errors.amount)}
+              autoFocus={autoFocusAmount}
             />
             <TextField
               label="Descripción"

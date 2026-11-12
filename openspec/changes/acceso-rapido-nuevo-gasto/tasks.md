@@ -6,8 +6,8 @@
 
 ## 2. Navegación y formulario
 
-- [ ] 2.1 Agregar `unstable_settings = { anchor: 'index' }` al layout raíz y el modo rápido en `/expense/new?quick=1` (enfoca el monto en `AmountBlock`); verificar con pruebas de UI que con `quick` el monto tiene foco y sin él no.
-- [ ] 2.2 Abrir la hoja automática de Pendientes solo con el balance enfocado (prop `focused` desde la ruta); verificar con pruebas de UI que no se abre sin foco y que aparece al recuperarlo, una vez por sesión.
+- [x] 2.1 Agregar `unstable_settings = { anchor: 'index' }` al layout raíz y el modo rápido en `/expense/new?quick=1` (enfoca el monto en `AmountBlock`); verificar con pruebas de UI que con `quick` el monto tiene foco y sin él no.
+- [x] 2.2 Abrir la hoja automática de Pendientes solo con el balance enfocado (prop `focused` desde la ruta); verificar con pruebas de UI que no se abre sin foco y que aparece al recuperarlo, una vez por sesión.
 
 ## 3. Código nativo
 

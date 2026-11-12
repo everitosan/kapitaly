@@ -42,10 +42,13 @@ export function AmountBlock({
   caption,
   gradient,
   error,
+  autoFocus,
 }: {
   amountText: string;
   onChangeText: (v: string) => void;
   caption: string;
+  /** Abre el teclado en el monto al mostrarse (modo de captura rápida). */
+  autoFocus?: boolean;
   /** Duotono de la frecuencia (recurrente) o `undefined` para el bloque neutro (único). */
   gradient?: Gradient;
   error?: string;
@@ -65,6 +68,7 @@ export function AmountBlock({
           placeholder="0.00"
           placeholderTextColor={gradient ? 'rgba(20,20,20,0.35)' : colors.muted}
           keyboardType="decimal-pad"
+          autoFocus={autoFocus}
           style={[styles.amountInput, { color }]}
         />
       </View>

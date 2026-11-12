@@ -41,6 +41,11 @@ export interface BalanceScreenProps {
   today?: CivilDate;
   /** Contenido extra al final de la lista. */
   extra?: ReactNode;
+  /**
+   * Si el balance está visible (sin otra pantalla encima). La hoja automática de Pendientes solo se
+   * abre así, para no tapar el formulario cuando la app arranca desde el acceso directo.
+   */
+  focused?: boolean;
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -51,6 +56,7 @@ export function BalanceScreen({
   onEdit,
   today = civilDateFromLocal(new Date()),
   extra,
+  focused = true,
 }: BalanceScreenProps) {
   const theme = useTheme();
   const methods = usePaymentMethods();
@@ -63,9 +69,12 @@ export function BalanceScreen({
   const pending = usePending(today);
   const [forceSheet, setForceSheet] = useState(false);
   const [, setSessionTick] = useState(0);
-  // La hoja se abre sola al abrir la app si hay pendientes; al cerrarla no vuelve sola en esta sesión.
+  // La hoja se abre sola cuando el balance queda visible y hay pendientes; al cerrarla no vuelve
+  // sola en esta sesión.
   const sheetVisible =
-    pending.loaded && pending.count > 0 && (forceSheet || !pendingSession.autoDismissed);
+    pending.loaded &&
+    pending.count > 0 &&
+    (forceSheet || (focused && !pendingSession.autoDismissed));
   const closeSheet = () => {
     pendingSession.dismissAuto();
     setForceSheet(false);

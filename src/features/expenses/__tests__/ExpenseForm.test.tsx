@@ -402,3 +402,20 @@ describe('categoría del gasto', () => {
     expect((await repos.categories.list()).some((c) => c.name === 'Gimnasio')).toBe(true);
   });
 });
+
+describe('modo de captura rápida', () => {
+  it('con autoFocusAmount el teclado se abre en el monto, en "Único"', async () => {
+    await renderWithProviders(
+      <ExpenseForm target={{ kind: 'new' }} onDone={jest.fn()} today={TODAY} autoFocusAmount />,
+    );
+    expect(screen.getByRole('tab', { name: 'Único' })).toBeSelected();
+    expect(screen.getByTestId('amount-input').props.autoFocus).toBe(true);
+  });
+
+  it('desde el botón del balance no abre el teclado', async () => {
+    await renderWithProviders(
+      <ExpenseForm target={{ kind: 'new' }} onDone={jest.fn()} today={TODAY} />,
+    );
+    expect(screen.getByTestId('amount-input').props.autoFocus).toBeFalsy();
+  });
+});

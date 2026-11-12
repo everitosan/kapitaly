@@ -10,6 +10,9 @@ import { ThemeProvider, useTheme } from '@/ui/ThemeProvider';
 
 import migrations from '../../drizzle/migrations';
 
+/** Al abrir una ruta por enlace profundo (p. ej. el acceso directo "Nuevo gasto"), el balance queda debajo. */
+export const unstable_settings = { anchor: 'index' };
+
 function MigrationError({ error }: { error: Error }) {
   const { colors } = useTheme();
   return (
