@@ -118,13 +118,7 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
     const onMenu = jest.fn();
     await renderIn(
       scheme,
-      <MonthSwitcher
-        year={2026}
-        month={11}
-        onPrev={onPrev}
-        onNext={jest.fn()}
-        onMenu={onMenu}
-      />,
+      <MonthSwitcher year={2026} month={11} onPrev={onPrev} onNext={jest.fn()} onMenu={onMenu} />,
     );
     expect(screen.getByText('Noviembre')).toBeTruthy();
     expect(screen.getByText('2026')).toBeTruthy();

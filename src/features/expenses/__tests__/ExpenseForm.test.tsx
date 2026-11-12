@@ -11,6 +11,7 @@ import {
   createInMemoryRepositories,
   type InMemoryRepositories,
 } from '@/data/repositories/inMemory';
+import { BUILTIN_CATEGORIES, OTHER_CATEGORY_ID } from '@/domain/category';
 import { CASH_METHOD_ID } from '@/domain/paymentMethod';
 
 import { BalanceScreen } from '../../balance/BalanceScreen';
@@ -316,5 +317,88 @@ describe('7.5 · Eliminar', () => {
     await press('Cancelar');
     expect(onDone).not.toHaveBeenCalled();
     expect(await repos.oneOffExpenses.list()).toHaveLength(1);
+  });
+});
+
+describe('categoría del gasto', () => {
+  const id = (name: string) => BUILTIN_CATEGORIES.find((b) => b.name === name)!.id;
+
+  it('sin elegir categoría, el gasto único queda en "Otro"', async () => {
+    const onDone = jest.fn();
+    const { repos } = await renderWithProviders(
+      <ExpenseForm target={{ kind: 'new' }} onDone={onDone} today={TODAY} />,
+    );
+    expect(screen.getByRole('button', { name: 'Categoría: Otro' })).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByTestId('expense-title'), 'Recarga metro');
+    await fireEvent.changeText(screen.getByTestId('amount-input'), '100');
+    await save();
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect((await repos.oneOffExpenses.list())[0].categoryId).toBe(OTHER_CATEGORY_ID);
+  });
+
+  it('elige "Comida" en el selector y la guarda', async () => {
+    const onDone = jest.fn();
+    const { repos } = await renderWithProviders(
+      <ExpenseForm target={{ kind: 'new' }} onDone={onDone} today={TODAY} />,
+    );
+    await fireEvent.changeText(screen.getByTestId('expense-title'), 'Comida con amigos');
+    await fireEvent.changeText(screen.getByTestId('amount-input'), '450');
+    await fireEvent.press(screen.getByTestId('expense-category'));
+    await fireEvent.press(await screen.findByTestId(`pick-${id('Comida')}`));
+    await fireEvent.press(screen.getByTestId('use-category'));
+    expect(await screen.findByRole('button', { name: 'Categoría: Comida' })).toBeOnTheScreen();
+    await save();
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect((await repos.oneOffExpenses.list())[0].categoryId).toBe(id('Comida'));
+  });
+
+  it('el selector no ofrece categorías ocultas, salvo la que ya tiene el gasto', async () => {
+    const repos = createInMemoryRepositories(testDeps());
+    await repos.categories.hide(id('Salud'));
+    await repos.categories.hide(id('Hogar'));
+    const farmacia = await repos.oneOffExpenses.create(
+      sampleOneOff(CASH_METHOD_ID, { description: 'Farmacia', categoryId: id('Salud') }),
+    );
+    const onDone = jest.fn();
+    await renderWithProviders(
+      <ExpenseForm target={{ kind: 'oneOff', expense: farmacia }} onDone={onDone} today={TODAY} />,
+      { repos },
+    );
+    expect(await screen.findByRole('button', { name: 'Categoría: Salud' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('expense-category'));
+    expect(await screen.findByTestId(`pick-${id('Salud')}`)).toBeOnTheScreen();
+    expect(screen.queryByTestId(`pick-${id('Hogar')}`)).toBeNull();
+    await fireEvent.press(screen.getByText('‹ Gasto'));
+    await save();
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect((await repos.oneOffExpenses.get(farmacia.id))?.categoryId).toBe(id('Salud'));
+  });
+
+  it('un gasto recurrente guarda su categoría', async () => {
+    const onDone = jest.fn();
+    const { repos } = await renderWithProviders(
+      <ExpenseForm target={{ kind: 'new' }} onDone={onDone} today={TODAY} />,
+    );
+    await fireEvent.press(screen.getByText('Recurrente'));
+    await fireEvent.changeText(screen.getByTestId('expense-title'), 'Netflix');
+    await fireEvent.changeText(screen.getByTestId('amount-input'), '219');
+    await fireEvent.press(screen.getByTestId('expense-category'));
+    await fireEvent.press(await screen.findByTestId(`pick-${id('Suscripciones')}`));
+    await fireEvent.press(screen.getByTestId('use-category'));
+    await save();
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect((await repos.recurringExpenses.list())[0].categoryId).toBe(id('Suscripciones'));
+  });
+
+  it('"Nueva categoría" desde el selector la crea y la deja elegida', async () => {
+    const { repos } = await renderWithProviders(
+      <ExpenseForm target={{ kind: 'new' }} onDone={jest.fn()} today={TODAY} />,
+    );
+    await fireEvent.press(screen.getByTestId('expense-category'));
+    await fireEvent.press(await screen.findByTestId('new-category'));
+    await fireEvent.changeText(screen.getByTestId('category-name'), 'Gimnasio');
+    await fireEvent.press(screen.getByTestId('save-category'));
+    expect(await screen.findByRole('button', { name: 'Categoría: Gimnasio' })).toBeOnTheScreen();
+    expect((await repos.categories.list()).some((c) => c.name === 'Gimnasio')).toBe(true);
   });
 });

@@ -1,7 +1,8 @@
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
-import { Alert, Modal, View } from 'react-native';
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { OTHER_CATEGORY_ID, resolveCategory } from '@/domain/category';
 import { civilDateFromLocal, type CivilDate } from '@/domain/date';
 import { formatMXN, parseMoneyToCents } from '@/domain/money';
 import {
@@ -40,12 +41,15 @@ import {
   recurringCaption,
 } from '@/ui/components/forms';
 import { SheetLayout } from '@/ui/components/layout';
+import { CategoryIcon } from '@/ui/icons/categoryIcons';
 import { frequencyKeyForMonths } from '@/ui/theme';
 import { useTheme } from '@/ui/ThemeProvider';
 
+import { CategoryPicker } from '../categories/CategoryPicker';
 import { errorMessage } from '../messages';
 import { PaymentMethodForm } from '../paymentMethods/PaymentMethodForm';
 import {
+  useCategories,
   useOneOffExpenses,
   usePaymentMethods,
   useRecurringExpenses,
@@ -74,6 +78,7 @@ interface Draft {
   cardVariant: CardVariant | null;
   /** Solo gasto único con tarjeta de crédito: falso = ya venía en el saldo inicial. */
   addsToCard: boolean;
+  categoryId: string;
 }
 
 const centsToText = (cents: number) => (cents / 100).toFixed(2);
@@ -91,6 +96,7 @@ function initialDraft(target: ExpenseFormTarget, today: CivilDate): Draft {
     methodId: null,
     cardVariant: null,
     addsToCard: true,
+    categoryId: OTHER_CATEGORY_ID,
   };
   if (target.kind === 'oneOff') {
     const e = target.expense;
@@ -102,6 +108,7 @@ function initialDraft(target: ExpenseFormTarget, today: CivilDate): Draft {
       methodId: e.paymentMethodId,
       cardVariant: e.cardVariant,
       addsToCard: e.addsToCardBalance,
+      categoryId: e.categoryId,
     };
   }
   if (target.kind === 'recurring') {
@@ -118,6 +125,7 @@ function initialDraft(target: ExpenseFormTarget, today: CivilDate): Draft {
       endDate: e.endDate ?? e.anchorDate,
       methodId: e.paymentMethodId,
       cardVariant: e.cardVariant,
+      categoryId: e.categoryId,
     };
   }
   return base;
@@ -145,6 +153,9 @@ export function ExpenseForm({
     Partial<Record<OneOffExpenseField | RecurringExpenseField, string>>
   >({});
   const [creatingMethod, setCreatingMethod] = useState(false);
+  const [pickingCategory, setPickingCategory] = useState(false);
+  const categories = useCategories();
+  const category = resolveCategory(draft.categoryId, categories.data);
   const [saving, setSaving] = useState(false);
 
   // Método efectivo: el elegido o, en altas, el último usado (derivado, sin efectos).
@@ -181,6 +192,7 @@ export function ExpenseForm({
             paymentMethodId: methodId,
             cardVariant,
             addsToCardBalance: selectedMethod?.kind === 'credit' ? draft.addsToCard : true,
+            categoryId: category.id,
           },
           ctx,
         );
@@ -198,6 +210,7 @@ export function ExpenseForm({
             endDate: draft.hasEnd ? draft.endDate : null,
             paymentMethodId: methodId,
             cardVariant,
+            categoryId: category.id,
           },
           ctx,
         );
@@ -342,6 +355,25 @@ export function ExpenseForm({
           </>
         )}
 
+        <Field>
+          <Pressable
+            testID="expense-category"
+            accessibilityRole="button"
+            accessibilityLabel={`Categoría: ${category.name}`}
+            onPress={() => setPickingCategory(true)}
+            style={styles.categoryRow}
+          >
+            <Text style={[styles.categoryLabel, { color: theme.colors.ink }]}>Categoría</Text>
+            <View style={[styles.categoryValue, { backgroundColor: theme.colors.bg }]}>
+              <CategoryIcon icon={category.icon} color={theme.colors.ink} size={18} />
+              <Text style={[styles.categoryName, { color: theme.colors.ink }]}>
+                {category.name}
+              </Text>
+            </View>
+            <Text style={[styles.chev, { color: theme.colors.muted }]}>›</Text>
+          </Pressable>
+        </Field>
+
         <PaymentMethodPicker
           methods={methods.data}
           selectedId={methodId}
@@ -399,6 +431,40 @@ export function ExpenseForm({
           />
         ) : null}
       </Modal>
+
+      <Modal
+        visible={pickingCategory}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setPickingCategory(false)}
+      >
+        {pickingCategory ? (
+          <CategoryPicker
+            selectedId={draft.categoryId}
+            context={contextLabel}
+            onDone={(categoryId) => {
+              setPickingCategory(false);
+              if (categoryId) update({ categoryId });
+            }}
+          />
+        ) : null}
+      </Modal>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  categoryRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 34 },
+  categoryLabel: { flex: 1, fontSize: 16, fontWeight: '600' },
+  categoryValue: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingLeft: 8,
+    paddingRight: 10,
+  },
+  categoryName: { fontSize: 15, fontWeight: '700' },
+  chev: { fontSize: 20, fontWeight: '600' },
+});

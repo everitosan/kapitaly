@@ -7,6 +7,7 @@ import {
   testDeps,
 } from '@/data/repositories/contract';
 import { createInMemoryRepositories } from '@/data/repositories/inMemory';
+import { BUILTIN_CATEGORIES, OTHER_CATEGORY_ID } from '@/domain/category';
 import { CASH_METHOD_ID } from '@/domain/paymentMethod';
 
 import { renderWithProviders } from '../../testUtils';
@@ -208,5 +209,44 @@ describe('8.4 · tocar un gasto abre su edición', () => {
     await fireEvent.press(screen.getByText('Promedio'));
     await fireEvent.press(screen.getByRole('button', { name: 'Seguro' }));
     expect(p.onEdit).toHaveBeenLastCalledWith('recurring', ids.seguro);
+  });
+});
+
+describe('categoría en las filas', () => {
+  const id = (name: string) => BUILTIN_CATEGORIES.find((b) => b.name === name)!.id;
+
+  it('"Este mes" muestra la categoría de recurrentes y únicos', async () => {
+    const repos = createInMemoryRepositories(testDeps());
+    await repos.recurringExpenses.create(
+      sampleRecurring(CASH_METHOD_ID, { categoryId: id('Suscripciones') }),
+    );
+    await repos.oneOffExpenses.create(
+      sampleOneOff(CASH_METHOD_ID, { date: '2026-11-08', categoryId: id('Transporte') }),
+    );
+    await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });
+    expect(await screen.findByText('Suscripciones')).toBeOnTheScreen();
+    expect(screen.getByText('Transporte')).toBeOnTheScreen();
+  });
+
+  it('"Promedio" muestra la categoría de cada gasto', async () => {
+    const repos = createInMemoryRepositories(testDeps());
+    await repos.recurringExpenses.create(
+      sampleRecurring(CASH_METHOD_ID, { name: 'Renta', categoryId: id('Hogar') }),
+    );
+    await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });
+    await fireEvent.press(screen.getByText('Promedio'));
+    expect(await screen.findByText('Hogar')).toBeOnTheScreen();
+  });
+
+  it('un gasto de una categoría borrada se muestra con "Otro"', async () => {
+    const repos = createInMemoryRepositories(testDeps());
+    const gym = await repos.categories.create({ name: 'Gimnasio', icon: 'dumbbell' });
+    await repos.recurringExpenses.create(
+      sampleRecurring(CASH_METHOD_ID, { name: 'Smart Fit', categoryId: gym.id }),
+    );
+    await repos.categories.remove(gym.id);
+    await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });
+    expect(await screen.findByTestId(`category-pill-${OTHER_CATEGORY_ID}`)).toBeOnTheScreen();
+    expect(screen.queryByText('Gimnasio')).toBeNull();
   });
 });

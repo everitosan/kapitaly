@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 
 import { INSTITUTION_CATALOG } from '@/data/institutions/catalog';
+import type { CategoryView } from '@/domain/category';
 import { duotoneFromBase } from '@/domain/color';
 import type { MethodBreakdownEntry } from '@/domain/balance';
 import { parseCivilDate, type CivilDate } from '@/domain/date';
@@ -10,6 +11,7 @@ import { formatMXN, type Cents } from '@/domain/money';
 import { methodLabel, type CardVariant, type PaymentMethod } from '@/domain/paymentMethod';
 
 import { MONTH_SHORT, capitalize, MONTH_NAMES } from '../format';
+import { CategoryIcon } from '../icons/categoryIcons';
 import { methodGradient } from '../methodColor';
 import type { Gradient } from '../theme';
 import { useTheme } from '../ThemeProvider';
@@ -253,6 +255,23 @@ export function MethodPill({
   );
 }
 
+/** Píldora con el ícono y el nombre de la categoría de un gasto. */
+export function CategoryPill({ category, onBlock }: { category: CategoryView; onBlock?: boolean }) {
+  const { colors } = useTheme();
+  const color = onBlock ? colors.onBlock : colors.ink;
+  return (
+    <View
+      testID={`category-pill-${category.id}`}
+      style={[styles.cpill, { backgroundColor: onBlock ? colors.blockOverlay : colors.bg }]}
+    >
+      <CategoryIcon icon={category.icon} color={color} size={14} />
+      <Text style={[styles.mpillText, { color }]} numberOfLines={1}>
+        {category.name}
+      </Text>
+    </View>
+  );
+}
+
 /* ---------- ExpenseRow ---------- */
 
 function DateBadge({ date, neutral }: { date: CivilDate; neutral?: boolean }) {
@@ -277,6 +296,7 @@ type ExpenseRowProps =
       amountCents: Cents;
       method: PaymentMethod | null;
       cardVariant?: CardVariant | null;
+      category?: CategoryView;
       /** Cobro vencido sin confirmar: muestra la píldora "Por confirmar". */
       pending?: boolean;
       onPress?: () => void;
@@ -288,6 +308,7 @@ type ExpenseRowProps =
       amountCents: Cents;
       method: PaymentMethod | null;
       cardVariant?: CardVariant | null;
+      category?: CategoryView;
       onPress?: () => void;
     }
   | {
@@ -300,6 +321,7 @@ type ExpenseRowProps =
       hint?: string;
       method: PaymentMethod | null;
       cardVariant?: CardVariant | null;
+      category?: CategoryView;
       onPress?: () => void;
     };
 
@@ -321,6 +343,7 @@ export function ExpenseRow(props: ExpenseRowProps) {
             {props.title}
           </Text>
           <View style={styles.subRow}>
+            {props.category ? <CategoryPill category={props.category} /> : null}
             <Pill background={colors.ink} color={colors.bg} style={styles.unique}>
               ÚNICO
             </Pill>
@@ -341,6 +364,7 @@ export function ExpenseRow(props: ExpenseRowProps) {
             {props.title}
           </Text>
           <View style={styles.subRow}>
+            {props.category ? <CategoryPill category={props.category} onBlock /> : null}
             <Text style={[styles.sub, { color: colors.onBlock }]}>{props.frequency}</Text>
             {props.pending ? (
               <Pill background={colors.onBlock} color="#F4F1EA" style={styles.unique}>
@@ -360,6 +384,7 @@ export function ExpenseRow(props: ExpenseRowProps) {
               {props.title}
             </Text>
             <View style={styles.subRow}>
+              {props.category ? <CategoryPill category={props.category} onBlock /> : null}
               <Text style={[styles.sub, { color: colors.onBlock }]}>{props.frequency}</Text>
               <MethodPill method={props.method} cardVariant={props.cardVariant} onBlock />
             </View>
@@ -487,6 +512,16 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   mpillText: { fontSize: 12, fontWeight: '700', flexShrink: 1 },
+  cpill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 3,
+    paddingLeft: 6,
+    paddingRight: 9,
+    borderRadius: 999,
+    flexShrink: 1,
+  },
   rowWrap: { marginBottom: 10 },
   row: {
     flexDirection: 'row',

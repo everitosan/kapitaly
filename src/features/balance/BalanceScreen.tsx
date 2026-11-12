@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { buildAverageView, buildThisMonthView, type MonthCharge } from '@/domain/balance';
+import { resolveCategory } from '@/domain/category';
 import { civilDateFromLocal, parseCivilDate, shiftMonth, type CivilDate } from '@/domain/date';
 import { formatMXN } from '@/domain/money';
 import { frequencyLabel, monthsPerInterval } from '@/domain/recurringExpense';
@@ -23,7 +24,12 @@ import { isPending } from '@/domain/confirmations';
 import { PendingSheet } from '../pending/PendingSheet';
 import { pendingSession } from '../pending/session';
 import { usePending } from '../pending/usePending';
-import { useOneOffExpenses, usePaymentMethods, useRecurringExpenses } from '../repositories';
+import {
+  useCategories,
+  useOneOffExpenses,
+  usePaymentMethods,
+  useRecurringExpenses,
+} from '../repositories';
 
 export type BalanceView = 'this' | 'avg';
 
@@ -49,6 +55,7 @@ export function BalanceScreen({
   const theme = useTheme();
   const methods = usePaymentMethods();
   const recurring = useRecurringExpenses();
+  const categories = useCategories();
   const oneOffs = useOneOffExpenses();
   const start = parseCivilDate(today);
   const [{ year, month }, setMonth] = useState({ year: start.year, month: start.month });
@@ -79,6 +86,7 @@ export function BalanceScreen({
         amountCents={c.amountCents}
         method={methodOf(c.paymentMethodId)}
         cardVariant={c.expense.cardVariant}
+        category={resolveCategory(c.expense.categoryId, categories.data)}
         onPress={() => onEdit('oneOff', c.id)}
       />
     ) : (
@@ -99,6 +107,7 @@ export function BalanceScreen({
         amountCents={c.amountCents}
         method={methodOf(c.paymentMethodId)}
         cardVariant={c.expense.cardVariant}
+        category={resolveCategory(c.expense.categoryId, categories.data)}
         onPress={() => onEdit('recurring', c.id)}
       />
     );
@@ -158,6 +167,7 @@ export function BalanceScreen({
               }
               method={methodOf(i.expense.paymentMethodId)}
               cardVariant={i.expense.cardVariant}
+              category={resolveCategory(i.expense.categoryId, categories.data)}
               onPress={() => onEdit('recurring', i.expense.id)}
             />
           ))

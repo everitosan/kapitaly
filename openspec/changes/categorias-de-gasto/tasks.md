@@ -23,8 +23,8 @@
 
 ## 5. Formulario y balance
 
-- [ ] 5.1 Agregar la fila "Categoría" y su selector al formulario de gasto (solo categorías vigentes y no ocultas, "Otro" por defecto, conservando una categoría oculta al editar); verificar con pruebas de UI los escenarios de alta en `one-off-expenses` y `recurring-expenses`.
-- [ ] 5.2 Mostrar ícono y nombre de la categoría en las filas de "Este mes" y "Promedio", resolviendo categorías borradas como "Otro"; verificar con pruebas de UI los escenarios de `monthly-balance`.
+- [x] 5.1 Agregar la fila "Categoría" y su selector al formulario de gasto (solo categorías vigentes y no ocultas, "Otro" por defecto, conservando una categoría oculta al editar); verificar con pruebas de UI los escenarios de alta en `one-off-expenses` y `recurring-expenses`.
+- [x] 5.2 Mostrar ícono y nombre de la categoría en las filas de "Este mes" y "Promedio", resolviendo categorías borradas como "Otro"; verificar con pruebas de UI los escenarios de `monthly-balance`.
 
 ## 6. Verificación integrada
 
