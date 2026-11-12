@@ -21,7 +21,11 @@
 ## 5. Verificación integrada
 
 - [x] 5.1 Correr `npm test`, `npm run typecheck`, `npm run lint` y `openspec validate acceso-rapido-nuevo-gasto --strict`.
-- [ ] 5.2 Publicar `v0.1.0-beta.3` y verificar en el teléfono: agregar el acceso directo desde Ajustes, abrir la app cerrada desde el ícono (formulario en "Único" con el teclado en el monto, guardar y volver al balance, Pendientes sin interrumpir), el atajo al mantener presionado el ícono, y que los gastos de la beta.2 quedan en "Otro" (pendiente de `categorias-de-gasto`).
+- [x] 5.2 Publicar `v0.1.0-beta.3` y verificar en el teléfono: agregar el acceso directo desde Ajustes, abrir la app cerrada desde el ícono (formulario en "Único" con el teclado en el monto, guardar y volver al balance, Pendientes sin interrumpir), el atajo al mantener presionado el ícono, y que los gastos de la beta.2 quedan en "Otro" (pendiente de `categorias-de-gasto`).
+
+## 6. Ícono del acceso directo
+
+- [ ] 6.1 Corregir el ícono del acceso directo fijado: en la beta.3 se ve como un círculo negro sin el "+" (el vector `shortcut_new_expense` no se dibuja como en la maqueta). Definir el ícono con el usuario y verificarlo en el teléfono en la siguiente beta.
 
 ## Workflow follow-up
 
