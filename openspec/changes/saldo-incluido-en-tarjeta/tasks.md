@@ -12,4 +12,4 @@
 
 ## 3. Verificación
 
-- [ ] 3.1 Probar en la beta 0.1.0-beta.2 instalada desde Play: registrar un gasto ya incluido en el saldo inicial con el interruptor desactivado y comprobar que el usado no cambia.
+- [x] 3.1 Probar en la beta 0.1.0-beta.2 instalada desde Play: registrar un gasto ya incluido en el saldo inicial con el interruptor desactivado y comprobar que el usado no cambia.
