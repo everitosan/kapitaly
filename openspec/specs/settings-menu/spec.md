@@ -14,7 +14,7 @@ El encabezado del balance SHALL tener un botón de menú que abre la pantalla "A
 - **THEN** se abre la pantalla "Ajustes"
 
 ### Requirement: Opciones de Ajustes
-La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una con el número de elementos vigentes, y abrir su pantalla al tocarla. Una opción sin funcionalidad disponible, como recordatorios, no SHALL mostrarse.
+La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una con el número de elementos vigentes, y abrir su pantalla al tocarla. En Android con soporte para fijar accesos directos SHALL mostrar además "Acceso directo: nuevo gasto". Una opción sin funcionalidad disponible, como recordatorios, no SHALL mostrarse.
 
 #### Scenario: Ir a Categorías
 - **WHEN** el usuario toca "Categorías" en Ajustes
@@ -28,6 +28,10 @@ La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una
 - **WHEN** el usuario abre Ajustes
 - **THEN** no aparece ninguna opción de recordatorios
 
+#### Scenario: Acceso directo disponible
+- **WHEN** el usuario abre Ajustes en un Android que puede fijar accesos directos
+- **THEN** aparece "Acceso directo: nuevo gasto" debajo de "Categorías"
+
 ### Requirement: Sin pantallas de desarrollo en producción
 La app de producción no SHALL incluir pantallas ni enlaces de desarrollo, ni SHALL poder abrirlas por enlace profundo. Ajustes solo SHALL mostrar opciones para el usuario.
 
@@ -37,4 +41,4 @@ La app de producción no SHALL incluir pantallas ni enlaces de desarrollo, ni SH
 
 #### Scenario: Ajustes solo con opciones del usuario
 - **WHEN** el usuario abre Ajustes
-- **THEN** solo aparecen "Métodos de pago" y "Categorías"
+- **THEN** solo aparecen "Métodos de pago", "Categorías" y, si el dispositivo lo admite, "Acceso directo: nuevo gasto"
