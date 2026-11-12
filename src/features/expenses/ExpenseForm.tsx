@@ -72,6 +72,8 @@ interface Draft {
   methodId: string | null;
   /** `null` = aún no elegida: se usa la sugerida para el método. */
   cardVariant: CardVariant | null;
+  /** Solo gasto único con tarjeta de crédito: falso = ya venía en el saldo inicial. */
+  addsToCard: boolean;
 }
 
 const centsToText = (cents: number) => (cents / 100).toFixed(2);
@@ -88,6 +90,7 @@ function initialDraft(target: ExpenseFormTarget, today: CivilDate): Draft {
     endDate: today,
     methodId: null,
     cardVariant: null,
+    addsToCard: true,
   };
   if (target.kind === 'oneOff') {
     const e = target.expense;
@@ -98,6 +101,7 @@ function initialDraft(target: ExpenseFormTarget, today: CivilDate): Draft {
       date: e.date,
       methodId: e.paymentMethodId,
       cardVariant: e.cardVariant,
+      addsToCard: e.addsToCardBalance,
     };
   }
   if (target.kind === 'recurring') {
@@ -176,6 +180,7 @@ export function ExpenseForm({
             date: draft.date,
             paymentMethodId: methodId,
             cardVariant,
+            addsToCardBalance: selectedMethod?.kind === 'credit' ? draft.addsToCard : true,
           },
           ctx,
         );
@@ -361,6 +366,17 @@ export function ExpenseForm({
             value={cardVariant}
             onChange={(v) => update({ cardVariant: v })}
           />
+        ) : null}
+
+        {isOneOff && selectedMethod?.kind === 'credit' ? (
+          <FieldRow label="Sumar al saldo de la tarjeta" muted>
+            <Switch
+              label="Sumar al saldo de la tarjeta"
+              value={draft.addsToCard}
+              onValueChange={(addsToCard) => update({ addsToCard })}
+              testID="adds-to-card"
+            />
+          </FieldRow>
         ) : null}
 
         {target.kind !== 'new' ? (

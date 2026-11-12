@@ -45,6 +45,7 @@ const one = (
   date,
   paymentMethodId,
   cardVariant: null,
+  addsToCardBalance: true,
   ...extra,
 });
 

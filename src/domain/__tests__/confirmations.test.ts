@@ -105,8 +105,17 @@ describe('validateConfirmation', () => {
         paymentMethodId: 'bbva',
         status: 'charged',
         amountCents: 24900,
+        addsToCardBalance: true,
       },
     });
+  });
+
+  it('puede marcarse como ya incluido en el saldo de la tarjeta', () => {
+    const r = validateConfirmation(
+      { status: 'charged', amountText: '249', addsToCardBalance: false },
+      charge,
+    );
+    expect(r.ok && r.value.addsToCardBalance).toBe(false);
   });
 
   it('descartar no lleva monto', () => {

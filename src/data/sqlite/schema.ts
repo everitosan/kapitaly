@@ -55,6 +55,8 @@ export const oneOffExpenses = sqliteTable('one_off_expenses', {
   date: text('date').notNull(),
   paymentMethodId: text('payment_method_id').notNull(),
   cardVariant: text('card_variant', { enum: ['physical', 'digital'] }),
+  /** Si suma al usado de una tarjeta de crédito (migración 0004); falso = ya venía en el saldo inicial. */
+  addsToCardBalance: integer('adds_to_card_balance', { mode: 'boolean' }).notNull().default(true),
 });
 
 /** Pagos a tarjetas de crédito (restan del usado; no son gastos). */
@@ -76,6 +78,8 @@ export const recurringChargeConfirmations = sqliteTable('recurring_charge_confir
   amountCents: integer('amount_cents'),
   /** Método del gasto al confirmar. */
   paymentMethodId: text('payment_method_id').notNull(),
+  /** Si suma al usado de una tarjeta de crédito (migración 0004); falso = ya venía en el saldo inicial. */
+  addsToCardBalance: integer('adds_to_card_balance', { mode: 'boolean' }).notNull().default(true),
 });
 
 export const schema = {

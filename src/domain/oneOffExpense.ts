@@ -12,6 +12,8 @@ export interface OneOffExpense extends SyncMeta {
   paymentMethodId: string;
   /** Física o digital si el método tiene versión digital; `null` si no aplica. */
   cardVariant: CardVariant | null;
+  /** Si suma al usado de una tarjeta de crédito; falso = ya venía en el saldo inicial. */
+  addsToCardBalance: boolean;
 }
 
 export interface OneOffExpenseInput {
@@ -20,6 +22,8 @@ export interface OneOffExpenseInput {
   date: CivilDate;
   paymentMethodId: string;
   cardVariant: CardVariant | null;
+  /** Por defecto `true`. */
+  addsToCardBalance?: boolean;
 }
 
 export type OneOffExpenseField = 'description' | 'amount' | 'date' | 'paymentMethodId';
@@ -30,6 +34,7 @@ export interface OneOffExpenseDraft {
   date: CivilDate | null;
   paymentMethodId: string | null;
   cardVariant?: CardVariant | null;
+  addsToCardBalance?: boolean;
 }
 
 export function validateOneOffExpenseInput(
@@ -60,6 +65,7 @@ export function validateOneOffExpenseInput(
       date: draft.date!,
       paymentMethodId: draft.paymentMethodId!,
       cardVariant: normalizeCardVariant(draft.paymentMethodId!, draft.cardVariant, ctx),
+      addsToCardBalance: draft.addsToCardBalance ?? true,
     },
   };
 }

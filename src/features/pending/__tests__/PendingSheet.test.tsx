@@ -55,6 +55,19 @@ describe('10.4 · cobros por confirmar', () => {
     expect(screen.queryByTestId('pending-banner')).not.toBeOnTheScreen();
   });
 
+  it('con tarjeta de crédito permite no sumar el cobro al saldo', async () => {
+    const { repos, netflix } = await withNetflix();
+    await renderBalance(repos, '2026-11-16');
+    const card = await screen.findByTestId(`pending-charge-${netflix.id}`);
+    await fireEvent(within(card).getByTestId(`adds-to-card-${netflix.id}`), 'valueChange', false);
+    await fireEvent.press(within(card).getByText('Sí, se cobró'));
+    await waitFor(async () =>
+      expect(await repos.chargeConfirmations.list()).toEqual([
+        expect.objectContaining({ status: 'charged', addsToCardBalance: false }),
+      ]),
+    );
+  });
+
   it('nada antes del registro', async () => {
     const { repos } = await withNetflix();
     await renderBalance(repos, '2026-11-12');

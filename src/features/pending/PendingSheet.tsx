@@ -8,7 +8,7 @@ import { parseCivilDate, type CivilDate } from '@/domain/date';
 import { formatMXN } from '@/domain/money';
 import { methodLabel, type PaymentMethod } from '@/domain/paymentMethod';
 import { frequencyLabel, monthsPerInterval } from '@/domain/recurringExpense';
-import { PrimaryButton, SecondaryButton } from '@/ui/components/basics';
+import { FieldRow, PrimaryButton, SecondaryButton, Switch } from '@/ui/components/basics';
 import { InstitutionBadge } from '@/ui/components/balance';
 import { DuotoneBlock } from '@/ui/components/DuotoneBlock';
 import { SheetLayout } from '@/ui/components/layout';
@@ -47,11 +47,16 @@ function ChargeCard({
   const repos = useRepositories();
   const [amountText, setAmountText] = useState(centsText(charge.expense.amountCents));
   const [error, setError] = useState<string>();
+  const [addsToCard, setAddsToCard] = useState(true);
+  const isCredit = method?.kind === 'credit';
   const { day, month } = parseCivilDate(charge.date);
   const months = monthsPerInterval(charge.expense.intervalUnit, charge.expense.intervalCount);
 
   const answer = async (status: 'charged' | 'skipped') => {
-    const r = validateConfirmation({ status, amountText }, charge);
+    const r = validateConfirmation(
+      { status, amountText, addsToCardBalance: isCredit ? addsToCard : true },
+      charge,
+    );
     if (!r.ok) return setError(errorMessage('amount', r.errors.amount));
     await repos.chargeConfirmations.upsert(r.value);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -96,6 +101,16 @@ function ChargeCard({
         <Text accessibilityRole="alert" style={[styles.error, { color: colors.danger }]}>
           {error}
         </Text>
+      ) : null}
+      {isCredit ? (
+        <FieldRow label="Sumar al saldo de la tarjeta" muted>
+          <Switch
+            label={`Sumar ${charge.expense.name} al saldo de la tarjeta`}
+            value={addsToCard}
+            onValueChange={setAddsToCard}
+            testID={`adds-to-card-${charge.expense.id}`}
+          />
+        </FieldRow>
       ) : null}
       <PrimaryButton label="Sí, se cobró" onPress={() => answer('charged')} />
       <View style={styles.row}>

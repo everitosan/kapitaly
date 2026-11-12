@@ -15,6 +15,8 @@ export interface ChargeConfirmation extends SyncMeta {
   amountCents: Cents | null;
   /** Método del gasto al confirmar. */
   paymentMethodId: string;
+  /** Si suma al usado de una tarjeta de crédito; falso = ya venía en el saldo inicial. */
+  addsToCardBalance: boolean;
 }
 
 export interface ChargeConfirmationInput {
@@ -23,6 +25,8 @@ export interface ChargeConfirmationInput {
   status: ConfirmationStatus;
   amountCents: Cents | null;
   paymentMethodId: string;
+  /** Por defecto `true`. */
+  addsToCardBalance?: boolean;
 }
 
 export interface PendingCharge {
@@ -86,13 +90,14 @@ export type ConfirmationField = 'amount';
 
 /** "Sí, se cobró" requiere un monto > 0; "No se cobró este mes" se guarda sin monto. */
 export function validateConfirmation(
-  draft: { status: ConfirmationStatus; amountText?: string },
+  draft: { status: ConfirmationStatus; amountText?: string; addsToCardBalance?: boolean },
   charge: PendingCharge,
 ): Validation<ChargeConfirmationInput, ConfirmationField> {
   const base = {
     recurringExpenseId: charge.expense.id,
     occurrenceDate: charge.date,
     paymentMethodId: charge.expense.paymentMethodId,
+    addsToCardBalance: draft.addsToCardBalance ?? true,
   };
   if (draft.status === 'skipped')
     return { ok: true, value: { ...base, status: 'skipped', amountCents: null } };

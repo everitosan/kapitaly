@@ -151,7 +151,10 @@ class InMemoryChargeConfirmationRepository
   implements ChargeConfirmationRepository
 {
   constructor(deps: RepositoryDeps) {
-    super('Confirmación de cobro', deps, (i) => ({ ...i }));
+    super('Confirmación de cobro', deps, (i) => ({
+      ...i,
+      addsToCardBalance: i.addsToCardBalance ?? true,
+    }));
   }
 
   async upsert(input: ChargeConfirmationInput): Promise<ChargeConfirmation> {
@@ -186,7 +189,7 @@ export function createInMemoryRepositories(deps: RepositoryDeps): InMemoryReposi
   const oneOffExpenses = new InMemoryRepository<OneOffExpense, OneOffExpenseInput>(
     'Gasto único',
     deps,
-    (i) => ({ ...i }),
+    (i) => ({ ...i, addsToCardBalance: i.addsToCardBalance ?? true }),
   );
   const cardPayments = new InMemoryRepository<CardPayment, CardPaymentInput>(
     'Pago de tarjeta',

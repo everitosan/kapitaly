@@ -1,0 +1,2 @@
+ALTER TABLE `one_off_expenses` ADD `adds_to_card_balance` integer DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE `recurring_charge_confirmations` ADD `adds_to_card_balance` integer DEFAULT true NOT NULL;

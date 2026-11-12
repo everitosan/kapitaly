@@ -66,6 +66,18 @@ describe('usedCents', () => {
     );
   });
 
+  it('no suma lo marcado como ya incluido en el saldo inicial', () => {
+    const included = { ...charged(21900, '2026-11-03'), addsToCardBalance: false };
+    expect(
+      usedCents(
+        card,
+        [{ ...one(5000, '2026-11-02'), addsToCardBalance: false }, one(1000, '2026-11-02')],
+        [included, charged(30000, '2026-11-03')],
+        [],
+      ),
+    ).toBe(1231000);
+  });
+
   it('ignora gastos de otras tarjetas y eliminados', () => {
     expect(
       usedCents(

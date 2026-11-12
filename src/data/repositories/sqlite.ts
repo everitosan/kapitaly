@@ -170,6 +170,7 @@ const toOneOff = (r: Record<string, unknown>): OneOffExpense => ({
   date: r.date as string,
   paymentMethodId: r.paymentMethodId as string,
   cardVariant: (r.cardVariant as OneOffExpense['cardVariant']) ?? null,
+  addsToCardBalance: r.addsToCardBalance === undefined ? true : Boolean(r.addsToCardBalance),
 });
 
 class SqlitePaymentMethodRepository
@@ -238,6 +239,7 @@ const toConfirmation = (r: Record<string, unknown>): ChargeConfirmation => ({
   status: r.status as ChargeConfirmation['status'],
   amountCents: (r.amountCents as number | null) ?? null,
   paymentMethodId: r.paymentMethodId as string,
+  addsToCardBalance: r.addsToCardBalance === undefined ? true : Boolean(r.addsToCardBalance),
 });
 
 class SqliteChargeConfirmationRepository
@@ -311,6 +313,7 @@ export function createSqliteRepositories(db: AppDatabase, deps: RepositoryDeps):
       date: i.date,
       paymentMethodId: i.paymentMethodId,
       cardVariant: i.cardVariant,
+      addsToCardBalance: i.addsToCardBalance ?? true,
     }),
   );
   const cardPaymentRepo = new SqliteRepository<CardPayment, CardPaymentInput>(
@@ -338,6 +341,7 @@ export function createSqliteRepositories(db: AppDatabase, deps: RepositoryDeps):
       status: i.status,
       amountCents: i.amountCents,
       paymentMethodId: i.paymentMethodId,
+      addsToCardBalance: i.addsToCardBalance ?? true,
     }),
   );
   return {

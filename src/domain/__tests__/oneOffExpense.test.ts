@@ -19,8 +19,14 @@ describe('validateOneOffExpenseInput', () => {
         date: '2026-11-11',
         paymentMethodId: 'efectivo',
         cardVariant: null,
+        addsToCardBalance: true,
       },
     });
+  });
+
+  it('respeta "no sumar al saldo de la tarjeta"', () => {
+    const r = validateOneOffExpenseInput({ ...draft(), addsToCardBalance: false }, ctx);
+    expect(r.ok && r.value.addsToCardBalance).toBe(false);
   });
 
   it('descripción vacía', () => {

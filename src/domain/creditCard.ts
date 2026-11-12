@@ -34,6 +34,8 @@ export interface ChargedRef {
   occurrenceDate: CivilDate;
   paymentMethodId: string;
   deletedAt: string | null;
+  /** Falso = ya venía en el saldo inicial; ausente cuenta como verdadero. */
+  addsToCardBalance?: boolean;
 }
 
 type Card = Pick<
@@ -47,17 +49,25 @@ const onOrAfter = (date: CivilDate, from: CivilDate | null) =>
 /**
  * Usado de una tarjeta = saldo inicial + gastos únicos con la tarjeta desde la fecha del saldo
  * + cobros recurrentes confirmados con la tarjeta desde esa fecha − pagos. Negativo = saldo a favor.
+ * Los gastos y cobros marcados con `addsToCardBalance: false` ya venían en el saldo y no se suman.
  */
 export function usedCents(
   card: Card,
-  oneOffs: readonly Pick<OneOffExpense, 'paymentMethodId' | 'amountCents' | 'date' | 'deletedAt'>[],
+  oneOffs: readonly (Pick<OneOffExpense, 'paymentMethodId' | 'amountCents' | 'date' | 'deletedAt'> &
+    Partial<Pick<OneOffExpense, 'addsToCardBalance'>>)[],
   confirmations: readonly ChargedRef[],
   payments: readonly Pick<CardPayment, 'paymentMethodId' | 'amountCents' | 'deletedAt'>[],
 ): Cents {
   const from = card.openingBalanceDate;
   const spent = sumCents(
     oneOffs
-      .filter((o) => !isDeleted(o) && o.paymentMethodId === card.id && onOrAfter(o.date, from))
+      .filter(
+        (o) =>
+          !isDeleted(o) &&
+          o.addsToCardBalance !== false &&
+          o.paymentMethodId === card.id &&
+          onOrAfter(o.date, from),
+      )
       .map((o) => o.amountCents),
   );
   const charged = sumCents(
@@ -66,6 +76,7 @@ export function usedCents(
         (c) =>
           !isDeleted(c) &&
           c.status === 'charged' &&
+          c.addsToCardBalance !== false &&
           c.paymentMethodId === card.id &&
           onOrAfter(c.occurrenceDate, from),
       )
