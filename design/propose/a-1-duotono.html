@@ -334,6 +334,17 @@
     </div>
   </div>
 
+  <div class="ph-group">
+    <h3>Acceso rápido: nuevo gasto <span class="new-badge">nuevo</span></h3>
+    <p>Desde Ajustes, "Acceso directo: nuevo gasto" pide a Android poner un ícono en la pantalla de inicio (sin mantener nada presionado). Un toque en ese ícono abre el formulario en "Único" con el teclado listo en el monto. El mismo atajo aparece al mantener presionado el ícono de Kapitaly.</p>
+    <div class="phones">
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph17"></div></div><div class="ph-cap">Ajustes · opción del acceso directo</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph18"></div></div><div class="ph-cap">Confirmación de Android (la dibuja el sistema)</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph19"></div></div><div class="ph-cap">Pantalla de inicio · ícono "Nuevo gasto" y atajo del ícono</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph20"></div></div><div class="ph-cap">Formulario en modo rápido · teclado en el monto</div></div>
+    </div>
+  </div>
+
   <section class="section">
     <h2 class="s-title">Componentes</h2>
     <p class="s-desc">Las piezas base que se implementarían en <code>src/ui</code>, con sus tokens.</p>
@@ -865,6 +876,26 @@
   .cat-field .t { flex: 1; font-size: 16px; font-weight: 600; }
   .cat-field .v { display: inline-flex; align-items: center; gap: 8px; background: var(--bg); border-radius: 10px; padding: 6px 10px 6px 8px; font-weight: 700; font-size: 15px; }
   .cat-field .chev { font-size: 20px; color: var(--muted); font-weight: 600; }
+  .sc-ic { display: inline-grid; place-items: center; border-radius: 50%; background: var(--f1); color: #141414; flex: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+  .sys-dialog { position: absolute; left: 22px; right: 22px; top: 230px; background: var(--card); border-radius: 28px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 50px -10px rgba(0,0,0,.45); }
+  .sys-dialog b { font-size: 18px; }
+  .sys-item { display: flex; align-items: center; gap: 14px; font-weight: 700; }
+  .sys-item small, .sys-hint { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .sys-actions { display: flex; justify-content: flex-end; gap: 18px; font-weight: 700; color: var(--cobalt); }
+  .home { position: absolute; inset: 0; background: linear-gradient(160deg, #2B4BF2 0%, #7B3CF0 55%, #FF7FB2 100%); color: #fff; }
+  .home-clock { text-align: center; margin-top: 40px; } .home-clock b { display: block; font-size: 64px; font-weight: 300; letter-spacing: -.02em; } .home-clock span { font-size: 15px; font-weight: 600; opacity: .9; }
+  .home-grid { position: absolute; left: 24px; right: 24px; bottom: 120px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .app-ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; }
+  .app-ic.kap { background: #141414; color: #E6F87C; font-weight: 800; font-size: 24px; }
+  .lp-menu { position: absolute; right: 30px; bottom: 210px; width: 210px; background: #F4F1EA; color: #141414; border-radius: 22px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 16px 40px -8px rgba(0,0,0,.5); }
+  .lp-app, .lp-item { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; }
+  .lp-app { padding-bottom: 8px; border-bottom: 1px solid #E4DFD3; }
+  .lp-menu small { font-size: 11px; color: #6E695F; font-weight: 600; }
+  .caret { display: inline-block; width: 3px; height: 44px; background: var(--cobalt); vertical-align: middle; margin: 0 2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .kbd { position: absolute; left: 0; right: 0; bottom: 0; height: 250px; background: var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 10px 8px 34px; }
+  .kbd span { background: var(--card); border-radius: 8px; display: grid; place-items: center; font-size: 22px; font-weight: 600; }
   .cat-pick { background: var(--card); border-radius: var(--r-lg); padding: 4px 16px; }
   .cat-pick button { display: flex; align-items: center; gap: 14px; width: 100%; padding: 10px 0; border-top: 1px solid var(--line); text-align: left; font-size: 16px; font-weight: 700; }
   .cat-pick button:first-child { border-top: 0; }
@@ -996,6 +1027,70 @@
       </div>
     </div></div>
     <div class="home-ind"></div>`;
+
+  /* ---------- Acceso rápido: nuevo gasto ---------- */
+  const PLUS_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+  /* Ícono del acceso directo: "+" en tinta sobre círculo lima (lo dibuja Android a partir del drawable) */
+  const shortcutIcon = (size = 56) => `<span class="sc-ic" style="width:${size}px;height:${size}px">${PLUS_ICON.replace(/width="20" height="20"/, `width="${Math.round(size * 0.5)}" height="${Math.round(size * 0.5)}"`)}</span>`;
+  const settingsRows = `
+      <div class="set-list">
+        <button class="set-row"><span class="ic" style="background:var(--m-cobalt);color:#fff">${CARD_ICON}</span><span class="t">Métodos de pago<small>Tarjetas, efectivo y transferencias</small></span><span class="n">${K.METHODS.filter((m) => !m.archived).length}</span><span class="chev">›</span></button>
+        <button class="set-row"><span class="ic" style="background:var(--f1)">${ico('dots', 20)}</span><span class="t">Categorías<small>Para clasificar cada gasto</small></span><span class="n">${CATS.filter((c) => !c.hidden).length}</span><span class="chev">›</span></button>
+        <button class="set-row"><span class="ic" style="background:var(--f1)">${PLUS_ICON}</span><span class="t">Acceso directo: nuevo gasto<small>Un ícono en tu pantalla de inicio</small></span><span class="chev">›</span></button>
+      </div>`;
+  document.getElementById('ph17').innerHTML = `${STATUS_BAR('currentColor')}
+    <div data-scroll><div class="content">
+      <div class="topnav"><button class="round" aria-label="Volver">‹</button></div>
+      <div class="mtitle">Ajustes</div>
+      <div class="mdesc">Configura cómo registras tus gastos</div>
+      ${settingsRows}
+      <p style="font-size:13px;color:var(--muted);font-weight:600;padding:0 4px">"Acceso directo" solo aparece si tu pantalla de inicio lo admite.</p>
+    </div></div>
+    <div class="home-ind"></div>`;
+
+  document.getElementById('ph18').innerHTML = `${STATUS_BAR('currentColor')}
+    <div data-scroll><div class="content" style="opacity:.35;pointer-events:none">
+      <div class="topnav"><button class="round">‹</button></div>
+      <div class="mtitle">Ajustes</div>
+      <div class="mdesc">Configura cómo registras tus gastos</div>
+      ${settingsRows}
+    </div></div>
+    <div class="sys-dialog">
+      <b>Agregar a la pantalla principal</b>
+      <div class="sys-item">${shortcutIcon(48)}<span>Nuevo gasto<small>Kapitaly Expenses</small></span></div>
+      <small class="sys-hint">Mantén presionado y arrastra para colocarlo manualmente</small>
+      <div class="sys-actions"><button>Cancelar</button><button class="ok">Agregar</button></div>
+    </div>
+    <div class="home-ind"></div>`;
+
+  document.getElementById('ph19').innerHTML = `<div class="home">${STATUS_BAR('#fff')}
+      <div class="home-clock"><b>9:41</b><span>miércoles, 11 de noviembre</span></div>
+      <div class="home-grid">
+        <div class="app"><span class="app-ic" style="background:#3A3A3F"></span><span>Cámara</span></div>
+        <div class="app"><span class="app-ic" style="background:#1A73E8"></span><span>Mapas</span></div>
+        <div class="app"><span class="app-ic kap">K</span><span>Kapitaly</span></div>
+        <div class="app">${shortcutIcon(56)}<span>Nuevo gasto</span></div>
+      </div>
+      <div class="lp-menu">
+        <div class="lp-app"><span class="app-ic kap" style="width:28px;height:28px;font-size:13px">K</span>Kapitaly Expenses</div>
+        <div class="lp-item">${shortcutIcon(28)}Nuevo gasto</div>
+        <small>Al mantener presionado el ícono de Kapitaly</small>
+      </div>
+      <div class="home-ind" style="color:#fff"></div>
+    </div>`;
+
+  document.getElementById('ph20').innerHTML = `${STATUS_BAR('#fff')}
+    <div class="sheet-peek"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="sh-nav"><button>Cancelar</button><b>Nuevo gasto</b><span style="width:64px"></span></div>
+      <div data-scroll><div class="sh-body">
+        ${typeSeg('one')}
+        <div class="amount-block neutral" style="box-shadow:inset 0 0 0 2px var(--ink)"><div class="lbl">Monto</div><div class="big num">$<span class="caret"></span><span style="opacity:.3">0.00</span></div><div class="per">Gasto único · no se repite</div></div>
+        <div class="field"><label>Descripción</label><input placeholder="Ej. Recarga metro" aria-label="Descripción"></div>
+      </div></div>
+      <div class="kbd">${['1','2','3','4','5','6','7','8','9','.','0','⌫'].map((k) => `<span>${k}</span>`).join('')}</div>
+    </div>`;
 
   /* Categorías */
   (() => {

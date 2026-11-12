@@ -1,0 +1,33 @@
+# Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: Opciones de Ajustes
+La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una con el número de elementos vigentes, y abrir su pantalla al tocarla. En Android con soporte para fijar accesos directos SHALL mostrar además "Acceso directo: nuevo gasto". Una opción sin funcionalidad disponible, como recordatorios, no SHALL mostrarse.
+
+#### Scenario: Ir a Categorías
+- **WHEN** el usuario toca "Categorías" en Ajustes
+- **THEN** se abre la pantalla Categorías
+
+#### Scenario: Ir a Métodos de pago
+- **WHEN** el usuario toca "Métodos de pago" en Ajustes
+- **THEN** se abre la lista de métodos de pago, igual que antes desde el balance
+
+#### Scenario: Sin recordatorios todavía
+- **WHEN** el usuario abre Ajustes
+- **THEN** no aparece ninguna opción de recordatorios
+
+#### Scenario: Acceso directo disponible
+- **WHEN** el usuario abre Ajustes en un Android que puede fijar accesos directos
+- **THEN** aparece "Acceso directo: nuevo gasto" debajo de "Categorías"
+
+### Requirement: Sin pantallas de desarrollo en producción
+La app de producción no SHALL incluir pantallas ni enlaces de desarrollo, ni SHALL poder abrirlas por enlace profundo. Ajustes solo SHALL mostrar opciones para el usuario.
+
+#### Scenario: Enlace profundo a una pantalla de desarrollo
+- **WHEN** se abre `kapitalyexpenses://dev/components` en la app instalada desde Play
+- **THEN** la app no muestra ninguna pantalla de desarrollo
+
+#### Scenario: Ajustes solo con opciones del usuario
+- **WHEN** el usuario abre Ajustes
+- **THEN** solo aparecen "Métodos de pago", "Categorías" y, si el dispositivo lo admite, "Acceso directo: nuevo gasto"
