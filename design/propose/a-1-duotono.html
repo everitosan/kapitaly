@@ -321,6 +321,19 @@
     </div>
   </div>
 
+  <div class="ph-group">
+    <h3>Categorías y ajustes <span class="new-badge">nuevo</span></h3>
+    <p>El botón de tarjeta del encabezado pasa a ser un menú que abre "Ajustes" (métodos de pago y categorías). Cada gasto tiene categoría (por defecto "Otro"), que se ve en las filas del balance con un ícono propio, igual en todas las plataformas. Las de inicio se pueden ocultar y cambiar de ícono; "Otro" es fija; las tuyas se renombran y se borran.</p>
+    <div class="phones">
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph11"></div></div><div class="ph-cap">Balance · menú y categoría en cada fila (interactivo)</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph12"></div></div><div class="ph-cap">Ajustes</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen" id="ph13"></div></div><div class="ph-cap">Categorías · toca una de inicio para ocultarla</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph14"></div></div><div class="ph-cap">Editar categoría propia · elige ícono (interactivo)</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph15"></div></div><div class="ph-cap">Nuevo gasto · fila "Categoría"</div></div>
+      <div class="ph-wrap"><div class="phone"><div class="screen sheet-bg" id="ph16"></div></div><div class="ph-cap">Selector de categoría (interactivo)</div></div>
+    </div>
+  </div>
+
   <section class="section">
     <h2 class="s-title">Componentes</h2>
     <p class="s-desc">Las piezas base que se implementarían en <code>src/ui</code>, con sus tokens.</p>
@@ -816,6 +829,273 @@
     <div class="comp dark"><div class="comp-label">Fila con "Por confirmar" y aviso de pendientes ${NEW}</div>
       <button class="banner"><span class="dot">2</span><span><b>2 pendientes</b><small>Cobros por confirmar · toca para revisar</small></span></button>
       ${K.monthAll(2026, 11).items.filter((i) => i.kind === 'rec' && isPend(i, 11)).slice(0, 1).map((it) => rowCharge(it, 11)).join('')}</div>`);
+</script>
+<style>
+  /* ---------- Categorías y ajustes ---------- */
+  .cico { display: block; flex: none; }
+  .cpill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 3px 9px 3px 6px; border-radius: 999px; background: rgba(255,255,255,.55); color: var(--on-block); white-space: nowrap; }
+  .row.one .cpill { background: var(--bg); color: var(--ink); }
+  html[data-theme="dark"] .cpill { background: rgba(255,255,255,.45); }
+  html[data-theme="dark"] .row.one .cpill { background: var(--bg); }
+  .sub-row .sub.dot::before { content: "·"; margin-right: 6px; }
+  .set-list { background: var(--card); border-radius: var(--r-lg); padding: 4px 16px; margin-bottom: 18px; }
+  .set-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 0; border-top: 1px solid var(--line); text-align: left; }
+  .set-row:first-child { border-top: 0; }
+  .set-row .ic { width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; color: var(--on-block); flex: none; }
+  .set-row .t { flex: 1; min-width: 0; font-size: 17px; font-weight: 700; }
+  .set-row .t small { display: block; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .set-row .n { font-size: 15px; font-weight: 700; color: var(--muted); }
+  .set-row .chev { font-size: 22px; color: var(--muted); font-weight: 600; }
+  .ctile { width: 40px; height: 40px; border-radius: 14px; background: var(--bg); color: var(--ink); display: grid; place-items: center; flex: none; }
+  .cat-item { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 0; border-top: 1px solid var(--line); text-align: left; }
+  .cat-item:first-child { border-top: 0; }
+  .cat-item .t { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; }
+  .cat-item .t small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .cat-item.hid .ctile, .cat-item.hid .t { opacity: .45; }
+  .tag { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; background: var(--bg); color: var(--muted); }
+  .tag.ink { background: var(--ink); color: var(--bg); }
+  .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+  .icon-grid button { aspect-ratio: 1; border-radius: 14px; background: var(--bg); color: var(--ink); display: grid; place-items: center; border: 2px solid transparent; }
+  .icon-grid button.on { border-color: var(--ink); background: var(--card); }
+  .cprev { background: var(--card); border-radius: var(--r-xl); padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .cprev .big { width: 72px; height: 72px; border-radius: 24px; background: var(--f1); color: var(--on-block); display: grid; place-items: center; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+  .cprev b { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .cprev small { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .cat-field { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
+  .cat-field .t { flex: 1; font-size: 16px; font-weight: 600; }
+  .cat-field .v { display: inline-flex; align-items: center; gap: 8px; background: var(--bg); border-radius: 10px; padding: 6px 10px 6px 8px; font-weight: 700; font-size: 15px; }
+  .cat-field .chev { font-size: 20px; color: var(--muted); font-weight: 600; }
+  .cat-pick { background: var(--card); border-radius: var(--r-lg); padding: 4px 16px; }
+  .cat-pick button { display: flex; align-items: center; gap: 14px; width: 100%; padding: 10px 0; border-top: 1px solid var(--line); text-align: left; font-size: 16px; font-weight: 700; }
+  .cat-pick button:first-child { border-top: 0; }
+  .cat-pick button .t { flex: 1; min-width: 0; }
+  .cat-pick .chk { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; font-size: 13px; font-weight: 800; }
+  .cat-pick button.on .chk { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .cat-pick .new { color: var(--muted); }
+  .cat-pick .new .ctile { background: transparent; border: 2px dashed var(--muted); color: var(--muted); font-size: 20px; }
+</style>
+<script>
+  /* ---------- Categorías y ajustes (piezas nuevas) ---------- */
+  /* Set de íconos propio (24×24, trazo redondeado, tomados de Lucide · ISC). Se guarda solo la clave. */
+  const ICONS = {
+    home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
+    food: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+    car: '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+    bolt: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+    repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+    health: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>',
+    ticket: '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>',
+    dots: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    dumbbell: '<path d="M6 7v10"/><path d="M18 7v10"/><path d="M3 9.5v5"/><path d="M21 9.5v5"/><path d="M6 12h12"/>',
+    bag: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+    cart: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+    gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+    book: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+    school: '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+    plane: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+    bus: '<rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16"/><path d="M8 19v2"/><path d="M16 19v2"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/>',
+    fuel: '<path d="M3 22h12"/><path d="M4 9h10"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0V9.83a2 2 0 0 0-.59-1.42L18 5"/>',
+    wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+    phone: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>',
+    tv: '<rect x="2" y="7" width="20" height="15" rx="2"/><path d="m17 2-5 5-5-5"/>',
+    music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+    coffee: '<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2"/><path d="M10 2v2"/><path d="M14 2v2"/>',
+    pill: '<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>',
+    paw: '<circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.05Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>',
+    shirt: '<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>',
+    briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  };
+  const ico = (k, s = 20) => `<svg class="cico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.dots}</svg>`;
+  const MENU_ICON = '<svg width="20" height="16" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 2h16M2 8h16M2 14h10"/></svg>';
+
+  const CATS = [
+    { id: 'hogar', name: 'Hogar', icon: 'home', builtin: true },
+    { id: 'comida', name: 'Comida', icon: 'food', builtin: true },
+    { id: 'transporte', name: 'Transporte', icon: 'car', builtin: true },
+    { id: 'servicios', name: 'Servicios', icon: 'bolt', builtin: true },
+    { id: 'suscripciones', name: 'Suscripciones', icon: 'repeat', builtin: true },
+    { id: 'salud', name: 'Salud', icon: 'health', builtin: true },
+    { id: 'entretenimiento', name: 'Entretenimiento', icon: 'ticket', builtin: true },
+    { id: 'otro', name: 'Otro', icon: 'dots', builtin: true, fixed: true },
+    { id: 'gimnasio', name: 'Gimnasio', icon: 'dumbbell', builtin: false },
+  ];
+  const CAT_OF = { renta: 'hogar', netflix: 'suscripciones', gym: 'gimnasio', internet: 'servicios', medico: 'salud', servicio: 'transporte', seguro: 'transporte', o1: 'transporte', o2: 'comida', o3: 'salud', o4: 'transporte', o5: 'entretenimiento' };
+  const cat = (id) => CATS.find((c) => c.id === id && !c.deleted) || CATS.find((c) => c.id === 'otro');
+  const catOfItem = (it) => cat(CAT_OF[it.kind === 'one' ? it.o.id : it.e.id]);
+  const catUses = (id) => Object.values(CAT_OF).filter((c) => c === id).length;
+  const cpill = (c) => `<span class="cpill">${ico(c.icon, 14)}${c.name}</span>`;
+
+  const monthHeaderMenu = (st) => `
+    <header class="month">
+      <div><div class="m">${K.cap(K.MONTHS[st.m - 1])}</div><div class="y">${st.y}</div></div>
+      <div class="arrows">
+        <button class="round" aria-label="Ajustes">${MENU_ICON}</button>
+        <button class="round" data-act="prev" aria-label="Mes anterior">‹</button><button class="round" data-act="next" aria-label="Mes siguiente">›</button>
+      </div>
+    </header>`;
+  /* ExpenseRow con categoría: categoría primero en la línea secundaria, luego frecuencia/marca y método */
+  const rowChargeCat = (it, m) => it.kind === 'one' ? `
+    <div class="row one">
+      <div class="date"><b>${it.day}</b><span>${K.MON[m - 1]}</span></div>
+      <div class="mid"><div class="name">${it.label}</div><div class="sub-row">${cpill(catOfItem(it))}<span class="upill">Único</span>${mp(it.method)}</div></div>
+      <div class="ramt num">${K.fmt(it.cents)}</div>
+    </div>` : `
+    <div class="row" style="background:${FC(K.months(it.e))}">
+      <div class="date"><b>${it.day}</b><span>${K.MON[m - 1]}</span></div>
+      <div class="mid"><div class="name">${it.label}</div><div class="sub-row">${cpill(catOfItem(it))}<span class="sub">${K.freqLabel(it.e)}</span>${isPend(it, m) ? '<span class="ppill">Por confirmar</span>' : ''}${mp(it.method, it.e.variant)}</div></div>
+      <div class="ramt num">${K.fmt(it.cents)}</div>
+    </div>`;
+  const rowAvgCat = (it) => `
+    <div class="row col" style="background:${FC(it.k)}">
+      <div class="top">
+        <div class="mid"><div class="name">${it.e.name}</div><div class="sub-row">${cpill(cat(CAT_OF[it.e.id]))}<span class="sub">${K.freqLabel(it.e)}</span>${mp(it.e.method, it.e.variant)}</div></div>
+        <div class="ramt num">${K.fmt(it.monthly)}<small>al mes</small></div>
+      </div>
+      ${it.k > 1 ? `<div class="hint"><i></i>${it.next ? `${K.fmt(it.e.cents)} · próximo cobro ${K.dateLabel(it.next)}` : 'Sin cobros próximos'}</div>` : ''}
+    </div>`;
+
+  mountPhone(document.getElementById('ph11'), (st) => {
+    let body;
+    if (st.view === 'this') {
+      const r = K.monthAll(st.y, st.m);
+      body = `
+        <div class="total this">
+          <div class="lbl">Cargos de ${K.MONTHS[st.m - 1]}</div>
+          <div class="amt num">${money(r.total)}</div>
+          <div class="meta"><span class="pill">${r.count} ${r.count === 1 ? 'cargo' : 'cargos'}</span><span class="pill">Recurrentes ${K.fmt(r.recTotal)}</span><span class="pill">Únicos ${K.fmt(r.oneTotal)}</span></div>
+        </div>
+        <div class="s-lbl">Por fecha</div>
+        ${r.items.length ? r.items.map((it) => rowChargeCat(it, st.m)).join('') : `<div class="empty"><b>✦</b>No hay cargos este mes</div>`}`;
+    } else {
+      const r = K.averageAll(st.y, st.m);
+      body = `
+        <div class="total avg">
+          <div class="lbl">Costo mensual promedio</div>
+          <div class="amt num">${money(r.total)}</div>
+          <div class="meta"><span class="pill">Fijos ${K.fmt(r.fixed)}</span><span class="pill">Prorrateados ${K.fmt(r.prorated)}</span><span class="pill">Únicos ${K.fmt(r.oneTotal)}</span></div>
+        </div>
+        <div class="s-lbl">Proporcional por gasto</div>
+        ${r.items.map(rowAvgCat).join('')}
+        ${r.ones.length ? `<div class="s-lbl" style="margin-top:22px">Únicos del mes</div>${r.ones.map((it) => rowChargeCat(it, st.m)).join('')}` : ''}`;
+    }
+    return `${STATUS_BAR('currentColor')}
+      <div data-scroll><div class="content">${monthHeaderMenu(st)}${seg(st.view)}${body}</div></div>
+      <div class="fab-bar"><button class="btn btn-primary"><span class="plus">+</span>Agregar gasto</button></div>
+      <div class="home-ind"></div>`;
+  }, { view: 'this' });
+
+  /* Ajustes */
+  document.getElementById('ph12').innerHTML = `${STATUS_BAR('currentColor')}
+    <div data-scroll><div class="content">
+      <div class="topnav"><button class="round" aria-label="Volver">‹</button></div>
+      <div class="mtitle">Ajustes</div>
+      <div class="mdesc">Configura cómo registras tus gastos</div>
+      <div class="set-list">
+        <button class="set-row"><span class="ic" style="background:var(--m-cobalt);color:#fff">${CARD_ICON}</span><span class="t">Métodos de pago<small>Tarjetas, efectivo y transferencias</small></span><span class="n">${K.METHODS.filter((m) => !m.archived).length}</span><span class="chev">›</span></button>
+        <button class="set-row"><span class="ic" style="background:var(--f1)">${ico('dots', 20)}</span><span class="t">Categorías<small>Para clasificar cada gasto</small></span><span class="n">${CATS.filter((c) => !c.hidden).length}</span><span class="chev">›</span></button>
+      </div>
+    </div></div>
+    <div class="home-ind"></div>`;
+
+  /* Categorías */
+  (() => {
+    const el = document.getElementById('ph13');
+    const draw = () => {
+      const builtin = CATS.filter((c) => c.builtin && !c.fixed), mine = CATS.filter((c) => !c.builtin), otro = cat('otro');
+      const item = (c) => { const n = catUses(c.id); return `<button class="cat-item ${c.hidden ? 'hid' : ''}" ${c.builtin && !c.fixed ? `data-hide="${c.id}"` : ''}>
+          <span class="ctile">${ico(c.icon, 20)}</span><span class="t">${c.name}<small>${n} ${n === 1 ? 'gasto' : 'gastos'}</small></span>
+          ${c.fixed ? '<span class="tag ink">Fija</span>' : c.hidden ? '<span class="tag">Oculta</span>' : '<span class="chev" style="color:var(--muted);font-size:20px">›</span>'}</button>`; };
+      el.innerHTML = `${STATUS_BAR('currentColor')}
+        <div data-scroll><div class="content">
+          <div class="topnav"><button class="round" aria-label="Volver">‹</button></div>
+          <div class="mtitle">Categorías</div>
+          <div class="mdesc">${CATS.filter((c) => !c.hidden).length} activas · para clasificar cada gasto</div>
+          <div class="s-lbl">Tuyas</div>
+          <div class="set-list">${mine.map(item).join('')}</div>
+          <div class="s-lbl">De inicio</div>
+          <div class="set-list">${builtin.map(item).join('')}${item(otro)}</div>
+          <p style="font-size:13px;color:var(--muted);font-weight:600;padding:0 4px">Las de inicio se pueden ocultar o cambiar de ícono. "Otro" recibe los gastos sin categoría.</p>
+        </div></div>
+        <div class="fab-bar"><button class="btn btn-primary"><span class="plus">+</span>Nueva categoría</button></div>
+        <div class="home-ind"></div>`;
+    };
+    el.addEventListener('click', (e) => { const h = e.target.closest('[data-hide]'); if (h) { const c = CATS.find((x) => x.id === h.dataset.hide); c.hidden = !c.hidden; draw(); } });
+    draw();
+  })();
+
+  /* Editar categoría propia */
+  (() => {
+    const el = document.getElementById('ph14'); const st = { icon: 'dumbbell' };
+    const draw = () => {
+      el.innerHTML = `${STATUS_BAR('#fff')}
+        <div class="sheet-peek"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="sh-nav"><button>Cancelar</button><b>Editar categoría</b><span style="width:64px"></span></div>
+          <div data-scroll><div class="sh-body">
+            <div class="cprev"><span class="big">${ico(st.icon, 34)}</span><b>Gimnasio</b><small>${catUses('gimnasio')} gasto · categoría tuya</small></div>
+            <div class="field"><label>Nombre</label><input value="Gimnasio" aria-label="Nombre"></div>
+            <div class="field"><label>Ícono</label><div class="icon-grid">
+              ${Object.keys(ICONS).map((k) => `<button class="${st.icon === k ? 'on' : ''}" data-icon="${k}" aria-label="${k}">${ico(k, 22)}</button>`).join('')}
+            </div></div>
+            <div class="notice"><span class="ic">i</span><span>Si la borras, <b>${catUses('gimnasio')} gasto</b> pasará a "Otro".</span></div>
+            <button class="btn btn-danger">Borrar categoría</button>
+          </div></div>
+          <div class="fab-bar"><button class="btn btn-primary">Guardar</button></div>
+        </div>
+        <div class="home-ind"></div>`;
+    };
+    el.addEventListener('click', (e) => { const b = e.target.closest('[data-icon]'); if (b) { st.icon = b.dataset.icon; draw(); } });
+    draw();
+  })();
+
+  /* Formulario de gasto con la fila "Categoría" */
+  const catField = (c) => `<div class="field"><button class="cat-field"><span class="t">Categoría</span><span class="v">${ico(c.icon, 18)}${c.name}</span><span class="chev">›</span></button></div>`;
+  document.getElementById('ph15').innerHTML = `${STATUS_BAR('#fff')}
+    <div class="sheet-peek"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="sh-nav"><button>Cancelar</button><b>Nuevo gasto</b><span style="width:64px"></span></div>
+      <div data-scroll><div class="sh-body">
+        ${typeSeg('one')}
+        <div class="amount-block neutral"><div class="lbl">Monto</div><div class="big num">$100<span style="opacity:.45">.00</span></div><div class="per">Gasto único · no se repite</div></div>
+        <div class="field"><label>Descripción</label><input value="Recarga metro" aria-label="Descripción"></div>
+        <div class="field"><div class="field-row"><span>Fecha</span><span class="val-pill">Hoy · 11 nov 2026</span></div></div>
+        ${catField(cat('otro'))}
+        ${methodPicker('efectivo')}
+      </div></div>
+      <div class="fab-bar"><button class="btn btn-primary">Guardar</button></div>
+    </div>
+    <div class="home-ind"></div>`;
+
+  /* Selector de categoría: segunda hoja sobre el gasto */
+  (() => {
+    const el = document.getElementById('ph16'); const st = { sel: 'otro' };
+    const draw = () => {
+      const list = CATS.filter((c) => !c.hidden && !c.deleted);
+      el.innerHTML = `${STATUS_BAR('#fff')}
+        <div class="sheet-peek"></div><div class="sheet-peek two"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="sh-nav"><button>‹ Gasto</button><b>Categoría</b><span style="width:64px"></span></div>
+          <div data-scroll><div class="sh-body">
+            <div class="ctx"><span>Para el gasto</span><span><b>Recarga metro</b> · $100.00</span></div>
+            <div class="cat-pick">
+              ${list.map((c) => `<button class="${st.sel === c.id ? 'on' : ''}" data-sel="${c.id}"><span class="ctile">${ico(c.icon, 20)}</span><span class="t">${c.name}</span><span class="chk">${st.sel === c.id ? '✓' : ''}</span></button>`).join('')}
+              <button class="new"><span class="ctile">+</span><span class="t">Nueva categoría</span></button>
+            </div>
+          </div></div>
+          <div class="fab-bar"><button class="btn btn-primary">Usar ${cat(st.sel).name}</button></div>
+        </div>
+        <div class="home-ind"></div>`;
+    };
+    el.addEventListener('click', (e) => { const b = e.target.closest('[data-sel]'); if (b) { st.sel = b.dataset.sel; draw(); } });
+    draw();
+  })();
+
+  document.getElementById('comps').insertAdjacentHTML('beforeend', `
+    <div class="comp dark"><div class="comp-label">Set de íconos de categoría ${NEW}</div><div class="icon-grid">${Object.keys(ICONS).map((k) => `<button aria-label="${k}">${ico(k, 22)}</button>`).join('')}</div></div>
+    <div class="comp dark"><div class="comp-label">ExpenseRow con categoría ${NEW}</div>${K.monthAll(2026, 11).items.slice(0, 3).map((it) => rowChargeCat(it, 11)).join('')}</div>`);
 </script>
 </body>
 </html>

@@ -33,7 +33,7 @@ export interface BalanceScreenProps {
   onEdit: (kind: 'recurring' | 'oneOff', id: string) => void;
   /** Fecha de hoy (zona local). Se inyecta en pruebas. */
   today?: CivilDate;
-  /** Contenido extra al final (p. ej. el enlace de desarrollo a la pantalla de muestra). */
+  /** Contenido extra al final de la lista. */
   extra?: ReactNode;
 }
 

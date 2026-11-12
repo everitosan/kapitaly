@@ -18,7 +18,7 @@ npx expo start            # escanea el QR con Expo Go (teléfono y computadora e
 npx expo start --tunnel   # si el teléfono está en otra red
 ```
 
-Pantalla de muestra del sistema de diseño: en modo desarrollo, al final del balance aparece el enlace "Catálogo de componentes (desarrollo)" (ruta `/dev/components`). No se muestra en builds de producción.
+El catálogo visual de componentes vive en la maqueta `design/propose/a-1-duotono.html` (sección "Componentes"); la app no incluye pantallas de desarrollo.
 
 ## Pruebas y calidad
 
