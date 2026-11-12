@@ -1,0 +1,127 @@
+name: Android beta
+run-name: Android beta ${{ inputs.version || github.ref_name }}
+
+on:
+  push:
+    tags:
+      - 'v*-beta.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Beta sin v, por ejemplo 0.1.0-beta.1 (solo genera AAB)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-beta-publication
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  beta:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CI: 'true'
+      EXPO_NO_TELEMETRY: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.11.0'
+          cache: npm
+
+      - name: Validate version and release branch
+        id: release
+        env:
+          INPUT_BETA_VERSION: ${{ inputs.version }}
+        run: node scripts/validate-beta-release.js
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Tests
+        run: npm test -- --ci --runInBand
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Java
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '21.0.13+9'
+
+      # SDK 58 / RN 0.88: compileSdk 37, build-tools 37.0.0 y NDK del catálogo de RN; mismas piezas que el build local que Play aceptó.
+      - name: Android SDK
+        run: >-
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
+
+      - name: Prepare signing credentials
+        env:
+          PUBLISH_BETA: ${{ steps.release.outputs.publish }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ steps.release.outputs.publish == 'true' && secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON || '' }}
+        run: node scripts/prepare-android-secrets.js
+
+      - name: Generate and build Android
+        env:
+          KAPITALY_BETA_TAG: ${{ steps.release.outputs.tag }}
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/kapitaly-signing/upload.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          npx expo prebuild --platform android --no-install
+          cd android
+          ./gradlew :app:bundleRelease --no-daemon --no-build-cache --no-configuration-cache
+
+      - name: Verify upload signature
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/kapitaly-signing/upload.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          java scripts/VerifyAndroidBundle.java android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Save signed bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-${{ steps.release.outputs.versionName }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Publish to internal testing
+        if: steps.release.outputs.publish == 'true'
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJson: ${{ runner.temp }}/kapitaly-signing/google-play.json
+          packageName: com.kapitaly.expenses
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          tracks: internal
+          status: completed
+          releaseName: ${{ steps.release.outputs.versionName }}
+
+      - name: Remove temporary credentials
+        if: always()
+        run: |
+          node -e "require('node:fs').rmSync(require('node:path').join(process.env.RUNNER_TEMP, 'kapitaly-signing'), { recursive: true, force: true })"

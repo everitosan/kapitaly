@@ -29,6 +29,10 @@ npm run lint         # ESLint (incluye la regla de pureza de src/domain)
 npm run format       # Prettier
 ```
 
+## Betas en Google Play
+
+Las betas de Android se compilan, firman y publican en la pista de prueba interna con GitHub Actions al crear un tag `vX.Y.Z-beta.N` sobre `release/X.Y.0`. Guía completa (versiones, llave de subida, secretos, cuenta de servicio): [`docs/android-beta.md`](docs/android-beta.md).
+
 ## Estructura
 
 ```
