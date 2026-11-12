@@ -28,7 +28,7 @@
 
 ## 6. Verificación integrada
 
-- [ ] 6.1 Correr `npm test`, `npm run typecheck`, `npm run lint` y `openspec validate categorias-de-gasto --strict`, y revisar en Expo que el flujo completo (crear categoría, usarla en un gasto, verla en el balance, borrarla y ver el gasto en "Otro") funciona en claro y oscuro.
+- [x] 6.1 Correr `npm test`, `npm run typecheck`, `npm run lint` y `openspec validate categorias-de-gasto --strict`, y revisar en Expo que el flujo completo (crear categoría, usarla en un gasto, verla en el balance, borrarla y ver el gasto en "Otro") funciona en claro y oscuro.
 - [ ] 6.2 Publicar `v0.1.0-beta.3` desde `release/0.1.0` y verificar, al actualizar desde Play, que los gastos de la beta.2 quedan en "Otro" y conservan sus datos.
 
 ## Workflow follow-up

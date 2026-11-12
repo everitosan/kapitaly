@@ -21,24 +21,10 @@ La vista "Este mes" SHALL mostrar los cobros de gastos recurrentes que caen en e
 - **WHEN** "Smart Fit" tenía la categoría personalizada "Gimnasio" y esta se borró
 - **THEN** su fila muestra "Otro"
 
-### Requirement: Vista Promedio
-La vista "Promedio" SHALL listar cada gasto recurrente vigente en el mes con su costo mensual proporcional (monto entre los meses del intervalo, redondeado al centavo) y cada gasto único del mes con su monto real; cada elemento muestra el ícono y nombre de su categoría. Su total es la suma de los montos mostrados, con subtotales de fijos mensuales, prorrateados y únicos. Un recurrente es vigente si su ancla es anterior o igual al último día del mes y su fecha de fin, si la tiene, es posterior o igual al primer día.
+## ADDED Requirements
 
-#### Scenario: Proporcionales y total
-- **WHEN** están vigentes Netflix mensual ($219.00), Renta mensual ($1,500.00), Internet bimestral ($450.00) y Seguro anual ($6,000.00), y en el mes hay un gasto único "Recarga metro" de $100.00
-- **THEN** la vista muestra $219.00, $1,500.00, $225.00, $500.00 y $100.00 respectivamente, con un total de $2,544.00 y subtotales de $1,719.00 fijos, $725.00 prorrateados y $100.00 únicos
-
-#### Scenario: Redondeo al centavo
-- **WHEN** está vigente un gasto trimestral de $1,000.00
-- **THEN** su costo mensual proporcional se muestra como $333.33 y el total suma $333.33 por ese gasto
-
-#### Scenario: Gasto aún no vigente
-- **WHEN** un gasto mensual tiene fecha de cobro 10/12/2026 y se consulta noviembre 2026
-- **THEN** ese gasto no aparece en la vista Promedio de noviembre 2026
-
-#### Scenario: Gastos únicos de otro mes
-- **WHEN** existe un gasto único con fecha 30/10/2026 y se consulta noviembre 2026
-- **THEN** ese gasto no aparece en la vista Promedio de noviembre 2026
+### Requirement: Categoría en la vista Promedio
+Cada gasto recurrente y único de la vista "Promedio" SHALL mostrar el ícono y el nombre de su categoría; un gasto de una categoría borrada SHALL mostrarse con "Otro".
 
 #### Scenario: Categoría en la vista Promedio
 - **WHEN** Renta tiene la categoría "Hogar"

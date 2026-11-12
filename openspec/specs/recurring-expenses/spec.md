@@ -7,7 +7,7 @@ Permite registrar y mantener las reglas de gastos recurrentes del usuario (qué 
 ## Requirements
 
 ### Requirement: Registrar un gasto recurrente
-El sistema SHALL permitir crear un gasto recurrente con nombre, monto, frecuencia, fecha de cobro (fecha ancla) y método de pago, y opcionalmente una fecha de fin. El gasto creado SHALL aparecer de inmediato en el balance.
+El sistema SHALL permitir crear un gasto recurrente con nombre, monto, frecuencia, fecha de cobro (fecha ancla), método de pago y categoría, y opcionalmente una fecha de fin. La categoría SHALL proponerse como "Otro"; solo se ofrecen categorías vigentes y no ocultas. Sus cobros SHALL usar siempre la categoría actual del gasto. El gasto creado SHALL aparecer de inmediato en el balance.
 
 #### Scenario: Alta exitosa
 - **WHEN** el usuario captura nombre "Netflix", monto $219.00, frecuencia Mensual, fecha de cobro 15/11/2026 y método "BBVA Azul" y guarda
@@ -16,6 +16,14 @@ El sistema SHALL permitir crear un gasto recurrente con nombre, monto, frecuenci
 #### Scenario: Alta con fecha de fin
 - **WHEN** el usuario registra un gasto mensual desde 01/01/2026 con fecha de fin 31/03/2026
 - **THEN** el gasto genera cargos en enero, febrero y marzo de 2026 y ninguno a partir de abril
+
+#### Scenario: Categoría por defecto
+- **WHEN** el usuario registra "Netflix" sin elegir categoría
+- **THEN** el gasto queda con la categoría "Otro"
+
+#### Scenario: Reclasificar también los meses anteriores
+- **WHEN** "Netflix" tiene cobros confirmados en octubre y noviembre 2026 y el usuario cambia su categoría de "Otro" a "Suscripciones"
+- **THEN** los cobros de octubre y noviembre se muestran con "Suscripciones"
 
 ### Requirement: Validar los datos del gasto recurrente
 El sistema SHALL rechazar el guardado y mostrar un mensaje junto al campo inválido cuando: el nombre esté vacío o solo tenga espacios, el monto no sea mayor que cero o tenga más de dos decimales, falte la fecha de cobro, el intervalo no sea un entero mayor o igual a 1, la fecha de fin sea anterior a la fecha de cobro, o no haya un método de pago activo seleccionado.

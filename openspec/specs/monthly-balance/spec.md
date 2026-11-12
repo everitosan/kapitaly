@@ -51,7 +51,7 @@ La pantalla de balance SHALL ofrecer un control de dos opciones, "Este mes" y "P
 - **THEN** la pantalla muestra la vista Promedio del mismo mes
 
 ### Requirement: Vista Este mes
-La vista "Este mes" SHALL mostrar los cobros de gastos recurrentes que caen en el mes seleccionado y los gastos únicos con fecha en ese mes. Incluye el número de cargos, el total exacto, los subtotales de recurrentes y de únicos, y una lista ordenada por fecha (y por nombre si empatan). Cada elemento muestra fecha, nombre o descripción, monto real, método de pago y una marca si es único. Los gastos eliminados no SHALL incluirse.
+La vista "Este mes" SHALL mostrar los cobros de gastos recurrentes que caen en el mes seleccionado y los gastos únicos con fecha en ese mes. Incluye el número de cargos, el total exacto, los subtotales de recurrentes y de únicos, y una lista ordenada por fecha (y por nombre si empatan). Cada elemento muestra fecha, nombre o descripción, monto real, método de pago, el ícono y nombre de su categoría y una marca si es único. Los gastos eliminados no SHALL incluirse.
 
 #### Scenario: Total y conteo del mes
 - **WHEN** en noviembre 2026 caen Netflix ($219.00, día 15), Renta ($1,500.00, día 20) e Internet bimestral ($450.00, día 28), hay un gasto único "Recarga metro" ($100.00, día 8) y existe un seguro anual de $6,000.00 que se cobra en marzo
@@ -60,6 +60,14 @@ La vista "Este mes" SHALL mostrar los cobros de gastos recurrentes que caen en e
 #### Scenario: Mes sin cargos
 - **WHEN** en el mes seleccionado no cae ningún cobro ni hay gastos únicos
 - **THEN** la vista muestra 0 cargos, un total de $0.00 y un mensaje indicando que no hay cargos ese mes
+
+#### Scenario: Categoría en la fila
+- **WHEN** Netflix tiene la categoría "Suscripciones" y se cobra en noviembre 2026
+- **THEN** su fila en "Este mes" muestra el ícono y el nombre "Suscripciones"
+
+#### Scenario: Categoría borrada
+- **WHEN** "Smart Fit" tenía la categoría personalizada "Gimnasio" y esta se borró
+- **THEN** su fila muestra "Otro"
 
 ### Requirement: Marca de cobros por confirmar
 En la vista "Este mes", cada cobro recurrente que esté por confirmar SHALL mostrar la marca "Por confirmar". Las cifras de "Este mes" y "Promedio" SHALL seguir calculándose con el monto de la regla, confirmados o no.
@@ -105,6 +113,13 @@ La vista "Promedio" SHALL listar cada gasto recurrente vigente en el mes con su 
 #### Scenario: Gastos únicos de otro mes
 - **WHEN** existe un gasto único con fecha 30/10/2026 y se consulta noviembre 2026
 - **THEN** ese gasto no aparece en la vista Promedio de noviembre 2026
+
+### Requirement: Categoría en la vista Promedio
+Cada gasto recurrente y único de la vista "Promedio" SHALL mostrar el ícono y el nombre de su categoría; un gasto de una categoría borrada SHALL mostrarse con "Otro".
+
+#### Scenario: Categoría en la vista Promedio
+- **WHEN** Renta tiene la categoría "Hogar"
+- **THEN** su fila en "Promedio" muestra el ícono y el nombre "Hogar"
 
 ### Requirement: Pista del cobro real en la vista Promedio
 Para cada gasto con intervalo mayor a un mes, la vista Promedio SHALL mostrar su monto real, su frecuencia y la fecha de su próximo cobro, que es el primero que cae en o después de la fecha de referencia. La fecha de referencia es la fecha de hoy o el primer día del mes seleccionado, la que sea posterior. Si no quedan cobros, SHALL indicar que no hay cobros próximos.
