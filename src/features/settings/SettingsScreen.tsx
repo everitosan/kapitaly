@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import { isSelectableCategory } from '@/domain/category';
 import { isActiveMethod } from '@/domain/paymentMethod';
@@ -9,7 +11,21 @@ import { CategoryIcon } from '@/ui/icons/categoryIcons';
 import type { Gradient } from '@/ui/theme';
 import { useTheme } from '@/ui/ThemeProvider';
 
+import { isPinSupported, requestPinNewExpense } from '../../../modules/kapitaly-shortcuts';
 import { useCategories, usePaymentMethods } from '../repositories';
+
+function PlusIcon({ color }: { color: string }) {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={2.6} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+const addShortcut = () => {
+  if (!requestPinNewExpense())
+    Alert.alert('No se pudo agregar', 'Tu pantalla de inicio no permite agregar accesos directos.');
+};
 
 export interface SettingsScreenProps {
   onBack: () => void;
@@ -27,7 +43,7 @@ function SettingsRow({
 }: {
   label: string;
   detail: string;
-  count: number;
+  count?: number;
   gradient: Gradient;
   icon: React.ReactNode;
   onPress: () => void;
@@ -36,7 +52,7 @@ function SettingsRow({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${label}, ${count}`}
+      accessibilityLabel={count === undefined ? label : `${label}, ${count}`}
       onPress={onPress}
       style={({ pressed }) => [styles.row, { opacity: pressed ? 0.7 : 1 }]}
     >
@@ -47,7 +63,9 @@ function SettingsRow({
         <Text style={[styles.label, { color: colors.ink }]}>{label}</Text>
         <Text style={[styles.detail, { color: colors.muted }]}>{detail}</Text>
       </View>
-      <Text style={[styles.count, { color: colors.muted }]}>{count}</Text>
+      {count === undefined ? null : (
+        <Text style={[styles.count, { color: colors.muted }]}>{count}</Text>
+      )}
       <Text style={[styles.chev, { color: colors.muted }]}>›</Text>
     </Pressable>
   );
@@ -59,6 +77,8 @@ export function SettingsScreen({ onBack, onOpenMethods, onOpenCategories }: Sett
   const { colors } = theme;
   const methods = usePaymentMethods();
   const categories = useCategories();
+  // No cambia durante la vida de la app; se consulta una vez por pantalla.
+  const [pinSupported] = useState(isPinSupported);
 
   return (
     <ScreenLayout
@@ -94,6 +114,18 @@ export function SettingsScreen({ onBack, onOpenMethods, onOpenCategories }: Sett
           icon={<CategoryIcon icon="dots" color={colors.onBlock} />}
           onPress={onOpenCategories}
         />
+        {pinSupported ? (
+          <>
+            <View style={[styles.sep, { backgroundColor: colors.line }]} />
+            <SettingsRow
+              label="Acceso directo: nuevo gasto"
+              detail="Un ícono en tu pantalla de inicio"
+              gradient={theme.frequency.monthly}
+              icon={<PlusIcon color={colors.onBlock} />}
+              onPress={addShortcut}
+            />
+          </>
+        ) : null}
       </View>
     </ScreenLayout>
   );

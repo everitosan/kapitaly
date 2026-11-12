@@ -1,0 +1,20 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.kapitalyshortcuts'
+version = '0.1.0'
+
+expoModule {
+  // Módulo local de la app: se compila junto con ella, no se publica.
+  canBePublished false
+}
+
+android {
+  namespace "expo.modules.kapitalyshortcuts"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+}

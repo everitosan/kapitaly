@@ -1,0 +1,7 @@
+{
+  "name": "kapitaly-shortcuts",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "description": "Acceso directo fijado \"Nuevo gasto\" en la pantalla de inicio de Android (módulo local)."
+}

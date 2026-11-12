@@ -18,6 +18,8 @@ npx expo start            # escanea el QR con Expo Go (teléfono y computadora e
 npx expo start --tunnel   # si el teléfono está en otra red
 ```
 
+El acceso directo "Nuevo gasto" (Ajustes y atajo del ícono) usa el módulo nativo local `modules/kapitaly-shortcuts` y el plugin `plugins/withAndroidShortcuts.js`: en Expo Go no aparece; se prueba con un development build (`npx expo run:android`) o con la beta de Play.
+
 El catálogo visual de componentes vive en la maqueta `design/propose/a-1-duotono.html` (sección "Componentes"); la app no incluye pantallas de desarrollo.
 
 ## Pruebas y calidad
