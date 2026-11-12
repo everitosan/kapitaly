@@ -22,7 +22,7 @@ Al registrar o editar un método de tipo crédito, el sistema SHALL permitir cap
 - **THEN** el formulario no muestra saldo inicial, límite ni día de pago
 
 ### Requirement: Cálculo del usado
-El usado de una tarjeta SHALL ser: saldo inicial + gastos únicos vigentes con esa tarjeta y fecha igual o posterior a la del saldo inicial + cobros recurrentes confirmados con esa tarjeta y fecha igual o posterior − pagos vigentes de la tarjeta. Si el resultado es negativo, SHALL mostrarse como saldo a favor.
+El usado de una tarjeta SHALL ser: saldo inicial + gastos únicos vigentes con esa tarjeta y fecha igual o posterior a la del saldo inicial + cobros recurrentes confirmados con esa tarjeta y fecha igual o posterior − pagos vigentes de la tarjeta. Los gastos únicos y cobros confirmados marcados como "no sumar al saldo de la tarjeta" SHALL excluirse del usado porque ya venían incluidos en el saldo inicial. Si el resultado es negativo, SHALL mostrarse como saldo a favor.
 
 #### Scenario: Usado con gastos y un cobro confirmado
 - **WHEN** "BBVA Azul" tiene saldo inicial $12,000.00 al 01/11/2026, un gasto único de $238.50 el 09/11/2026 y el cobro de Netflix de $219.00 del 15/11/2026 confirmado
@@ -43,6 +43,10 @@ El usado de una tarjeta SHALL ser: saldo inicial + gastos únicos vigentes con e
 #### Scenario: Saldo a favor
 - **WHEN** el usado es $500.00 y el usuario registra un pago de $700.00
 - **THEN** la tarjeta muestra un saldo a favor de $200.00
+
+#### Scenario: Gasto ya incluido en el saldo inicial
+- **WHEN** "BBVA Azul" tiene saldo inicial $12,000.00 al 11/11/2026 y el usuario confirma el cobro de Netflix de $219.00 con "Sumar al saldo de la tarjeta" desactivado
+- **THEN** su usado sigue en $12,000.00 y el cobro sí cuenta en el balance del mes
 
 ### Requirement: Privacidad del límite
 El usado SHALL mostrarse siempre. El límite y el disponible (límite − usado) SHALL mostrarse ocultos con puntos hasta que el usuario los toque, y SHALL volver a ocultarse al salir de la pantalla. Estos datos SHALL mostrarse solo en Métodos de pago, nunca en el balance del mes.
