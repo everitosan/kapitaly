@@ -87,7 +87,7 @@ Desde Métodos de pago, el sistema SHALL permitir "Pagar tarjeta" con un monto m
 
 #### Scenario: Los pagos no son gastos
 - **WHEN** el usuario registra un pago de tarjeta en noviembre 2026
-- **THEN** el total y los cargos de "Este mes" y de "Promedio" de noviembre no cambian
+- **THEN** lo efectuado, lo proyectado y los cargos de "Este mes" y el costo mensual promedio de "Análisis" de noviembre no cambian
 
 ### Requirement: Aviso en la fecha de pago
 Al abrir la app, por cada tarjeta con día de pago, usado mayor que cero y cuya fecha de pago más reciente ya llegó (y es igual o posterior a la del saldo inicial) sin pago asociado, el sistema SHALL preguntar si ya se pagó, con el monto propuesto igual al usado y editable. "Sí, pagué" SHALL registrar el pago asociado a esa fecha; "Aún no" SHALL volver a preguntar en la siguiente apertura.
