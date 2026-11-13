@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { INSTITUTION_CATALOG } from '@/data/institutions/catalog';
 import type { CategoryView } from '@/domain/category';
 import { duotoneFromBase } from '@/domain/color';
-import type { MethodBreakdownEntry } from '@/domain/balance';
+import type { ChargeState, MethodBreakdownEntry } from '@/domain/balance';
 import { parseCivilDate, type CivilDate } from '@/domain/date';
 import { resolveInstitution } from '@/domain/institution';
 import { formatMXN, type Cents } from '@/domain/money';
@@ -60,12 +60,64 @@ export function SegmentedControl<V extends string>({
 
 /* ---------- MonthSwitcher ---------- */
 
-/** Ícono de menú (tres líneas). */
-export function MenuIcon({ color }: { color: string }) {
+/** Ícono de engrane (Ajustes). */
+export function GearIcon({ color }: { color: string }) {
   return (
-    <Svg width={20} height={16} viewBox="0 0 20 16" fill="none">
-      <Path d="M2 2h16M2 8h16M2 14h10" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx={12} cy={12} r={3} stroke={color} strokeWidth={2} />
     </Svg>
+  );
+}
+
+/** Botón de ícono discreto, sin fondo (barra superior del balance). */
+function GhostIconButton({
+  label,
+  onPress,
+  children,
+}: {
+  label: string;
+  onPress?: () => void;
+  children: React.ReactNode;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      hitSlop={6}
+      style={({ pressed }) => [styles.ghost, pressed ? { backgroundColor: colors.card } : null]}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+/** Fila superior del balance: Métodos de pago y Ajustes, separados de las flechas del mes. */
+export function BalanceTopBar({
+  onOpenMethods,
+  onOpenSettings,
+}: {
+  onOpenMethods: () => void;
+  onOpenSettings: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.topBar} testID="balance-top-bar">
+      <GhostIconButton label="Métodos de pago" onPress={onOpenMethods}>
+        <CardIcon color={colors.muted} />
+      </GhostIconButton>
+      <GhostIconButton label="Ajustes" onPress={onOpenSettings}>
+        <GearIcon color={colors.muted} />
+      </GhostIconButton>
+    </View>
   );
 }
 
@@ -111,14 +163,11 @@ export function MonthSwitcher({
   month,
   onPrev,
   onNext,
-  onMenu,
 }: {
   year: number;
   month: number;
   onPrev: () => void;
   onNext: () => void;
-  /** Abre Ajustes. */
-  onMenu?: () => void;
 }) {
   const { colors } = useTheme();
   return (
@@ -130,11 +179,6 @@ export function MonthSwitcher({
         <Text style={[styles.monthYear, { color: colors.muted }]}>{year}</Text>
       </View>
       <View style={styles.arrows}>
-        {onMenu ? (
-          <RoundButton label="Ajustes" onPress={onMenu}>
-            <MenuIcon color={colors.ink} />
-          </RoundButton>
-        ) : null}
         <RoundButton label="Mes anterior" onPress={onPrev}>
           <Text style={[styles.arrow, { color: colors.ink }]}>‹</Text>
         </RoundButton>
@@ -143,37 +187,6 @@ export function MonthSwitcher({
         </RoundButton>
       </View>
     </View>
-  );
-}
-
-/* ---------- TotalCard ---------- */
-
-export function TotalCard({
-  variant,
-  label,
-  cents,
-  pills,
-}: {
-  variant: 'thisMonth' | 'average';
-  label: string;
-  cents: Cents;
-  pills: string[];
-}) {
-  const theme = useTheme();
-  const gradient = theme.totals[variant];
-  const pillBg = gradient.text === '#FFFFFF' ? 'rgba(255,255,255,0.22)' : 'rgba(20,20,20,0.1)';
-  return (
-    <DuotoneBlock gradient={gradient} radius={theme.radii.total} style={styles.total}>
-      <Text style={[styles.totalLabel, { color: gradient.text }]}>{label}</Text>
-      <MoneyText cents={cents} size={46} color={gradient.text} style={styles.totalAmount} />
-      <View style={styles.pills}>
-        {pills.map((p) => (
-          <Pill key={p} background={pillBg} color={gradient.text}>
-            {p}
-          </Pill>
-        ))}
-      </View>
-    </DuotoneBlock>
   );
 }
 
@@ -274,6 +287,13 @@ export function CategoryPill({ category, onBlock }: { category: CategoryView; on
 
 /* ---------- ExpenseRow ---------- */
 
+const STATUS_LABEL: Record<ChargeState, string> = {
+  charged: '',
+  pending: ', por confirmar',
+  future: ', por cobrar',
+  skipped: ', no se cobró',
+};
+
 function DateBadge({ date, neutral }: { date: CivilDate; neutral?: boolean }) {
   const { colors } = useTheme();
   const { day, month } = parseCivilDate(date);
@@ -297,8 +317,10 @@ type ExpenseRowProps =
       method: PaymentMethod | null;
       cardVariant?: CardVariant | null;
       category?: CategoryView;
-      /** Cobro vencido sin confirmar: muestra la píldora "Por confirmar". */
-      pending?: boolean;
+      /** Estado del cobro: "Por confirmar", "Por cobrar" (tenue) o "No se cobró" (neutro y tachado). */
+      status?: ChargeState;
+      /** Monto de la regla; si difiere de `amountCents` se muestra "esperado $X". */
+      expectedCents?: Cents;
       onPress?: () => void;
     }
   | {
@@ -355,10 +377,70 @@ export function ExpenseRow(props: ExpenseRowProps) {
     );
   }
 
-  const content =
-    props.variant === 'recurring' ? (
+  if (props.variant === 'recurring') {
+    const status = props.status ?? 'charged';
+    const skipped = status === 'skipped';
+    const ink = skipped ? colors.ink : colors.onBlock;
+    const strike = skipped ? styles.strike : null;
+    const showExpected =
+      props.expectedCents !== undefined && props.expectedCents !== props.amountCents && !skipped;
+    const inner = (
       <View style={styles.rowInner}>
-        <DateBadge date={props.date} />
+        <DateBadge date={props.date} neutral={skipped} />
+        <View style={styles.mid}>
+          <Text style={[styles.name, { color: ink }, strike]} numberOfLines={1}>
+            {props.title}
+          </Text>
+          <View style={styles.subRow}>
+            {props.category ? <CategoryPill category={props.category} onBlock={!skipped} /> : null}
+            <Text style={[styles.sub, { color: ink }]}>{props.frequency}</Text>
+            {status === 'pending' ? (
+              <Pill background={colors.onBlock} color="#F4F1EA" style={styles.unique}>
+                POR CONFIRMAR
+              </Pill>
+            ) : null}
+            {status === 'future' || skipped ? (
+              <View style={[styles.dashed, { borderColor: ink }]}>
+                <Text style={[styles.dashedText, { color: ink }]}>
+                  {skipped ? 'NO SE COBRÓ' : 'POR COBRAR'}
+                </Text>
+              </View>
+            ) : null}
+            <MethodPill method={props.method} cardVariant={props.cardVariant} onBlock={!skipped} />
+          </View>
+        </View>
+        <View style={styles.alignEnd}>
+          <MoneyText cents={props.amountCents} color={ink} style={strike} />
+          {showExpected ? (
+            <Text style={[styles.perMonth, { color: ink }]}>
+              {`esperado ${formatMXN(props.expectedCents!)}`}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+    );
+    const label = `${props.title}${STATUS_LABEL[status]}`;
+    return (
+      <Pressable
+        onPress={props.onPress}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        style={[styles.rowWrap, status === 'future' || skipped ? styles.faded : null]}
+      >
+        {skipped ? (
+          <View style={{ backgroundColor: colors.card, borderRadius: radii.row }}>{inner}</View>
+        ) : (
+          <DuotoneBlock gradient={props.gradient} radius={radii.row}>
+            {inner}
+          </DuotoneBlock>
+        )}
+      </Pressable>
+    );
+  }
+
+  const content = (
+    <View style={styles.colInner}>
+      <View style={styles.rowInnerFlat}>
         <View style={styles.mid}>
           <Text style={[styles.name, { color: colors.onBlock }]} numberOfLines={1}>
             {props.title}
@@ -366,42 +448,22 @@ export function ExpenseRow(props: ExpenseRowProps) {
           <View style={styles.subRow}>
             {props.category ? <CategoryPill category={props.category} onBlock /> : null}
             <Text style={[styles.sub, { color: colors.onBlock }]}>{props.frequency}</Text>
-            {props.pending ? (
-              <Pill background={colors.onBlock} color="#F4F1EA" style={styles.unique}>
-                POR CONFIRMAR
-              </Pill>
-            ) : null}
             <MethodPill method={props.method} cardVariant={props.cardVariant} onBlock />
           </View>
         </View>
-        <MoneyText cents={props.amountCents} color={colors.onBlock} />
-      </View>
-    ) : (
-      <View style={styles.colInner}>
-        <View style={styles.rowInnerFlat}>
-          <View style={styles.mid}>
-            <Text style={[styles.name, { color: colors.onBlock }]} numberOfLines={1}>
-              {props.title}
-            </Text>
-            <View style={styles.subRow}>
-              {props.category ? <CategoryPill category={props.category} onBlock /> : null}
-              <Text style={[styles.sub, { color: colors.onBlock }]}>{props.frequency}</Text>
-              <MethodPill method={props.method} cardVariant={props.cardVariant} onBlock />
-            </View>
-          </View>
-          <View style={styles.alignEnd}>
-            <MoneyText cents={props.monthlyCents} color={colors.onBlock} />
-            <Text style={[styles.perMonth, { color: colors.onBlock }]}>al mes</Text>
-          </View>
+        <View style={styles.alignEnd}>
+          <MoneyText cents={props.monthlyCents} color={colors.onBlock} />
+          <Text style={[styles.perMonth, { color: colors.onBlock }]}>al mes</Text>
         </View>
-        {props.hint ? (
-          <View style={[styles.hint, { backgroundColor: colors.blockOverlay }]}>
-            <View style={[styles.hintDot, { backgroundColor: colors.onBlock }]} />
-            <Text style={[styles.hintText, { color: colors.onBlock }]}>{props.hint}</Text>
-          </View>
-        ) : null}
       </View>
-    );
+      {props.hint ? (
+        <View style={[styles.hint, { backgroundColor: colors.blockOverlay }]}>
+          <View style={[styles.hintDot, { backgroundColor: colors.onBlock }]} />
+          <Text style={[styles.hintText, { color: colors.onBlock }]}>{props.hint}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
 
   return (
     <Pressable
@@ -422,9 +484,15 @@ export function ExpenseRow(props: ExpenseRowProps) {
 export function MethodBreakdownCard({
   entries,
   totalCents,
+  caption,
+  note,
 }: {
   entries: MethodBreakdownEntry[];
   totalCents: Cents;
+  /** Texto a la derecha del encabezado (p. ej. "al mes"); por defecto, el número de métodos. */
+  caption?: string;
+  /** Aclaración bajo el encabezado. */
+  note?: string;
 }) {
   const theme = useTheme();
   const { colors, radii } = theme;
@@ -435,8 +503,11 @@ export function MethodBreakdownCard({
     >
       <View style={styles.bdHead}>
         <Text style={[styles.bdHeadText, { color: colors.muted }]}>POR MÉTODO</Text>
-        <Text style={[styles.bdHeadText, { color: colors.muted }]}>{entries.length}</Text>
+        <Text style={[styles.bdHeadText, { color: colors.muted }]}>
+          {caption ?? entries.length}
+        </Text>
       </View>
+      {note ? <Text style={[styles.bdNote, { color: colors.muted }]}>{note}</Text> : null}
       {entries.map((e) => {
         const g = methodGradient(e.method, theme);
         const pct = totalCents > 0 ? (e.amountCents / totalCents) * 100 : 0;
@@ -478,11 +549,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   segText: { fontSize: 15, fontWeight: '700' },
+  topBar: { flexDirection: 'row', justifyContent: 'flex-end', gap: 4, paddingBottom: 6 },
+  ghost: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   month: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    paddingTop: 8,
+    paddingTop: 0,
     paddingHorizontal: 4,
     paddingBottom: 22,
   },
@@ -558,11 +637,22 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     paddingHorizontal: 12,
   },
+  strike: { textDecorationLine: 'line-through' },
+  faded: { opacity: 0.42 },
+  dashed: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  dashedText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
   hintDot: { width: 8, height: 8, borderRadius: 4 },
   hintText: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
   bd: { paddingTop: 18, paddingHorizontal: 18, paddingBottom: 8, marginBottom: 26 },
   bdHead: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   bdHeadText: { fontSize: 13, fontWeight: '700', letterSpacing: 1 },
+  bdNote: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   bdItem: { paddingVertical: 10 },
   bdTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   bdName: { flex: 1, fontSize: 15, fontWeight: '700' },

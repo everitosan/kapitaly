@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react-native';
 import { Keyboard, Platform, Text } from 'react-native';
 
 import { ThemeProvider } from '../../ThemeProvider';
-import { SheetLayout } from '../layout';
+import { ScreenLayout, SheetLayout } from '../layout';
 
 /** Captura los listeners del teclado para simular que aparece y desaparece. */
 function mockKeyboard() {
@@ -46,5 +46,26 @@ describe('SheetLayout con el teclado', () => {
     await render(ui);
     await act(async () => kb.keyboardDidShow());
     expect(screen.getByText('Guardar')).toBeOnTheScreen();
+  });
+});
+
+describe('ScreenLayout con el teclado', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('oculta el botón flotante mientras se escribe y lo regresa al cerrar el teclado', async () => {
+    const kb = mockKeyboard();
+    await render(
+      <ThemeProvider scheme="light">
+        <ScreenLayout footer={<Text>Agregar gasto</Text>}>
+          <Text>Lista</Text>
+        </ScreenLayout>
+      </ThemeProvider>,
+    );
+    expect(screen.getByText('Agregar gasto')).toBeOnTheScreen();
+    await act(async () => kb.keyboardDidShow());
+    expect(screen.queryByText('Agregar gasto')).not.toBeOnTheScreen();
+    expect(screen.getByText('Lista')).toBeOnTheScreen();
+    await act(async () => kb.keyboardDidHide());
+    expect(screen.getByText('Agregar gasto')).toBeOnTheScreen();
   });
 });

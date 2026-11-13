@@ -34,12 +34,64 @@ export interface PendingCharge {
   date: CivilDate;
 }
 
-const key = (expenseId: string, date: CivilDate) => `${expenseId}|${date}`;
+export const confirmationKey = (expenseId: string, date: CivilDate) => `${expenseId}|${date}`;
+const key = confirmationKey;
+
+/** Estado de un cobro recurrente concreto. */
+export type ChargeStatus =
+  /** Cobrado: confirmado (con su monto real) o anterior al registro del gasto (monto de la regla). */
+  | { status: 'charged'; amountCents: Cents }
+  /** Marcado como "No se cobró este mes". */
+  | { status: 'skipped' }
+  /** Ya pasó su fecha y falta la respuesta. */
+  | { status: 'pending' }
+  /** Aún no llega su fecha. */
+  | { status: 'future' };
+
+/** Primer día desde el que se pregunta por los cobros: máx(ancla, día local de registro). */
+const askFrom = (
+  expense: RecurringExpense,
+  registeredOn: (iso: string) => CivilDate,
+): CivilDate => {
+  const registered = registeredOn(expense.createdAt);
+  return compareCivilDates(expense.anchorDate, registered) > 0 ? expense.anchorDate : registered;
+};
+
+/**
+ * Estado del cobro de `expense` en `date`. Manda la confirmación vigente si existe; si no, un cobro
+ * anterior a máx(ancla, día local de registro) se da por cobrado con el monto de la regla (nunca se
+ * pregunta por él); uno con fecha ≤ hoy está por confirmar y uno posterior, por cobrar.
+ */
+export function chargeStatus(
+  expense: RecurringExpense,
+  date: CivilDate,
+  confirmation: Pick<ChargeConfirmation, 'status' | 'amountCents'> | undefined,
+  today: CivilDate,
+  registeredOn: (iso: string) => CivilDate,
+): ChargeStatus {
+  if (confirmation) {
+    if (confirmation.status === 'skipped') return { status: 'skipped' };
+    return { status: 'charged', amountCents: confirmation.amountCents ?? expense.amountCents };
+  }
+  if (compareCivilDates(date, askFrom(expense, registeredOn)) < 0)
+    return { status: 'charged', amountCents: expense.amountCents };
+  return compareCivilDates(date, today) <= 0 ? { status: 'pending' } : { status: 'future' };
+}
+
+/** Confirmaciones vigentes indexadas por gasto y fecha de cobro. */
+export function indexConfirmations<
+  C extends Pick<ChargeConfirmation, 'recurringExpenseId' | 'occurrenceDate' | 'deletedAt'>,
+>(confirmations: readonly C[]): Map<string, C> {
+  const map = new Map<string, C>();
+  for (const c of confirmations)
+    if (!isDeleted(c)) map.set(key(c.recurringExpenseId, c.occurrenceDate), c);
+  return map;
+}
 
 /**
  * Cobros por confirmar: de cada gasto vigente, los cobros con fecha ≤ hoy y ≥ máx(ancla, día local
- * en que se registró el gasto) que no tienen confirmación. `registeredOn` convierte `createdAt` (UTC)
- * a la fecha local; se inyecta para que el cálculo sea determinista.
+ * en que se registró el gasto) que no tienen confirmación (ver `chargeStatus`). `registeredOn`
+ * convierte `createdAt` (UTC) a la fecha local; se inyecta para que el cálculo sea determinista.
  */
 export function pendingConfirmations(
   recurring: readonly RecurringExpense[],
@@ -50,27 +102,21 @@ export function pendingConfirmations(
   today: CivilDate,
   registeredOn: (iso: string) => CivilDate,
 ): PendingCharge[] {
-  const answered = new Set(
-    confirmations
-      .filter((c) => !isDeleted(c))
-      .map((c) => key(c.recurringExpenseId, c.occurrenceDate)),
-  );
+  const answered = indexConfirmations(confirmations);
   const end = parseCivilDate(today);
   const pending: PendingCharge[] = [];
   for (const expense of recurring) {
     if (isDeleted(expense)) continue;
-    const registered = registeredOn(expense.createdAt);
-    const start =
-      compareCivilDates(expense.anchorDate, registered) > 0 ? expense.anchorDate : registered;
+    const start = askFrom(expense, registeredOn);
     if (compareCivilDates(start, today) > 0) continue;
     const s = parseCivilDate(start);
     const months = monthIndex(end.year, end.month) - monthIndex(s.year, s.month);
     for (let i = 0; i <= months; i++) {
       const { year, month } = shiftMonth(s.year, s.month, i);
       const date = occurrenceInMonth(expense, year, month);
-      if (date === null || compareCivilDates(date, start) < 0 || compareCivilDates(date, today) > 0)
-        continue;
-      if (!answered.has(key(expense.id, date))) pending.push({ expense, date });
+      if (date === null || answered.has(key(expense.id, date))) continue;
+      if (chargeStatus(expense, date, undefined, today, registeredOn).status === 'pending')
+        pending.push({ expense, date });
     }
   }
   return pending.sort(

@@ -1,41 +1,57 @@
-import { useState, type ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 
-import { buildAverageView, buildThisMonthView, type MonthCharge } from '@/domain/balance';
+import {
+  buildAverageView,
+  buildThisMonthView,
+  sortCharges,
+  type MonthCharge,
+  type SortDirection,
+} from '@/domain/balance';
 import { resolveCategory } from '@/domain/category';
 import { civilDateFromLocal, parseCivilDate, shiftMonth, type CivilDate } from '@/domain/date';
-import { formatMXN } from '@/domain/money';
+import { methodLabel } from '@/domain/paymentMethod';
 import { frequencyLabel, monthsPerInterval } from '@/domain/recurringExpense';
-import { PrimaryButton, SectionLabel } from '@/ui/components/basics';
+import { matchesSearch } from '@/domain/search';
 import {
+  AverageTotalCard,
+  CategoryDonut,
+  MonthProgressCard,
+  type AverageListKind,
+} from '@/ui/components/analysis';
+import { PrimaryButton, SearchField } from '@/ui/components/basics';
+import {
+  BalanceTopBar,
   ExpenseRow,
   MethodBreakdownCard,
   MonthSwitcher,
   SegmentedControl,
-  TotalCard,
 } from '@/ui/components/balance';
 import { ScreenLayout } from '@/ui/components/layout';
-import { formatShortDate, MONTH_NAMES } from '@/ui/format';
+import { categoryColorMap } from '@/ui/categoryColor';
+import { MONTH_NAMES } from '@/ui/format';
 import { frequencyKeyForMonths } from '@/ui/theme';
 import { useTheme } from '@/ui/ThemeProvider';
 
-import { isPending } from '@/domain/confirmations';
-
 import { PendingSheet } from '../pending/PendingSheet';
 import { pendingSession } from '../pending/session';
-import { usePending } from '../pending/usePending';
+import { registeredOnLocal, usePending } from '../pending/usePending';
 import {
   useCategories,
+  useChargeConfirmations,
   useOneOffExpenses,
   usePaymentMethods,
   useRecurringExpenses,
 } from '../repositories';
+import { AnalysisListSheet } from './AnalysisListSheet';
 
 export type BalanceView = 'this' | 'avg';
+type Section = 'category' | 'method';
 
 export interface BalanceScreenProps {
   onAdd: () => void;
   onOpenSettings: () => void;
+  onOpenMethods: () => void;
   onEdit: (kind: 'recurring' | 'oneOff', id: string) => void;
   /** Fecha de hoy (zona local). Se inyecta en pruebas. */
   today?: CivilDate;
@@ -49,10 +65,12 @@ export interface BalanceScreenProps {
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const METHOD_NOTE = 'Estimado con prorrateo, no es lo cobrado. Lo real del mes está en "Este mes".';
 
 export function BalanceScreen({
   onAdd,
   onOpenSettings,
+  onOpenMethods,
   onEdit,
   today = civilDateFromLocal(new Date()),
   extra,
@@ -63,9 +81,18 @@ export function BalanceScreen({
   const recurring = useRecurringExpenses();
   const categories = useCategories();
   const oneOffs = useOneOffExpenses();
+  const confirmations = useChargeConfirmations();
   const start = parseCivilDate(today);
   const [{ year, month }, setMonth] = useState({ year: start.year, month: start.month });
   const [view, setView] = useState<BalanceView>('this');
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<SortDirection>('asc');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [list, setList] = useState<AverageListKind | null>(null);
+  const editAfterClose = useRef<{ kind: 'recurring' | 'oneOff'; id: string } | null>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const [scrollTarget, setScrollTarget] = useState<Section | null>(null);
+
   const pending = usePending(today);
   const [forceSheet, setForceSheet] = useState(false);
   const [, setSessionTick] = useState(0);
@@ -81,9 +108,36 @@ export function BalanceScreen({
     setSessionTick((t) => t + 1);
   };
 
+  // Se navega a la edición solo cuando el modal de la lista ya se cerró.
+  useEffect(() => {
+    const target = editAfterClose.current;
+    if (list === null && target) {
+      editAfterClose.current = null;
+      onEdit(target.kind, target.id);
+    }
+  }, [list, onEdit]);
+
   const methodById = new Map(methods.data.map((m) => [m.id, m]));
   const methodOf = (id: string) => methodById.get(id) ?? null;
+  const methodName = (id: string) => {
+    const m = methodOf(id);
+    return m ? methodLabel(m) : 'Método desconocido';
+  };
   const go = (delta: number) => setMonth(shiftMonth(year, month, delta));
+  const changeView = (v: BalanceView) => {
+    setView(v);
+    setScrollTarget(null);
+  };
+  const jumpTo = (section: Section) => {
+    setView('avg');
+    setScrollTarget(section);
+  };
+  // Al montarse la sección destino, se desplaza hasta ella.
+  const handleSectionLayout = (section: Section, y: number) => {
+    if (scrollTarget !== section) return;
+    scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: true });
+    setScrollTarget(null);
+  };
 
   const chargeRow = (c: MonthCharge) =>
     c.kind === 'oneOff' ? (
@@ -95,14 +149,15 @@ export function BalanceScreen({
         amountCents={c.amountCents}
         method={methodOf(c.paymentMethodId)}
         cardVariant={c.expense.cardVariant}
-        category={resolveCategory(c.expense.categoryId, categories.data)}
+        category={resolveCategory(c.categoryId, categories.data)}
         onPress={() => onEdit('oneOff', c.id)}
       />
     ) : (
       <ExpenseRow
         key={`r-${c.id}`}
         variant="recurring"
-        pending={c.date <= today && isPending(pending.allCharges, c.id, c.date)}
+        status={c.status}
+        expectedCents={c.expectedCents}
         gradient={
           theme.frequency[
             frequencyKeyForMonths(
@@ -116,103 +171,168 @@ export function BalanceScreen({
         amountCents={c.amountCents}
         method={methodOf(c.paymentMethodId)}
         cardVariant={c.expense.cardVariant}
-        category={resolveCategory(c.expense.categoryId, categories.data)}
+        category={resolveCategory(c.categoryId, categories.data)}
         onPress={() => onEdit('recurring', c.id)}
       />
     );
 
+  const average = buildAverageView(recurring.data, oneOffs.data, year, month, today, {
+    methods: methods.data,
+    categories: categories.data,
+  });
+
   let body;
   if (view === 'this') {
-    const v = buildThisMonthView(recurring.data, oneOffs.data, methods.data, year, month);
+    const v = buildThisMonthView({
+      recurring: recurring.data,
+      oneOffs: oneOffs.data,
+      confirmations: confirmations.data,
+      year,
+      month,
+      today,
+      registeredOn: registeredOnLocal,
+    });
+    const shown = sortCharges(
+      v.charges.filter((c) =>
+        matchesSearch(query, [
+          c.label,
+          resolveCategory(c.categoryId, categories.data).name,
+          methodName(c.paymentMethodId),
+        ]),
+      ),
+      sort,
+    );
     body = (
       <>
-        <TotalCard
-          variant="thisMonth"
-          label={`Cargos de ${MONTH_NAMES[month - 1]}`}
-          cents={v.totalCents}
-          pills={[
-            plural(v.count, 'cargo', 'cargos'),
-            `Recurrentes ${formatMXN(v.recurringCents)}`,
-            `Únicos ${formatMXN(v.oneOffCents)}`,
-          ]}
+        <MonthProgressCard
+          monthName={MONTH_NAMES[month - 1]}
+          doneCents={v.doneCents}
+          pendingCents={v.pendingCents}
+          futureCents={v.futureCents}
+          projectedCents={v.projectedCents}
+          onByCategory={() => jumpTo('category')}
+          onByMethod={() => jumpTo('method')}
         />
         {v.count > 0 ? (
-          <MethodBreakdownCard entries={v.breakdown} totalCents={v.totalCents} />
-        ) : null}
-        <SectionLabel>Por fecha</SectionLabel>
-        {v.count > 0 ? v.charges.map(chargeRow) : <Empty text="No hay cargos este mes" />}
+          <>
+            <SearchField
+              value={query}
+              onChange={setQuery}
+              placeholder={`Buscar en ${MONTH_NAMES[month - 1]}`}
+              testID="month-search"
+            />
+            <View style={styles.listHead}>
+              <Text style={[styles.sectionText, { color: theme.colors.muted }]}>
+                CARGOS DEL MES
+              </Text>
+              <Pressable
+                testID="sort-toggle"
+                accessibilityRole="button"
+                accessibilityLabel={`Orden: ${sort === 'asc' ? 'más antiguo primero' : 'más reciente primero'}`}
+                onPress={() => setSort((s) => (s === 'asc' ? 'desc' : 'asc'))}
+                hitSlop={8}
+                style={[styles.sort, { backgroundColor: theme.colors.card }]}
+              >
+                <Text style={[styles.sortText, { color: theme.colors.ink }]}>
+                  {sort === 'asc' ? '↑ Más antiguo' : '↓ Más reciente'}
+                </Text>
+              </Pressable>
+            </View>
+            {query ? (
+              <Text style={[styles.count, { color: theme.colors.muted }]}>
+                {`${shown.length} de ${plural(v.count, 'cargo', 'cargos')}`}
+              </Text>
+            ) : null}
+            {shown.length > 0 ? (
+              shown.map(chargeRow)
+            ) : (
+              <Empty text={`Nada coincide con "${query}"`} />
+            )}
+          </>
+        ) : (
+          <Empty text="No hay cargos este mes" />
+        )}
       </>
     );
   } else {
-    const v = buildAverageView(recurring.data, oneOffs.data, year, month, today);
+    const color = categoryColorMap(categories.data, theme);
     body = (
       <>
-        <TotalCard
-          variant="average"
-          label="Costo mensual promedio"
-          cents={v.totalCents}
-          pills={[
-            `Fijos ${formatMXN(v.fixedCents)}`,
-            `Prorrateados ${formatMXN(v.proratedCents)}`,
-            `Únicos ${formatMXN(v.oneOffCents)}`,
-          ]}
+        <AverageTotalCard
+          totalCents={average.totalCents}
+          fixedCents={average.fixedCents}
+          proratedCents={average.proratedCents}
+          oneOffCents={average.oneOffCents}
+          onOpen={setList}
         />
-        <SectionLabel>Proporcional por gasto</SectionLabel>
-        {v.items.length > 0 ? (
-          v.items.map((i) => (
-            <ExpenseRow
-              key={i.expense.id}
-              variant="average"
-              gradient={theme.frequency[frequencyKeyForMonths(i.monthsPerInterval)]}
-              title={i.expense.name}
-              frequency={frequencyLabel(i.expense.intervalUnit, i.expense.intervalCount)}
-              monthlyCents={i.monthlyCents}
-              hint={
-                i.nextCharge === undefined
-                  ? undefined
-                  : i.nextCharge === null
-                    ? 'Sin cobros próximos'
-                    : `${formatMXN(i.expense.amountCents)} · próximo cobro ${formatShortDate(i.nextCharge)}`
-              }
-              method={methodOf(i.expense.paymentMethodId)}
-              cardVariant={i.expense.cardVariant}
-              category={resolveCategory(i.expense.categoryId, categories.data)}
-              onPress={() => onEdit('recurring', i.expense.id)}
+        <View
+          testID="section-category"
+          onLayout={(e) => handleSectionLayout('category', e.nativeEvent.layout.y)}
+          style={[
+            styles.card,
+            { backgroundColor: theme.colors.card, borderRadius: theme.radii.row },
+          ]}
+        >
+          <View style={styles.cardHead}>
+            <Text style={[styles.sectionText, { color: theme.colors.muted }]}>POR CATEGORÍA</Text>
+            <Text style={[styles.sectionText, { color: theme.colors.muted }]}>al mes</Text>
+          </View>
+          {average.byCategory.length > 0 ? (
+            <>
+              <Text style={[styles.cardNote, { color: theme.colors.muted }]}>
+                Con lo prorrateado: así se reparte tu costo de vida.
+              </Text>
+              <CategoryDonut
+                entries={average.byCategory.map((e) => ({
+                  id: e.category.id,
+                  name: e.category.name,
+                  amountCents: e.amountCents,
+                  color: color(e.category.id),
+                }))}
+                totalCents={average.totalCents}
+                selectedId={selectedCategory}
+                onSelect={setSelectedCategory}
+              />
+            </>
+          ) : (
+            <Text style={[styles.cardNote, { color: theme.colors.muted }]}>
+              No hay gastos para analizar este mes.
+            </Text>
+          )}
+        </View>
+        <View
+          testID="section-method"
+          onLayout={(e) => handleSectionLayout('method', e.nativeEvent.layout.y)}
+        >
+          {average.byMethod.length > 0 ? (
+            <MethodBreakdownCard
+              entries={average.byMethod}
+              totalCents={average.totalCents}
+              caption="al mes"
+              note={METHOD_NOTE}
             />
-          ))
-        ) : (
-          <Empty text="Sin gastos vigentes" />
-        )}
-        {v.oneOffs.length > 0 ? (
-          <>
-            <SectionLabel style={styles.groupGap}>Únicos del mes</SectionLabel>
-            {v.oneOffs.map(chargeRow)}
-          </>
-        ) : null}
+          ) : null}
+        </View>
       </>
     );
   }
 
   return (
     <ScreenLayout
+      scrollRef={scrollRef}
       footer={<PrimaryButton label="Agregar gasto" plus onPress={onAdd} testID="add-expense" />}
     >
-      <MonthSwitcher
-        year={year}
-        month={month}
-        onPrev={() => go(-1)}
-        onNext={() => go(1)}
-        onMenu={onOpenSettings}
-      />
+      <BalanceTopBar onOpenMethods={onOpenMethods} onOpenSettings={onOpenSettings} />
+      <MonthSwitcher year={year} month={month} onPrev={() => go(-1)} onNext={() => go(1)} />
       <View style={styles.seg}>
         <SegmentedControl
           testID="balance-view"
           options={[
             { value: 'this', label: 'Este mes' },
-            { value: 'avg', label: 'Promedio' },
+            { value: 'avg', label: 'Análisis' },
           ]}
           value={view}
-          onChange={setView}
+          onChange={changeView}
         />
       </View>
       {pending.count > 0 ? (
@@ -256,6 +376,26 @@ export function BalanceScreen({
           />
         ) : null}
       </Modal>
+      <Modal
+        visible={list !== null && !sheetVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setList(null)}
+      >
+        {list !== null ? (
+          <AnalysisListSheet
+            kind={list}
+            view={average}
+            methods={methods.data}
+            categories={categories.data}
+            onClose={() => setList(null)}
+            onSelect={(kind, id) => {
+              editAfterClose.current = { kind, id };
+              setList(null);
+            }}
+          />
+        ) : null}
+      </Modal>
     </ScreenLayout>
   );
 }
@@ -290,7 +430,20 @@ const styles = StyleSheet.create({
   bannerDotText: { fontWeight: '800' },
   bannerTitle: { fontSize: 15, fontWeight: '800' },
   bannerSub: { fontSize: 12, fontWeight: '600' },
-  groupGap: { marginTop: 22 },
+  listHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 4,
+    marginBottom: 12,
+  },
+  sectionText: { fontSize: 13, fontWeight: '700', letterSpacing: 1 },
+  sort: { borderRadius: 999, paddingHorizontal: 11, paddingVertical: 6 },
+  sortText: { fontSize: 12, fontWeight: '800' },
+  count: { fontSize: 12, fontWeight: '700', marginHorizontal: 4, marginTop: -6, marginBottom: 12 },
+  card: { padding: 18, marginBottom: 22 },
+  cardHead: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  cardNote: { fontSize: 13, fontWeight: '600', marginBottom: 12 },
   empty: { paddingVertical: 34, paddingHorizontal: 24, alignItems: 'center' },
   emptyIcon: { fontSize: 40, marginBottom: 6 },
   emptyText: { fontSize: 15, fontWeight: '600' },

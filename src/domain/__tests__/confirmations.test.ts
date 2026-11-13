@@ -1,5 +1,11 @@
 import { OTHER_CATEGORY_ID } from '../category';
-import { isPending, pendingConfirmations, validateConfirmation } from '../confirmations';
+import {
+  chargeStatus,
+  indexConfirmations,
+  isPending,
+  pendingConfirmations,
+  validateConfirmation,
+} from '../confirmations';
 import type { RecurringExpense } from '../recurringExpense';
 
 const registeredOn = (iso: string) => iso.slice(0, 10);
@@ -92,6 +98,59 @@ describe('pendingConfirmations', () => {
     const p = pendingConfirmations([rec()], [], '2026-11-16', registeredOn);
     expect(isPending(p, 'netflix', '2026-11-15')).toBe(true);
     expect(isPending(p, 'netflix', '2026-12-15')).toBe(false);
+  });
+});
+
+describe('chargeStatus', () => {
+  const r = rec({ createdAt: '2026-11-01T12:00:00Z' });
+
+  it('cobrado con el monto confirmado', () => {
+    expect(
+      chargeStatus(
+        r,
+        '2026-11-15',
+        { status: 'charged', amountCents: 23900 },
+        '2026-11-21',
+        registeredOn,
+      ),
+    ).toEqual({ status: 'charged', amountCents: 23900 });
+  });
+
+  it('no se cobró', () => {
+    expect(
+      chargeStatus(
+        r,
+        '2026-11-15',
+        { status: 'skipped', amountCents: null },
+        '2026-11-21',
+        registeredOn,
+      ),
+    ).toEqual({ status: 'skipped' });
+  });
+
+  it('anterior al registro: cobrado con el monto de la regla', () => {
+    const late = rec({ anchorDate: '2026-11-01', createdAt: '2026-11-10T12:00:00Z' });
+    expect(chargeStatus(late, '2026-11-01', undefined, '2026-11-21', registeredOn)).toEqual({
+      status: 'charged',
+      amountCents: 21900,
+    });
+  });
+
+  it('por confirmar y por cobrar', () => {
+    expect(chargeStatus(r, '2026-11-15', undefined, '2026-11-15', registeredOn)).toEqual({
+      status: 'pending',
+    });
+    expect(chargeStatus(r, '2026-11-15', undefined, '2026-11-14', registeredOn)).toEqual({
+      status: 'future',
+    });
+  });
+
+  it('indexConfirmations ignora las eliminadas', () => {
+    const idx = indexConfirmations([
+      confirmation('2026-11-15'),
+      confirmation('2026-12-15', '2026-12-20'),
+    ]);
+    expect([...idx.keys()]).toEqual(['netflix|2026-11-15']);
   });
 });
 

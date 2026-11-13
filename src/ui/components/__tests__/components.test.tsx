@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 
 import { INSTITUTION_CATALOG } from '@/data/institutions/catalog';
@@ -12,6 +12,7 @@ import {
   MoneyText,
   PrimaryButton,
   SecondaryButton,
+  SearchField,
   Switch,
   TextField,
 } from '../basics';
@@ -19,10 +20,11 @@ import {
   ExpenseRow,
   InstitutionBadge,
   MethodBreakdownCard,
+  BalanceTopBar,
   MonthSwitcher,
   SegmentedControl,
-  TotalCard,
 } from '../balance';
+import { AverageTotalCard, CategoryDonut, MonthProgressCard } from '../analysis';
 import {
   AmountBlock,
   DateField,
@@ -113,34 +115,150 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
     expect(onChange).toHaveBeenCalledWith('avg');
   });
 
-  it('MonthSwitcher con mes, año y botones', async () => {
+  it('MonthSwitcher solo con mes, año y flechas', async () => {
     const onPrev = jest.fn();
-    const onMenu = jest.fn();
     await renderIn(
       scheme,
-      <MonthSwitcher year={2026} month={11} onPrev={onPrev} onNext={jest.fn()} onMenu={onMenu} />,
+      <MonthSwitcher year={2026} month={11} onPrev={onPrev} onNext={jest.fn()} />,
     );
     expect(screen.getByText('Noviembre')).toBeTruthy();
     expect(screen.getByText('2026')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Mes anterior'));
-    await fireEvent.press(screen.getByLabelText('Ajustes'));
     expect(onPrev).toHaveBeenCalled();
-    expect(onMenu).toHaveBeenCalled();
+    expect(screen.queryByLabelText('Ajustes')).toBeNull();
   });
 
-  it('TotalCard con píldoras', async () => {
+  it('BalanceTopBar con Métodos de pago y Ajustes', async () => {
+    const onOpenMethods = jest.fn();
+    const onOpenSettings = jest.fn();
     await renderIn(
       scheme,
-      <TotalCard
-        variant="thisMonth"
-        label="Cargos de noviembre"
-        cents={226900}
-        pills={['4 cargos', 'Únicos $100.00']}
+      <BalanceTopBar onOpenMethods={onOpenMethods} onOpenSettings={onOpenSettings} />,
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Métodos de pago' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ajustes' }));
+    expect(onOpenMethods).toHaveBeenCalled();
+    expect(onOpenSettings).toHaveBeenCalled();
+  });
+
+  it('MonthProgressCard: efectuado, proyectado, barra y atajos', async () => {
+    const onByCategory = jest.fn();
+    const onByMethod = jest.fn();
+    await renderIn(
+      scheme,
+      <MonthProgressCard
+        monthName="noviembre"
+        doneCents={33900}
+        pendingCents={150000}
+        futureCents={45000}
+        projectedCents={228900}
+        onByCategory={onByCategory}
+        onByMethod={onByMethod}
       />,
     );
     expect(screen.getByText('Cargos de noviembre')).toBeTruthy();
-    expect(screen.getByText('4 cargos')).toBeTruthy();
-    expect(screen.getByLabelText('$2,269.00')).toBeTruthy();
+    expect(screen.getByLabelText('$339.00')).toBeTruthy();
+    expect(screen.getByText('de $2,289.00 proyectados')).toBeTruthy();
+    expect(screen.getByText('Por confirmar $1,500.00')).toBeTruthy();
+    expect(screen.getByText('Por cobrar $450.00')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Por categoría' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Por método' }));
+    expect(onByCategory).toHaveBeenCalled();
+    expect(onByMethod).toHaveBeenCalled();
+  });
+
+  it('AverageTotalCard: aclaración y píldoras tocables', async () => {
+    const onOpen = jest.fn();
+    await renderIn(
+      scheme,
+      <AverageTotalCard
+        totalCents={254400}
+        fixedCents={171900}
+        proratedCents={72500}
+        oneOffCents={10000}
+        onOpen={onOpen}
+      />,
+    );
+    expect(screen.getByLabelText('$2,544.00')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Prorrateados $725.00, ver lista' }));
+    expect(onOpen).toHaveBeenCalledWith('prorated');
+    await fireEvent.press(screen.getByLabelText('¿Qué es el costo mensual promedio?'));
+    expect(screen.getByText('Tu costo de vida real')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Entendido'));
+    expect(screen.queryByText('Tu costo de vida real')).toBeNull();
+  });
+
+  it('ExpenseRow recurrente: por cobrar, no se cobró y monto distinto al esperado', async () => {
+    const base = {
+      variant: 'recurring' as const,
+      gradient: theme.frequency.monthly,
+      date: '2026-11-28',
+      frequency: 'Mensual',
+      method: bbva,
+    };
+    await renderIn(
+      scheme,
+      <>
+        <ExpenseRow {...base} title="Internet" amountCents={45000} status="future" />
+        <ExpenseRow {...base} title="Renta" amountCents={150000} status="skipped" />
+        <ExpenseRow
+          {...base}
+          title="Netflix"
+          amountCents={23900}
+          expectedCents={21900}
+          status="charged"
+        />
+      </>,
+    );
+    expect(
+      within(screen.getByRole('button', { name: 'Internet, por cobrar' })).getByText('POR COBRAR'),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByRole('button', { name: 'Renta, no se cobró' })).getByText('NO SE COBRÓ'),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByRole('button', { name: 'Netflix' })).getByText('esperado $219.00'),
+    ).toBeTruthy();
+  });
+
+  it('SearchField: escribir y borrar', async () => {
+    const onChange = jest.fn();
+    const { rerender } = await renderIn(
+      scheme,
+      <SearchField value="" onChange={onChange} placeholder="Buscar en noviembre" />,
+    );
+    await fireEvent.changeText(screen.getByLabelText('Buscar en noviembre'), 'net');
+    expect(onChange).toHaveBeenLastCalledWith('net');
+    expect(screen.queryByLabelText('Borrar búsqueda')).toBeNull();
+    await rerender(
+      <ThemeProvider scheme={scheme}>
+        <SearchField value="net" onChange={onChange} placeholder="Buscar en noviembre" />
+      </ThemeProvider>,
+    );
+    await fireEvent.press(screen.getByLabelText('Borrar búsqueda'));
+    expect(onChange).toHaveBeenLastCalledWith('');
+  });
+
+  it('CategoryDonut: leyenda accesible, seleccionar y deseleccionar', async () => {
+    const onSelect = jest.fn();
+    await renderIn(
+      scheme,
+      <CategoryDonut
+        entries={[
+          { id: 'hogar', name: 'Hogar', amountCents: 150000, color: theme.chart.series[0] },
+          { id: 'otro', name: 'Otro', amountCents: 50000, color: theme.chart.other },
+        ]}
+        totalCents={200000}
+        selectedId="hogar"
+        onSelect={onSelect}
+      />,
+    );
+    const hogar = screen.getByRole('button', { name: 'Hogar, $1,500.00, 75 %' });
+    expect(hogar).toBeSelected();
+    await fireEvent.press(hogar);
+    expect(onSelect).toHaveBeenLastCalledWith(null);
+    await fireEvent.press(screen.getByRole('button', { name: 'Otro, $500.00, 25 %' }));
+    expect(onSelect).toHaveBeenLastCalledWith('otro');
   });
 
   it('ExpenseRow: recurrente, único y promedio con pista, todos con método', async () => {
@@ -196,6 +314,20 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
     expect(screen.getByText('POR MÉTODO')).toBeTruthy();
     expect(screen.getByText('$2,000.00')).toBeTruthy();
     expect(screen.getByText(/archivado/)).toBeTruthy();
+  });
+
+  it('MethodBreakdownCard con aclaración', async () => {
+    await renderIn(
+      scheme,
+      <MethodBreakdownCard
+        totalCents={200000}
+        caption="al mes"
+        note="Estimado con prorrateo, no es lo cobrado."
+        entries={[{ paymentMethodId: 'bbva', method: bbva, amountCents: 200000 }]}
+      />,
+    );
+    expect(screen.getByText('al mes')).toBeTruthy();
+    expect(screen.getByText('Estimado con prorrateo, no es lo cobrado.')).toBeTruthy();
   });
 
   it('InstitutionBadge muestra el monograma', async () => {

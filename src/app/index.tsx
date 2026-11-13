@@ -10,6 +10,7 @@ export default function Index() {
       focused={focused}
       onAdd={() => router.push('/expense/new')}
       onOpenSettings={() => router.push('/settings')}
+      onOpenMethods={() => router.push('/payment-methods')}
       onEdit={(kind, id) =>
         router.push(
           kind === 'oneOff'

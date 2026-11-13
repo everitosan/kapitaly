@@ -13,6 +13,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import Svg, { Circle, Path } from 'react-native-svg';
+
 import { formatMXNParts, type Cents } from '@/domain/money';
 
 import { useTheme } from '../ThemeProvider';
@@ -349,7 +351,77 @@ export function Chip({
   );
 }
 
+/** Lupa para el buscador. */
+function SearchIcon({ color }: { color: string }) {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Circle cx={11} cy={11} r={7} stroke={color} strokeWidth={2} />
+      <Path d="m20 20-3.5-3.5" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/** Buscador de una línea con lupa y botón para borrar. */
+export function SearchField({
+  value,
+  onChange,
+  placeholder,
+  testID,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  testID?: string;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.search, { backgroundColor: colors.card }]}>
+      <SearchIcon color={colors.muted} />
+      <TextInput
+        testID={testID}
+        value={value}
+        onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor={colors.muted}
+        accessibilityLabel={placeholder}
+        autoCorrect={false}
+        returnKeyType="search"
+        style={[styles.searchInput, { color: colors.ink }]}
+      />
+      {value ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Borrar búsqueda"
+          onPress={() => onChange('')}
+          hitSlop={10}
+          style={[styles.searchClear, { backgroundColor: colors.line }]}
+        >
+          <Text style={[styles.searchClearText, { color: colors.muted }]}>✕</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 46,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    marginBottom: 14,
+  },
+  searchInput: { flex: 1, minWidth: 0, fontSize: 16, fontWeight: '600', paddingVertical: 0 },
+  searchClear: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchClearText: { fontSize: 11, fontWeight: '800' },
   pill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, alignSelf: 'flex-start' },
   pillText: { fontSize: 13, fontWeight: '700' },
   primary: {

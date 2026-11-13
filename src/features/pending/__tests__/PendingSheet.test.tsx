@@ -15,7 +15,13 @@ import { pendingSession } from '../session';
 
 const renderBalance = (repos: InMemoryRepositories, today: string) =>
   renderWithProviders(
-    <BalanceScreen onAdd={jest.fn()} onOpenSettings={jest.fn()} onEdit={jest.fn()} today={today} />,
+    <BalanceScreen
+      onAdd={jest.fn()}
+      onOpenSettings={jest.fn()}
+      onOpenMethods={jest.fn()}
+      onEdit={jest.fn()}
+      today={today}
+    />,
     { repos },
   );
 
@@ -181,7 +187,7 @@ describe('10.5 · marca "Por confirmar"', () => {
     await renderBalance(repos, '2026-11-16');
     await screen.findByTestId(`pending-charge-${netflix.id}`);
     await fireEvent.press(screen.getByText('Cerrar'));
-    const row = screen.getByRole('button', { name: 'Netflix' });
+    const row = screen.getByRole('button', { name: 'Netflix, por confirmar' });
     expect(within(row).getByText('POR CONFIRMAR')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('pending-banner'));
     await fireEvent.press(
@@ -194,7 +200,7 @@ describe('10.5 · marca "Por confirmar"', () => {
     );
   });
 
-  it('las cifras del mes siguen usando el monto de la regla', async () => {
+  it('Este mes usa el monto confirmado y Análisis el de la regla', async () => {
     const { repos, netflix } = await withNetflix();
     await repos.chargeConfirmations.upsert({
       recurringExpenseId: netflix.id,
@@ -204,8 +210,13 @@ describe('10.5 · marca "Por confirmar"', () => {
       paymentMethodId: netflix.paymentMethodId,
     });
     await renderBalance(repos, '2026-11-16');
-    expect(await screen.findByText('1 cargo')).toBeOnTheScreen();
-    expect(screen.getAllByLabelText('$219.00').length).toBeGreaterThan(0);
+    const card = await screen.findByTestId('month-progress');
+    expect(within(card).getByLabelText('$249.00')).toBeOnTheScreen();
+    expect(
+      within(screen.getByRole('button', { name: 'Netflix' })).getByText('esperado $219.00'),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('tab', { name: 'Análisis' }));
+    expect(within(screen.getByTestId('average-total')).getByLabelText('$219.00')).toBeOnTheScreen();
   });
 });
 
@@ -221,6 +232,7 @@ describe('Pendientes sin interrumpir el acceso rápido', () => {
         <BalanceScreen
           onAdd={jest.fn()}
           onOpenSettings={jest.fn()}
+          onOpenMethods={jest.fn()}
           onEdit={jest.fn()}
           today="2026-11-16"
           focused={focused}

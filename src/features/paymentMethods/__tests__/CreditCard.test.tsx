@@ -182,7 +182,7 @@ describe('10.3 · pagar tarjeta e historial', () => {
     expect(await screen.findByText('Sin pagos todavía.')).toBeOnTheScreen();
   });
 
-  it('los pagos no cambian "Este mes" ni "Promedio"', async () => {
+  it('los pagos no cambian "Este mes" ni "Análisis"', async () => {
     const { repos, card } = await setupCard();
     await repos.recurringExpenses.create(sampleRecurring(card.id, { anchorDate: '2026-11-25' }));
     await repos.cardPayments.create({
@@ -195,15 +195,18 @@ describe('10.3 · pagar tarjeta e historial', () => {
       <BalanceScreen
         onAdd={jest.fn()}
         onOpenSettings={jest.fn()}
+        onOpenMethods={jest.fn()}
         onEdit={jest.fn()}
         today="2026-11-11"
       />,
       { repos },
     );
-    expect(await screen.findByText('1 cargo')).toBeOnTheScreen();
-    expect(screen.getAllByLabelText('$219.00')).toHaveLength(2); // total y fila: el pago no suma
-    await fireEvent.press(screen.getByText('Promedio'));
-    expect(screen.getAllByLabelText('$219.00').length).toBeGreaterThan(0);
+    const progress = await screen.findByTestId('month-progress');
+    // Nada cobrado aún y $219.00 proyectados: el pago no suma.
+    expect(within(progress).getByLabelText('$0.00')).toBeOnTheScreen();
+    expect(within(progress).getByText('$219.00')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByText('Análisis'));
+    expect(within(screen.getByTestId('average-total')).getByLabelText('$219.00')).toBeOnTheScreen();
     expect(screen.queryByText(/5,000/)).not.toBeOnTheScreen();
   });
 });

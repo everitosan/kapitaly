@@ -39,6 +39,8 @@ export interface Theme {
   palette: Record<PaletteColorKey, Gradient>;
   /** Botón principal y opción activa del control segmentado. */
   primary: Gradient;
+  /** Paleta categórica de gráficas (8 tonos) y el gris de "Otro". */
+  chart: { series: readonly string[]; other: string };
   spacing: typeof spacing;
   radii: typeof radii;
   type: typeof type;
@@ -127,6 +129,19 @@ export const lightTheme: Theme = {
     g('#3A3A3F', '#121214', WHITE),
   ),
   primary: g('#2A2A2A', '#141414', '#F4F1EA'),
+  chart: {
+    series: [
+      '#9EE36A',
+      '#82B4FF',
+      '#A98BFF',
+      '#FF9E78',
+      '#FF7FB2',
+      '#6FD7B5',
+      '#FFC93C',
+      '#2B4BF2',
+    ],
+    other: '#B8B2A6',
+  },
   spacing,
   radii,
   type,
@@ -154,6 +169,19 @@ export const darkTheme: Theme = {
     g('#4A4A50', '#26262A', WHITE),
   ),
   primary: g('#FFFFFF', '#E4DFD3', ON_BLOCK),
+  chart: {
+    series: [
+      '#86D457',
+      '#6C9EF5',
+      '#9476F5',
+      '#F98A63',
+      '#F56CA2',
+      '#57C7A2',
+      '#F2BC2E',
+      '#5A78FF',
+    ],
+    other: '#6E695F',
+  },
   spacing,
   radii,
   type,

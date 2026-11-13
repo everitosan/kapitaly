@@ -35,7 +35,13 @@ async function pickDate(testID: string, year: number, month: number, day: number
 
 async function balanceShows(repos: InMemoryRepositories, text: string, monthsAhead = 0) {
   await renderWithProviders(
-    <BalanceScreen onAdd={jest.fn()} onOpenSettings={jest.fn()} onEdit={jest.fn()} today={TODAY} />,
+    <BalanceScreen
+      onAdd={jest.fn()}
+      onOpenSettings={jest.fn()}
+      onOpenMethods={jest.fn()}
+      onEdit={jest.fn()}
+      today={TODAY}
+    />,
     { repos },
   );
   for (let i = 0; i < monthsAhead; i++)
@@ -256,7 +262,7 @@ describe('7.4 · Guardar y ver en el balance', () => {
     await save();
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     await balanceShows(repos, 'Renta');
-    const row = screen.getByRole('button', { name: 'Renta' });
+    const row = screen.getByRole('button', { name: /^Renta/ });
     expect(within(row).getByLabelText('$1,650.00')).toBeOnTheScreen();
   });
 });
@@ -297,6 +303,7 @@ describe('7.5 · Eliminar', () => {
       <BalanceScreen
         onAdd={jest.fn()}
         onOpenSettings={jest.fn()}
+        onOpenMethods={jest.fn()}
         onEdit={jest.fn()}
         today={TODAY}
       />,

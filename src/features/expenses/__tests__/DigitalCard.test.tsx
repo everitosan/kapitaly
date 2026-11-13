@@ -87,6 +87,7 @@ describe('10.6 · física o digital en un gasto', () => {
       <BalanceScreen
         onAdd={jest.fn()}
         onOpenSettings={jest.fn()}
+        onOpenMethods={jest.fn()}
         onEdit={jest.fn()}
         today={TODAY}
       />,
@@ -128,11 +129,13 @@ describe('10.6 · física o digital en un gasto', () => {
       <BalanceScreen
         onAdd={jest.fn()}
         onOpenSettings={jest.fn()}
+        onOpenMethods={jest.fn()}
         onEdit={jest.fn()}
         today={TODAY}
       />,
       { repos },
     );
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Análisis' }));
     const card = await screen.findByTestId('method-breakdown');
     expect(within(card).getByText('$457.50')).toBeOnTheScreen();
     expect(within(card).getAllByText(/BBVA Azul/)).toHaveLength(1);

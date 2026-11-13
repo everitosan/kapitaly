@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   View,
+  type ScrollViewInstance,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -67,17 +68,29 @@ export function ScreenLayout({
   children,
   footer,
   header,
+  scrollRef,
 }: {
   children: ReactNode;
   footer?: ReactNode;
   header?: ReactNode;
+  /** Para desplazar el contenido desde la pantalla (p. ej. a una sección). */
+  scrollRef?: RefObject<ScrollViewInstance | null>;
 }) {
   const { colors } = useTheme();
+  // Mientras se escribe (p. ej. en el buscador) el botón flotante se oculta: en Android subiría con
+  // el teclado y taparía la lista; en iOS el teclado ya lo cubre.
+  const keyboardVisible = useKeyboardVisible();
   return (
     <SafeAreaView edges={['top']} style={[styles.flex, { backgroundColor: colors.bg }]}>
       {header}
-      <ScrollView contentContainerStyle={styles.screenBody}>{children}</ScrollView>
-      {footer ? <View style={styles.fab}>{footer}</View> : null}
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.screenBody}
+        keyboardShouldPersistTaps="handled"
+      >
+        {children}
+      </ScrollView>
+      {footer && !keyboardVisible ? <View style={styles.fab}>{footer}</View> : null}
     </SafeAreaView>
   );
 }
