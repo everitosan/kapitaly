@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, within } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
 import { sampleMethod, testDeps } from '@/data/repositories/contract';
@@ -18,6 +18,7 @@ const props = () => ({
   onOpenMethods: jest.fn(),
   onOpenCategories: jest.fn(),
   onOpenNotifications: jest.fn(),
+  onOpenFeedback: jest.fn(),
 });
 
 describe('Ajustes', () => {
@@ -33,7 +34,9 @@ describe('Ajustes', () => {
       'Métodos de pago, 2',
       'Categorías, 7',
       'Notificaciones, Apagadas',
+      'Comentarios',
     ]);
+    expect(screen.getByText('Beta')).toBeOnTheScreen();
     // Los recordatorios solo viven dentro de "Notificaciones".
     expect(screen.queryByText(/recordatorio/i)).toBeNull();
     expect(screen.queryByText(/componentes/i)).toBeNull();
@@ -69,6 +72,15 @@ describe('Notificaciones en Ajustes', () => {
   });
 });
 
+describe('Comentarios en Ajustes', () => {
+  it('abre la pantalla de Comentarios desde la sección Beta', async () => {
+    const p = props();
+    await renderWithProviders(<SettingsScreen {...p} />);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Comentarios' }));
+    expect(p.onOpenFeedback).toHaveBeenCalled();
+  });
+});
+
 describe('acceso directo "Nuevo gasto"', () => {
   const shortcuts = jest.requireMock('../../../../modules/kapitaly-shortcuts') as {
     isPinSupported: jest.Mock;
@@ -90,10 +102,17 @@ describe('acceso directo "Nuevo gasto"', () => {
       screen
         .getAllByRole('button')
         .map((b) => b.props.accessibilityLabel)
-        .slice(-2),
-    ).toEqual(['Notificaciones, Apagadas', 'Acceso directo: nuevo gasto']);
+        .slice(-3),
+    ).toEqual(['Notificaciones, Apagadas', 'Acceso directo: nuevo gasto', 'Comentarios']);
     await fireEvent.press(screen.getByText('Acceso directo: nuevo gasto'));
     expect(shortcuts.requestPinNewExpense).toHaveBeenCalled();
+  });
+
+  it('muestra el mismo ícono que el acceso directo', async () => {
+    shortcuts.isPinSupported.mockReturnValue(true);
+    await renderWithProviders(<SettingsScreen {...props()} />);
+    const row = screen.getByRole('button', { name: 'Acceso directo: nuevo gasto' });
+    expect(within(row).getByTestId('shortcut-icon')).toBeOnTheScreen();
   });
 
   it('avisa si el sistema rechaza la petición', async () => {

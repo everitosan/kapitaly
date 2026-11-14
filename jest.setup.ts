@@ -12,3 +12,11 @@ jest.mock('expo-haptics', () => ({
 require('react-native-reanimated').setUpTests();
 // Notificaciones: módulo nativo; el mock guarda lo agendado en memoria (ver jest/expoNotificationsMock.js).
 jest.mock('expo-notifications', () => require('./jest/expoNotificationsMock'));
+// Comentarios: correo y selector de fotos son módulos nativos.
+jest.mock('expo-mail-composer', () => ({
+  isAvailableAsync: jest.fn(async () => true),
+  composeAsync: jest.fn(async () => ({ status: 'sent' })),
+}));
+jest.mock('expo-image-picker', () => ({
+  launchImageLibraryAsync: jest.fn(async () => ({ canceled: true, assets: null })),
+}));

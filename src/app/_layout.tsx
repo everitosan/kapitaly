@@ -47,6 +47,7 @@ function AppStack() {
       <Stack.Screen name="index" />
       <Stack.Screen name="settings/index" />
       <Stack.Screen name="settings/notifications" />
+      <Stack.Screen name="settings/feedback" />
       <Stack.Screen name="categories/index" />
       <Stack.Screen name="categories/[id]" options={{ presentation: 'modal' }} />
       <Stack.Screen name="payment-methods/index" />

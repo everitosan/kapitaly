@@ -8,17 +8,26 @@ import { activeReminderCount } from '@/domain/reminderSettings';
 import { BellIcon, CardIcon, RoundButton } from '@/ui/components/balance';
 import { DuotoneBlock } from '@/ui/components/DuotoneBlock';
 import { ScreenLayout } from '@/ui/components/layout';
+import { SectionLabel } from '@/ui/components/basics';
 import { CategoryIcon } from '@/ui/icons/categoryIcons';
+import { ShortcutIcon } from '@/ui/icons/ShortcutIcon';
 import type { Gradient } from '@/ui/theme';
 import { useTheme } from '@/ui/ThemeProvider';
 
 import { isPinSupported, requestPinNewExpense } from '../../../modules/kapitaly-shortcuts';
 import { useCategories, usePaymentMethods, useReminderSettings } from '../repositories';
 
-function PlusIcon({ color }: { color: string }) {
+function ChatIcon({ color }: { color: string }) {
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={2.6} strokeLinecap="round" />
+      <Path
+        d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"
+        stroke={color}
+        strokeWidth={2.1}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path d="M8.5 11h7M8.5 14.5h4.5" stroke={color} strokeWidth={2.1} strokeLinecap="round" />
     </Svg>
   );
 }
@@ -33,6 +42,7 @@ export interface SettingsScreenProps {
   onOpenMethods: () => void;
   onOpenCategories: () => void;
   onOpenNotifications: () => void;
+  onOpenFeedback: () => void;
 }
 
 /** Resumen de Notificaciones en Ajustes: "Apagadas", "1 activa", "N activas". */
@@ -55,7 +65,8 @@ function SettingsRow({
   count?: number;
   /** Etiqueta accesible propia; por omisión, el nombre y el conteo. */
   accessibilityLabel?: string;
-  gradient: Gradient;
+  /** Ícono sobre un bloque duotono; se omite si `icon` ya trae su propio fondo. */
+  gradient?: Gradient;
   icon: React.ReactNode;
   onPress: () => void;
 }) {
@@ -69,9 +80,13 @@ function SettingsRow({
       onPress={onPress}
       style={({ pressed }) => [styles.row, { opacity: pressed ? 0.7 : 1 }]}
     >
-      <DuotoneBlock gradient={gradient} radius={14} style={styles.icon}>
-        {icon}
-      </DuotoneBlock>
+      {gradient ? (
+        <DuotoneBlock gradient={gradient} radius={14} style={styles.icon}>
+          {icon}
+        </DuotoneBlock>
+      ) : (
+        <View style={styles.icon}>{icon}</View>
+      )}
       <View style={styles.flex}>
         <Text style={[styles.label, { color: colors.ink }]}>{label}</Text>
         <Text style={[styles.detail, { color: colors.muted }]}>{detail}</Text>
@@ -90,6 +105,7 @@ export function SettingsScreen({
   onOpenMethods,
   onOpenCategories,
   onOpenNotifications,
+  onOpenFeedback,
 }: SettingsScreenProps) {
   const theme = useTheme();
   const { colors } = theme;
@@ -149,12 +165,21 @@ export function SettingsScreen({
             <SettingsRow
               label="Acceso directo: nuevo gasto"
               detail="Un ícono en tu pantalla de inicio"
-              gradient={theme.frequency.monthly}
-              icon={<PlusIcon color={colors.onBlock} />}
+              icon={<ShortcutIcon testID="shortcut-icon" />}
               onPress={addShortcut}
             />
           </>
         ) : null}
+      </View>
+      <SectionLabel style={styles.section}>Beta</SectionLabel>
+      <View style={[styles.list, { backgroundColor: colors.card }]}>
+        <SettingsRow
+          label="Comentarios"
+          detail="Cuéntame qué mejorar, con capturas"
+          gradient={theme.frequency.bimonthly}
+          icon={<ChatIcon color={colors.onBlock} />}
+          onPress={onOpenFeedback}
+        />
       </View>
     </ScreenLayout>
   );
@@ -173,6 +198,7 @@ const styles = StyleSheet.create({
   },
   desc: { fontSize: 15, fontWeight: '600', paddingHorizontal: 4, paddingBottom: 20 },
   list: { borderRadius: 22, paddingHorizontal: 16, paddingVertical: 4 },
+  section: { marginHorizontal: 4, marginTop: 22, marginBottom: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
   sep: { height: StyleSheet.hairlineWidth },
   icon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },

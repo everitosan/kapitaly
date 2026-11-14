@@ -10,6 +10,7 @@ export default function Settings() {
       onOpenMethods={() => router.push('/payment-methods')}
       onOpenCategories={() => router.push('/categories')}
       onOpenNotifications={() => router.push('/settings/notifications')}
+      onOpenFeedback={() => router.push('/settings/feedback')}
     />
   );
 }

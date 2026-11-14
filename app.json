@@ -47,6 +47,14 @@
           "defaultChannel": "reminders"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "KPTLY expenses usa tus fotos solo para adjuntar capturas a tus comentarios.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       "./plugins/withAndroidReleaseSigning",
       "./plugins/withAndroidShortcuts"
     ],
