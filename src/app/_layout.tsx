@@ -1,17 +1,26 @@
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
+import * as Linking from 'expo-linking';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 
 import { getAppRepositories } from '@/data/appRepositories';
 import { getAppDatabase } from '@/data/sqlite/appDatabase';
 import { RepositoryProvider } from '@/features/repositories';
+import { SplashGate } from '@/features/startup/SplashGate';
+import { shouldAnimateSplash } from '@/features/startup/splashRules';
 import { ThemeProvider, useTheme } from '@/ui/ThemeProvider';
 
 import migrations from '../../drizzle/migrations';
 
 /** Al abrir una ruta por enlace profundo (p. ej. el acceso directo "Nuevo gasto"), el balance queda debajo. */
 export const unstable_settings = { anchor: 'index' };
+
+// El splash nativo (solo el fondo de marca) sigue visible hasta que SplashGate pinta el animado.
+SplashScreen.preventAutoHideAsync();
 
 function MigrationError({ error }: { error: Error }) {
   const { colors } = useTheme();
@@ -45,12 +54,23 @@ function AppStack() {
 function Root() {
   const { db } = getAppDatabase();
   const { success, error } = useMigrations(db, migrations);
-  if (error) return <MigrationError error={error} />;
-  if (!success) return null;
+  const reducedMotion = useReducedMotion();
+  // Se decide una vez por arranque, con la URL que abrió la app.
+  const [animate] = useState(() => shouldAnimateSplash(Linking.getLinkingURL(), reducedMotion));
+
+  let content = null;
+  if (error) content = <MigrationError error={error} />;
+  else if (success) {
+    content = (
+      <RepositoryProvider repositories={getAppRepositories()}>
+        <AppStack />
+      </RepositoryProvider>
+    );
+  }
   return (
-    <RepositoryProvider repositories={getAppRepositories()}>
-      <AppStack />
-    </RepositoryProvider>
+    <SplashGate ready={success || error !== undefined} animate={animate}>
+      {content}
+    </SplashGate>
   );
 }
 

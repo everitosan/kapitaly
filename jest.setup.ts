@@ -8,3 +8,5 @@ jest.mock('expo-haptics', () => ({
   ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
   NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
 }));
+// Reanimated en Jest: animaciones con temporizadores de JS (usa con jest.useFakeTimers()).
+require('react-native-reanimated').setUpTests();
