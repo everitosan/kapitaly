@@ -99,6 +99,23 @@ export const recurringChargeConfirmations = sqliteTable('recurring_charge_confir
   addsToCardBalance: integer('adds_to_card_balance', { mode: 'boolean' }).notNull().default(true),
 });
 
+/**
+ * Preferencias de las notificaciones (migración 0006). Una sola fila (`id = 'default'`), creada por la
+ * migración con todo apagado. Es configuración del dispositivo, no un registro sincronizable.
+ */
+export const reminderSettings = sqliteTable('reminder_settings', {
+  id: text('id').primaryKey(),
+  chargesOn: integer('charges_on', { mode: 'boolean' }).notNull().default(false),
+  chargesTime: text('charges_time').notNull().default('10:00'),
+  dailyOn: integer('daily_on', { mode: 'boolean' }).notNull().default(false),
+  dailyTime: text('daily_time').notNull().default('21:00'),
+  idleOn: integer('idle_on', { mode: 'boolean' }).notNull().default(false),
+  idleDays: integer('idle_days').notNull().default(3),
+  /** NULL = usar la hora del recordatorio diario. */
+  idleTime: text('idle_time'),
+  updatedAt: text('updated_at').notNull(),
+});
+
 export const schema = {
   paymentMethods,
   categories,
@@ -106,4 +123,5 @@ export const schema = {
   oneOffExpenses,
   cardPayments,
   recurringChargeConfirmations,
+  reminderSettings,
 };

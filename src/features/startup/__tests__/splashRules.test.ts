@@ -25,4 +25,8 @@ describe('shouldAnimateSplash', () => {
   it('no anima con reducir movimiento activado', () => {
     expect(shouldAnimateSplash(null, true)).toBe(false);
   });
+
+  it('no anima si la app se abrió desde una notificación', () => {
+    expect(shouldAnimateSplash(null, false, true)).toBe(false);
+  });
 });

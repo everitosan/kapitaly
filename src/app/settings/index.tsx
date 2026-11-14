@@ -9,6 +9,7 @@ export default function Settings() {
       onBack={() => router.back()}
       onOpenMethods={() => router.push('/payment-methods')}
       onOpenCategories={() => router.push('/categories')}
+      onOpenNotifications={() => router.push('/settings/notifications')}
     />
   );
 }

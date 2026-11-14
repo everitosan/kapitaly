@@ -4,6 +4,7 @@ import type { CardPayment, CardPaymentInput } from '@/domain/creditCard';
 import type { OneOffExpense, OneOffExpenseInput } from '@/domain/oneOffExpense';
 import type { PaymentMethod, PaymentMethodInput } from '@/domain/paymentMethod';
 import type { RecurringExpense, RecurringExpenseInput } from '@/domain/recurringExpense';
+import type { ReminderSettings } from '@/domain/reminderSettings';
 
 /**
  * Forma base de todos los repositorios. Es asíncrona aunque SQLite local sea rápido, porque la
@@ -59,6 +60,18 @@ export interface CategoryRepository extends Repository<Category, CategoryInput> 
   unhide(id: string): Promise<void>;
 }
 
+/**
+ * Preferencias de notificaciones del dispositivo: un solo valor, siempre presente (por omisión, todo
+ * apagado). No es un registro sincronizable.
+ */
+export interface ReminderSettingsRepository {
+  get(): Promise<ReminderSettings>;
+  /** Aplica el cambio y devuelve el resultado. Lanza `ReminderSettingsError` si no es válido. */
+  update(patch: Partial<ReminderSettings>): Promise<ReminderSettings>;
+  /** Avisa de cualquier cambio; devuelve la función para dejar de escuchar. */
+  subscribe(listener: () => void): () => void;
+}
+
 export interface Repositories {
   paymentMethods: PaymentMethodRepository;
   categories: CategoryRepository;
@@ -66,6 +79,7 @@ export interface Repositories {
   oneOffExpenses: OneOffExpenseRepository;
   cardPayments: CardPaymentRepository;
   chargeConfirmations: ChargeConfirmationRepository;
+  reminderSettings: ReminderSettingsRepository;
 }
 
 /** Dependencias inyectables (reloj e ids), para pruebas deterministas. */

@@ -6,6 +6,7 @@ import type { CardPayment } from '@/domain/creditCard';
 import type { OneOffExpense } from '@/domain/oneOffExpense';
 import type { PaymentMethod } from '@/domain/paymentMethod';
 import type { RecurringExpense } from '@/domain/recurringExpense';
+import type { ReminderSettings } from '@/domain/reminderSettings';
 import type { Repositories, Repository } from '@/data/repositories/types';
 
 const RepositoryContext = createContext<Repositories | null>(null);
@@ -76,3 +77,33 @@ export const useChargeConfirmations = (): LiveList<ChargeConfirmation> =>
 /** Categorías vigentes, incluidas las ocultas (la UI decide cuáles ofrecer). */
 export const useCategories = (): LiveList<Category> =>
   useLiveList(useRepositories().categories as Repository<Category, never>);
+
+export interface LiveValue<T> {
+  data: T | null;
+  loading: boolean;
+}
+
+/** Preferencias de notificaciones; se recargan en cada cambio. */
+export function useReminderSettings(): LiveValue<ReminderSettings> {
+  const repo = useRepositories().reminderSettings;
+  const [state, setState] = useState<LiveValue<ReminderSettings>>({ data: null, loading: true });
+
+  useEffect(() => {
+    let active = true;
+    let version = 0;
+    const load = () => {
+      const current = ++version;
+      repo.get().then((data) => {
+        if (active && current === version) setState({ data, loading: false });
+      });
+    };
+    load();
+    const unsubscribe = repo.subscribe(load);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [repo]);
+
+  return state;
+}

@@ -13,10 +13,15 @@ jest.mock('../../../../modules/kapitaly-shortcuts', () => ({
   requestPinNewExpense: jest.fn(() => false),
 }));
 
-const props = () => ({ onBack: jest.fn(), onOpenMethods: jest.fn(), onOpenCategories: jest.fn() });
+const props = () => ({
+  onBack: jest.fn(),
+  onOpenMethods: jest.fn(),
+  onOpenCategories: jest.fn(),
+  onOpenNotifications: jest.fn(),
+});
 
 describe('Ajustes', () => {
-  it('muestra solo "Métodos de pago" y "Categorías", con sus conteos', async () => {
+  it('muestra "Métodos de pago", "Categorías" y "Notificaciones", con sus conteos', async () => {
     const repos = createInMemoryRepositories(testDeps());
     await repos.paymentMethods.create(sampleMethod());
     await repos.categories.hide(BUILTIN_CATEGORIES[5].id);
@@ -27,7 +32,9 @@ describe('Ajustes', () => {
       'Volver',
       'Métodos de pago, 2',
       'Categorías, 7',
+      'Notificaciones, Apagadas',
     ]);
+    // Los recordatorios solo viven dentro de "Notificaciones".
     expect(screen.queryByText(/recordatorio/i)).toBeNull();
     expect(screen.queryByText(/componentes/i)).toBeNull();
   });
@@ -39,6 +46,26 @@ describe('Ajustes', () => {
     await fireEvent.press(screen.getByText('Categorías'));
     expect(p.onOpenMethods).toHaveBeenCalled();
     expect(p.onOpenCategories).toHaveBeenCalled();
+  });
+});
+
+describe('Notificaciones en Ajustes', () => {
+  it('resume cuántos avisos están encendidos', async () => {
+    const repos = createInMemoryRepositories(testDeps());
+    await repos.reminderSettings.update({ dailyOn: true, idleOn: true });
+    await renderWithProviders(<SettingsScreen {...props()} />, { repos });
+    expect(
+      await screen.findByRole('button', { name: 'Notificaciones, 2 activas' }),
+    ).toBeOnTheScreen();
+    await repos.reminderSettings.update({ idleOn: false });
+    expect(await screen.findByText('1 activa')).toBeOnTheScreen();
+  });
+
+  it('abre la pantalla de Notificaciones', async () => {
+    const p = props();
+    await renderWithProviders(<SettingsScreen {...p} />);
+    await fireEvent.press(await screen.findByText('Notificaciones'));
+    expect(p.onOpenNotifications).toHaveBeenCalled();
   });
 });
 
@@ -55,7 +82,7 @@ describe('acceso directo "Nuevo gasto"', () => {
     expect(screen.queryByText('Acceso directo: nuevo gasto')).toBeNull();
   });
 
-  it('aparece debajo de Categorías y pide a Android fijarlo', async () => {
+  it('aparece debajo de Notificaciones y pide a Android fijarlo', async () => {
     shortcuts.isPinSupported.mockReturnValue(true);
     shortcuts.requestPinNewExpense.mockReturnValue(true);
     await renderWithProviders(<SettingsScreen {...props()} />);
@@ -63,8 +90,8 @@ describe('acceso directo "Nuevo gasto"', () => {
       screen
         .getAllByRole('button')
         .map((b) => b.props.accessibilityLabel)
-        .slice(-2)[1],
-    ).toBe('Acceso directo: nuevo gasto');
+        .slice(-2),
+    ).toEqual(['Notificaciones, Apagadas', 'Acceso directo: nuevo gasto']);
     await fireEvent.press(screen.getByText('Acceso directo: nuevo gasto'));
     expect(shortcuts.requestPinNewExpense).toHaveBeenCalled();
   });

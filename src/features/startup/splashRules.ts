@@ -8,9 +8,13 @@ export function isQuickLaunch(url: string | null): boolean {
 }
 
 /**
- * El splash se anima solo en un arranque normal: no desde el atajo, para que el formulario salga
- * de inmediato, ni con "reducir movimiento" activado.
+ * El splash se anima solo en un arranque normal: no desde el atajo ni desde una notificación, para
+ * que la pantalla destino salga de inmediato, ni con "reducir movimiento" activado.
  */
-export function shouldAnimateSplash(launchURL: string | null, reducedMotion: boolean): boolean {
-  return !reducedMotion && !isQuickLaunch(launchURL);
+export function shouldAnimateSplash(
+  launchURL: string | null,
+  reducedMotion: boolean,
+  fromNotification = false,
+): boolean {
+  return !reducedMotion && !fromNotification && !isQuickLaunch(launchURL);
 }

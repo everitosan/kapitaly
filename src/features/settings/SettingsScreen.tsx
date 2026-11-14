@@ -4,7 +4,8 @@ import Svg, { Path } from 'react-native-svg';
 
 import { isSelectableCategory } from '@/domain/category';
 import { isActiveMethod } from '@/domain/paymentMethod';
-import { CardIcon, RoundButton } from '@/ui/components/balance';
+import { activeReminderCount } from '@/domain/reminderSettings';
+import { BellIcon, CardIcon, RoundButton } from '@/ui/components/balance';
 import { DuotoneBlock } from '@/ui/components/DuotoneBlock';
 import { ScreenLayout } from '@/ui/components/layout';
 import { CategoryIcon } from '@/ui/icons/categoryIcons';
@@ -12,7 +13,7 @@ import type { Gradient } from '@/ui/theme';
 import { useTheme } from '@/ui/ThemeProvider';
 
 import { isPinSupported, requestPinNewExpense } from '../../../modules/kapitaly-shortcuts';
-import { useCategories, usePaymentMethods } from '../repositories';
+import { useCategories, usePaymentMethods, useReminderSettings } from '../repositories';
 
 function PlusIcon({ color }: { color: string }) {
   return (
@@ -31,6 +32,13 @@ export interface SettingsScreenProps {
   onBack: () => void;
   onOpenMethods: () => void;
   onOpenCategories: () => void;
+  onOpenNotifications: () => void;
+}
+
+/** Resumen de Notificaciones en Ajustes: "Apagadas", "1 activa", "N activas". */
+export function remindersSummary(active: number): string {
+  if (active === 0) return 'Apagadas';
+  return active === 1 ? '1 activa' : `${active} activas`;
 }
 
 function SettingsRow({
@@ -40,10 +48,13 @@ function SettingsRow({
   gradient,
   icon,
   onPress,
+  accessibilityLabel,
 }: {
   label: string;
   detail: string;
   count?: number;
+  /** Etiqueta accesible propia; por omisión, el nombre y el conteo. */
+  accessibilityLabel?: string;
   gradient: Gradient;
   icon: React.ReactNode;
   onPress: () => void;
@@ -52,7 +63,9 @@ function SettingsRow({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={count === undefined ? label : `${label}, ${count}`}
+      accessibilityLabel={
+        accessibilityLabel ?? (count === undefined ? label : `${label}, ${count}`)
+      }
       onPress={onPress}
       style={({ pressed }) => [styles.row, { opacity: pressed ? 0.7 : 1 }]}
     >
@@ -72,11 +85,18 @@ function SettingsRow({
 }
 
 /** Ajustes: punto de entrada a la configuración de la app desde el balance. */
-export function SettingsScreen({ onBack, onOpenMethods, onOpenCategories }: SettingsScreenProps) {
+export function SettingsScreen({
+  onBack,
+  onOpenMethods,
+  onOpenCategories,
+  onOpenNotifications,
+}: SettingsScreenProps) {
   const theme = useTheme();
   const { colors } = theme;
   const methods = usePaymentMethods();
   const categories = useCategories();
+  const reminders = useReminderSettings();
+  const summary = remindersSummary(reminders.data ? activeReminderCount(reminders.data) : 0);
   // No cambia durante la vida de la app; se consulta una vez por pantalla.
   const [pinSupported] = useState(isPinSupported);
 
@@ -113,6 +133,15 @@ export function SettingsScreen({ onBack, onOpenMethods, onOpenCategories }: Sett
           gradient={theme.frequency.monthly}
           icon={<CategoryIcon icon="dots" color={colors.onBlock} />}
           onPress={onOpenCategories}
+        />
+        <View style={[styles.sep, { backgroundColor: colors.line }]} />
+        <SettingsRow
+          label="Notificaciones"
+          detail={summary}
+          accessibilityLabel={`Notificaciones, ${summary}`}
+          gradient={theme.frequency.quarterly}
+          icon={<BellIcon color={colors.onBlock} />}
+          onPress={onOpenNotifications}
         />
         {pinSupported ? (
           <>

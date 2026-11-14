@@ -169,6 +169,38 @@ describe('posponer durante la sesión', () => {
   });
 });
 
+describe('abrir desde el aviso de cobros', () => {
+  function Harness() {
+    const [key, setKey] = useState<string | undefined>(undefined);
+    return (
+      <>
+        <Pressable onPress={() => setKey(String(Date.now()))}>
+          <Text>tocar aviso</Text>
+        </Pressable>
+        <BalanceScreen
+          onAdd={jest.fn()}
+          onOpenSettings={jest.fn()}
+          onOpenMethods={jest.fn()}
+          onEdit={jest.fn()}
+          today="2026-11-16"
+          openPendingKey={key}
+        />
+      </>
+    );
+  }
+
+  it('un valor nuevo de openPendingKey abre la hoja aunque ya se haya cerrado', async () => {
+    const { repos, netflix } = await withNetflix();
+    await renderWithProviders(<Harness />, { repos });
+    await screen.findByTestId(`pending-charge-${netflix.id}`);
+    await fireEvent.press(screen.getByText('Cerrar'));
+    expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByText('tocar aviso'));
+    expect(await screen.findByTestId(`pending-charge-${netflix.id}`)).toBeOnTheScreen();
+  });
+});
+
 describe('orden de las acciones', () => {
   /** Etiquetas de los botones, en el orden en que se muestran. */
   const labels = (node: ReturnType<typeof screen.getByTestId>) =>

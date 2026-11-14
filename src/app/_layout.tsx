@@ -1,5 +1,6 @@
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import * as Linking from 'expo-linking';
+import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -9,6 +10,9 @@ import { useReducedMotion } from 'react-native-reanimated';
 
 import { getAppRepositories } from '@/data/appRepositories';
 import { getAppDatabase } from '@/data/sqlite/appDatabase';
+import { NotificationRouter } from '@/features/reminders/NotificationRouter';
+import { configureNotificationHandler, targetOf } from '@/features/reminders/scheduler';
+import { ReminderSync } from '@/features/reminders/useReminderSync';
 import { RepositoryProvider } from '@/features/repositories';
 import { SplashGate } from '@/features/startup/SplashGate';
 import { shouldAnimateSplash } from '@/features/startup/splashRules';
@@ -21,6 +25,8 @@ export const unstable_settings = { anchor: 'index' };
 
 // El splash nativo (solo el fondo de marca) sigue visible hasta que SplashGate pinta el animado.
 SplashScreen.preventAutoHideAsync();
+// Las notificaciones se muestran también con la app abierta.
+configureNotificationHandler();
 
 function MigrationError({ error }: { error: Error }) {
   const { colors } = useTheme();
@@ -40,6 +46,7 @@ function AppStack() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="settings/index" />
+      <Stack.Screen name="settings/notifications" />
       <Stack.Screen name="categories/index" />
       <Stack.Screen name="categories/[id]" options={{ presentation: 'modal' }} />
       <Stack.Screen name="payment-methods/index" />
@@ -56,14 +63,22 @@ function Root() {
   const { success, error } = useMigrations(db, migrations);
   const reducedMotion = useReducedMotion();
   // Se decide una vez por arranque, con la URL que abrió la app.
-  const [animate] = useState(() => shouldAnimateSplash(Linking.getLinkingURL(), reducedMotion));
+  const [animate] = useState(() =>
+    shouldAnimateSplash(
+      Linking.getLinkingURL(),
+      reducedMotion,
+      targetOf(Notifications.getLastNotificationResponse()) !== null,
+    ),
+  );
 
   let content = null;
   if (error) content = <MigrationError error={error} />;
   else if (success) {
     content = (
       <RepositoryProvider repositories={getAppRepositories()}>
+        <ReminderSync />
         <AppStack />
+        <NotificationRouter />
       </RepositoryProvider>
     );
   }

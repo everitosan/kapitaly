@@ -13,12 +13,14 @@ import type { CardPayment, CardPaymentInput } from '@/domain/creditCard';
 import type { OneOffExpenseInput } from '@/domain/oneOffExpense';
 import { CASH_METHOD_ID, NO_CARD_DATA, type PaymentMethodInput } from '@/domain/paymentMethod';
 import type { RecurringExpenseInput } from '@/domain/recurringExpense';
+import { DEFAULT_REMINDER_SETTINGS } from '@/domain/reminderSettings';
 
 import {
   CategoryRuleError,
   LastActiveMethodError,
   NotFoundError,
   PaymentMethodInUseError,
+  ReminderSettingsError,
 } from './shared';
 import type { Repositories, Repository, RepositoryDeps } from './types';
 
@@ -452,6 +454,45 @@ export function describeRepositoryContracts(name: string, factory: HarnessFactor
       await h.repos.paymentMethods.archive(m.id);
       await h.repos.paymentMethods.unarchive(m.id);
       expect(listener).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe(`${name} · preferencias de notificaciones`, () => {
+    let h: ContractHarness;
+    beforeEach(() => {
+      h = factory(testDeps());
+    });
+
+    it('empiezan con todo apagado', async () => {
+      expect(await h.repos.reminderSettings.get()).toEqual(DEFAULT_REMINDER_SETTINGS);
+    });
+
+    it('guardan un cambio parcial y conservan lo demás', async () => {
+      const saved = await h.repos.reminderSettings.update({ dailyOn: true, dailyTime: '20:30' });
+      expect(saved).toEqual({ ...DEFAULT_REMINDER_SETTINGS, dailyOn: true, dailyTime: '20:30' });
+      expect(await h.repos.reminderSettings.get()).toEqual(saved);
+      await h.repos.reminderSettings.update({ idleTime: '08:00' });
+      await h.repos.reminderSettings.update({ idleTime: null });
+      expect((await h.repos.reminderSettings.get()).idleTime).toBeNull();
+    });
+
+    it('rechazan valores inválidos sin cambiar nada', async () => {
+      await expect(h.repos.reminderSettings.update({ idleDays: 0 })).rejects.toBeInstanceOf(
+        ReminderSettingsError,
+      );
+      await expect(
+        h.repos.reminderSettings.update({ chargesTime: '25:00' }),
+      ).rejects.toBeInstanceOf(ReminderSettingsError);
+      expect(await h.repos.reminderSettings.get()).toEqual(DEFAULT_REMINDER_SETTINGS);
+    });
+
+    it('avisan a los suscriptores', async () => {
+      const listener = jest.fn();
+      const unsubscribe = h.repos.reminderSettings.subscribe(listener);
+      await h.repos.reminderSettings.update({ chargesOn: true });
+      unsubscribe();
+      await h.repos.reminderSettings.update({ chargesOn: false });
+      expect(listener).toHaveBeenCalledTimes(1);
     });
   });
 }

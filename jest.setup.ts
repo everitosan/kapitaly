@@ -10,3 +10,5 @@ jest.mock('expo-haptics', () => ({
 }));
 // Reanimated en Jest: animaciones con temporizadores de JS (usa con jest.useFakeTimers()).
 require('react-native-reanimated').setUpTests();
+// Notificaciones: módulo nativo; el mock guarda lo agendado en memoria (ver jest/expoNotificationsMock.js).
+jest.mock('expo-notifications', () => require('./jest/expoNotificationsMock'));

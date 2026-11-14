@@ -19,12 +19,14 @@ import {
   type PaymentMethodInput,
 } from '@/domain/paymentMethod';
 import type { RecurringExpense, RecurringExpenseInput } from '@/domain/recurringExpense';
+import { DEFAULT_REMINDER_SETTINGS, type ReminderSettings } from '@/domain/reminderSettings';
 
 import {
   assertCategoryInput,
   assertRule,
   CategoryRuleError,
   ChangeEmitter,
+  mergeReminderSettings,
   nextTimestamp,
   NotFoundError,
 } from './shared';
@@ -35,6 +37,7 @@ import type {
   OneOffExpenseRepository,
   PaymentMethodRepository,
   RecurringExpenseRepository,
+  ReminderSettingsRepository,
   Repositories,
   Repository,
   RepositoryDeps,
@@ -240,6 +243,25 @@ export interface InMemoryRepositories extends Repositories {
 }
 
 /** Repositorios en memoria: para pruebas de UI y como referencia del contrato. */
+class InMemoryReminderSettingsRepository implements ReminderSettingsRepository {
+  private readonly emitter = new ChangeEmitter();
+  private value: ReminderSettings = { ...DEFAULT_REMINDER_SETTINGS };
+
+  async get(): Promise<ReminderSettings> {
+    return { ...this.value };
+  }
+
+  async update(patch: Partial<ReminderSettings>): Promise<ReminderSettings> {
+    this.value = mergeReminderSettings(this.value, patch);
+    this.emitter.emit();
+    return { ...this.value };
+  }
+
+  subscribe(listener: () => void): () => void {
+    return this.emitter.subscribe(listener);
+  }
+}
+
 export function createInMemoryRepositories(deps: RepositoryDeps): InMemoryRepositories {
   const recurringExpenses = new InMemoryRepository<RecurringExpense, RecurringExpenseInput>(
     'Gasto recurrente',
@@ -269,6 +291,7 @@ export function createInMemoryRepositories(deps: RepositoryDeps): InMemoryReposi
     oneOffExpenses: oneOffExpenses as OneOffExpenseRepository,
     cardPayments: cardPayments as CardPaymentRepository,
     chargeConfirmations,
+    reminderSettings: new InMemoryReminderSettingsRepository(),
     raw: {
       paymentMethods: paymentMethods.rows,
       categories: categories.rows,

@@ -15,6 +15,8 @@ jest.mock('drizzle-orm/expo-sqlite/migrator', () => ({ useMigrations: jest.fn() 
 jest.mock('../../../../drizzle/migrations', () => ({}));
 jest.mock('@/data/sqlite/appDatabase', () => ({ getAppDatabase: () => ({ db: {} }) }));
 jest.mock('@/data/appRepositories', () => ({ getAppRepositories: () => ({}) }));
+jest.mock('@/features/reminders/useReminderSync', () => ({ ReminderSync: () => null }));
+jest.mock('@/features/reminders/NotificationRouter', () => ({ NotificationRouter: () => null }));
 jest.mock('@/features/repositories', () => ({
   RepositoryProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
@@ -60,6 +62,17 @@ describe('RootLayout y el splash', () => {
     mockedURL.mockReturnValue('kapitalyexpenses://expense/new?quick=1');
     await render(<RootLayout />);
     expect(splashMode()).toBe('fijo');
+  });
+
+  it('no anima si la app se abrió desde una notificación', async () => {
+    (
+      jest.requireMock('expo-notifications') as { __state: { lastResponse: unknown } }
+    ).__state.lastResponse = {
+      notification: { request: { content: { data: { target: 'pending' } } } },
+    };
+    await render(<RootLayout />);
+    expect(splashMode()).toBe('fijo');
+    (jest.requireMock('expo-notifications') as { __reset: () => void }).__reset();
   });
 
   it('no anima con reducir movimiento activado', async () => {

@@ -108,3 +108,34 @@ describe('actualización de esquema 0004 → 0005', () => {
     });
   });
 });
+
+describe('actualización de esquema 0005 → 0006', () => {
+  it('agrega las preferencias de notificaciones con todo apagado sin tocar los datos', () => {
+    const client = new Database(':memory:');
+    const db = drizzle(client);
+    migrate(db, { migrationsFolder: folderUpTo(6) });
+    const before = client.prepare('SELECT COUNT(*) AS n FROM payment_methods').get() as {
+      n: number;
+    };
+
+    migrate(db, { migrationsFolder: MIGRATIONS });
+
+    expect(client.prepare('SELECT * FROM reminder_settings').all()).toEqual([
+      {
+        id: 'default',
+        charges_on: 0,
+        charges_time: '10:00',
+        daily_on: 0,
+        daily_time: '21:00',
+        idle_on: 0,
+        idle_days: 3,
+        idle_time: null,
+        updated_at: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
+    const after = client.prepare('SELECT COUNT(*) AS n FROM payment_methods').get() as {
+      n: number;
+    };
+    expect(after.n).toBe(before.n);
+  });
+});

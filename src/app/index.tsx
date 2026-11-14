@@ -1,13 +1,16 @@
-import { useIsFocused, useRouter } from 'expo-router';
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 
 import { BalanceScreen } from '@/features/balance/BalanceScreen';
 
 export default function Index() {
   const router = useRouter();
   const focused = useIsFocused();
+  // `?pending=<valor>` llega al tocar el aviso de cobros: abre la hoja de Pendientes.
+  const { pending } = useLocalSearchParams<{ pending?: string }>();
   return (
     <BalanceScreen
       focused={focused}
+      openPendingKey={pending}
       onAdd={() => router.push('/expense/new')}
       onOpenSettings={() => router.push('/settings')}
       onOpenMethods={() => router.push('/payment-methods')}

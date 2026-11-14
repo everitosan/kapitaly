@@ -1,5 +1,10 @@
 import { validateCategoryInput, type Category, type CategoryInput } from '@/domain/category';
 import type { MethodRuleResult } from '@/domain/paymentMethod';
+import {
+  validateReminderSettings,
+  type ReminderSettings,
+  type ReminderSettingsField,
+} from '@/domain/reminderSettings';
 
 export class NotFoundError extends Error {
   constructor(entity: string, id: string) {
@@ -59,6 +64,24 @@ export function nextTimestamp(now: string, previous?: string): string {
 }
 
 /** Emisor mínimo de cambios para `subscribe`. */
+/** Preferencias de notificaciones inválidas (hora mal formada o días fuera de rango). */
+export class ReminderSettingsError extends Error {
+  constructor(readonly errors: Partial<Record<ReminderSettingsField, string>>) {
+    super(`Preferencias de notificaciones no válidas: ${JSON.stringify(errors)}`);
+    this.name = 'ReminderSettingsError';
+  }
+}
+
+/** Aplica un cambio a las preferencias y lo valida; lanza `ReminderSettingsError` si no pasa. */
+export function mergeReminderSettings(
+  current: ReminderSettings,
+  patch: Partial<ReminderSettings>,
+): ReminderSettings {
+  const r = validateReminderSettings({ ...current, ...patch });
+  if (!r.ok) throw new ReminderSettingsError(r.errors);
+  return r.value;
+}
+
 export class ChangeEmitter {
   private listeners = new Set<() => void>();
 

@@ -62,6 +62,11 @@ export interface BalanceScreenProps {
    * abre así, para no tapar el formulario cuando la app arranca desde el acceso directo.
    */
   focused?: boolean;
+  /**
+   * Abre la hoja de Pendientes cada vez que cambia (p. ej. al tocar el aviso de cobros). Un valor
+   * nuevo por toque, para que funcione aunque la hoja ya se haya abierto antes.
+   */
+  openPendingKey?: string;
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -75,6 +80,7 @@ export function BalanceScreen({
   today = civilDateFromLocal(new Date()),
   extra,
   focused = true,
+  openPendingKey,
 }: BalanceScreenProps) {
   const theme = useTheme();
   const methods = usePaymentMethods();
@@ -96,6 +102,11 @@ export function BalanceScreen({
   const pending = usePending(today);
   const session = usePendingSession();
   const [forceSheet, setForceSheet] = useState(false);
+  const [seenPendingKey, setSeenPendingKey] = useState<string | undefined>(undefined);
+  if (openPendingKey !== seenPendingKey) {
+    setSeenPendingKey(openPendingKey);
+    if (openPendingKey) setForceSheet(true);
+  }
   // La hoja se abre sola cuando el balance queda visible y hay pendientes; al cerrarla no vuelve
   // sola en esta sesión.
   const sheetVisible =

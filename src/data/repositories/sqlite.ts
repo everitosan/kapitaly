@@ -21,6 +21,7 @@ import {
   type PaymentMethodInput,
 } from '@/domain/paymentMethod';
 import type { RecurringExpense, RecurringExpenseInput } from '@/domain/recurringExpense';
+import { DEFAULT_REMINDER_SETTINGS, type ReminderSettings } from '@/domain/reminderSettings';
 
 import type { AppDatabase } from '../sqlite/database';
 import {
@@ -30,12 +31,14 @@ import {
   paymentMethods,
   recurringChargeConfirmations,
   recurringExpenses,
+  reminderSettings,
 } from '../sqlite/schema';
 import {
   assertCategoryInput,
   assertRule,
   CategoryRuleError,
   ChangeEmitter,
+  mergeReminderSettings,
   nextTimestamp,
   NotFoundError,
 } from './shared';
@@ -46,6 +49,7 @@ import type {
   OneOffExpenseRepository,
   PaymentMethodRepository,
   RecurringExpenseRepository,
+  ReminderSettingsRepository,
   Repositories,
   Repository,
   RepositoryDeps,
@@ -327,6 +331,52 @@ class SqliteChargeConfirmationRepository
 }
 
 /** Repositorios sobre SQLite (Drizzle). El método inicial "Efectivo" lo crea la migración. */
+const REMINDER_SETTINGS_ID = 'default';
+
+/** Preferencias de notificaciones: la fila única `default` de `reminder_settings`. */
+class SqliteReminderSettingsRepository implements ReminderSettingsRepository {
+  private readonly emitter = new ChangeEmitter();
+
+  constructor(
+    private readonly db: AppDatabase,
+    private readonly deps: RepositoryDeps,
+  ) {}
+
+  async get(): Promise<ReminderSettings> {
+    const row = this.db
+      .select()
+      .from(reminderSettings)
+      .where(eq(reminderSettings.id, REMINDER_SETTINGS_ID))
+      .get();
+    if (!row) return { ...DEFAULT_REMINDER_SETTINGS };
+    return {
+      chargesOn: row.chargesOn,
+      chargesTime: row.chargesTime,
+      dailyOn: row.dailyOn,
+      dailyTime: row.dailyTime,
+      idleOn: row.idleOn,
+      idleDays: row.idleDays,
+      idleTime: row.idleTime,
+    };
+  }
+
+  async update(patch: Partial<ReminderSettings>): Promise<ReminderSettings> {
+    const next = mergeReminderSettings(await this.get(), patch);
+    const values = { ...next, updatedAt: this.deps.now() };
+    this.db
+      .insert(reminderSettings)
+      .values({ id: REMINDER_SETTINGS_ID, ...values })
+      .onConflictDoUpdate({ target: reminderSettings.id, set: values })
+      .run();
+    this.emitter.emit();
+    return next;
+  }
+
+  subscribe(listener: () => void): () => void {
+    return this.emitter.subscribe(listener);
+  }
+}
+
 export function createSqliteRepositories(db: AppDatabase, deps: RepositoryDeps): Repositories {
   const paymentMethodRepo = new SqlitePaymentMethodRepository(
     db,
@@ -425,5 +475,6 @@ export function createSqliteRepositories(db: AppDatabase, deps: RepositoryDeps):
     oneOffExpenses: oneOffRepo as OneOffExpenseRepository,
     cardPayments: cardPaymentRepo as CardPaymentRepository,
     chargeConfirmations: confirmationRepo,
+    reminderSettings: new SqliteReminderSettingsRepository(db, deps),
   };
 }
