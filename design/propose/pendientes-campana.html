@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campana de pendientes</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --on-block: #141414; --grab: #CFC9BC; --page: #E6E0D3; --backdrop: rgba(20,20,18,.55);
+    --cobalt: #2B4BF2;
+    --f1: linear-gradient(135deg, #E6F87C 0%, #9EE36A 100%); --f2: linear-gradient(135deg, #C4E6FF 0%, #82B4FF 100%); --f6: linear-gradient(135deg, #FFD9AE 0%, #FF9E78 100%);
+    /* Campana activa: tinte rojo (danger #C41E33 al 14 % sobre --bg) y tinta roja con contraste 5.2:1. */
+    --alert-bg: #EDD3D0; --alert-ink: #A8182C;
+    --r-xl: 30px; --r-lg: 22px; --r-md: 16px;
+  }
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28; --grab: #3A3833; --page: #0A0A09; --backdrop: rgba(0,0,0,.7);
+    --f1: linear-gradient(135deg, #D9F06A 0%, #86D457 100%); --f2: linear-gradient(135deg, #AFD9FF 0%, #6C9EF5 100%); --f6: linear-gradient(135deg, #FFCB98 0%, #F98A63 100%);
+    /* danger oscuro #FF6B6B al 16 % sobre --bg; contraste 5.5:1. */
+    --alert-bg: #381F1F; --alert-ink: #FF6B6B;
+  }
+  body { background: var(--page); color: var(--ink); }
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 120px; }
+
+  /* Barra superior */
+  .topbar { display: flex; justify-content: flex-end; align-items: center; gap: 4px; padding: 2px 0 6px; }
+  .ghost { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+  .ghost:active { background: var(--card); }
+  .bell { height: 40px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; color: var(--muted); transition: background .2s, color .2s, padding .2s; }
+  .bell[disabled] { opacity: .45; cursor: default; width: 40px; justify-content: center; padding: 0; }
+  .bell.on { background: var(--alert-bg); color: var(--alert-ink); padding: 0 13px 0 11px; }
+  .bell.on:active { transform: scale(.96); }
+  .bell b { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  .month { display: flex; align-items: flex-end; justify-content: space-between; padding: 0 4px 22px; }
+  .month .m { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .month .y { font-size: 15px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+  .arrows { display: flex; gap: 8px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-bottom: 18px; }
+  .seg span { height: 42px; border-radius: 999px; font-size: 15px; font-weight: 700; color: var(--muted); display: grid; place-items: center; }
+  .seg span.on { background: linear-gradient(135deg, #2a2a2a, #141414); color: #F4F1EA; }
+  html[data-theme="dark"] .seg span.on { background: linear-gradient(135deg, #FFFFFF, #E4DFD3); color: #141414; }
+
+  /* Aviso actual (solo en "Hoy") */
+  .banner { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 18px; padding: 12px 14px; margin-bottom: 16px; width: 100%; text-align: left; }
+  .banner .dot { width: 30px; height: 30px; border-radius: 50%; background: var(--f6); color: var(--on-block); display: grid; place-items: center; font-weight: 800; flex: none; }
+  .banner b { font-size: 15px; } .banner small { display: block; color: var(--muted); font-weight: 600; font-size: 12px; }
+
+  .total { border-radius: var(--r-xl); padding: 22px 22px 20px; margin-bottom: 22px; box-shadow: inset 0 1px 0 rgba(255,255,255,.25); background: linear-gradient(135deg, #2B4BF2 0%, #7B3CF0 100%); color: #fff; }
+  html[data-theme="dark"] .total { background: linear-gradient(135deg, #3354FF 0%, #8344F5 100%); }
+  .total .lbl { font-size: 14px; font-weight: 600; opacity: .85; }
+  .total .amt { font-size: 44px; font-weight: 800; letter-spacing: -.03em; margin: 6px 0 4px; line-height: 1; }
+  .total .amt small { font-size: 24px; opacity: .7; }
+  .total .proj { font-size: 15px; font-weight: 700; opacity: .9; }
+  .prog { height: 8px; border-radius: 999px; background: rgba(255,255,255,.22); margin: 14px 0 6px; overflow: hidden; display: flex; }
+  .prog span { display: block; height: 100%; } .prog .done { background: #fff; } .prog .due { background: rgba(255,255,255,.5); }
+  .prog-leg { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; font-weight: 700; opacity: .85; }
+  .prog-leg i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+
+  .s-lbl { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 4px 12px; }
+  .row { border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; color: var(--on-block); box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+  .date { width: 50px; height: 50px; border-radius: var(--r-md); background: rgba(255,255,255,.55); display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; }
+  html[data-theme="dark"] .date { background: rgba(255,255,255,.4); }
+  .date b { font-size: 19px; line-height: 1; } .date span { font-size: 10.5px; font-weight: 700; text-transform: uppercase; opacity: .7; margin-top: 2px; }
+  .mid { flex: 1; min-width: 0; } .name { font-size: 16.5px; font-weight: 700; } .sub { font-size: 12.5px; font-weight: 600; opacity: .65; }
+  .ramt { font-size: 16.5px; font-weight: 800; }
+  .ppill { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; background: #141414; color: #F4F1EA; margin-left: 6px; white-space: nowrap; display: inline-block; vertical-align: 1px; }
+
+  /* Hoja "Pendientes" */
+  .sheet-bg { position: absolute; inset: 0; background: var(--backdrop); z-index: 10; display: flex; flex-direction: column; padding-top: 58px; animation: fade .2s ease-out; }
+  .sheet { flex: 1; background: var(--bg); border-radius: 34px 34px 0 0; display: flex; flex-direction: column; overflow: hidden; animation: up .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fade { from { opacity: 0; } } @keyframes up { from { transform: translateY(40%); } }
+  .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--grab); margin: 10px auto 4px; }
+  .sh-nav { display: flex; justify-content: space-between; align-items: center; padding: 8px 20px 10px; }
+  .sh-nav b { font-size: 17px; } .sh-nav button { color: var(--muted); font-weight: 700; font-size: 16px; }
+  .sh-body { padding: 0 20px 40px; display: flex; flex-direction: column; gap: 12px; }
+  .pend { background: var(--card); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .pend-h { display: flex; align-items: center; gap: 10px; }
+  .pend-h .t { flex: 1; } .pend-h .t b { display: block; font-size: 16px; } .pend-h .t small { color: var(--muted); font-weight: 600; font-size: 13px; }
+  .pend-h .date { background: var(--f1); color: var(--on-block); }
+  .badge { width: 44px; height: 44px; border-radius: 50%; background: #1464F4; color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 800; flex: none; }
+  .pend-amount { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border-radius: 14px; padding: 10px 14px; font-weight: 700; }
+  .pend-amount b { font-size: 18px; font-weight: 800; }
+  .pend-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pend-actions button { height: 46px; border-radius: 999px; font-size: 15px; font-weight: 700; background: var(--bg); }
+  .pend-actions .primary { background: var(--ink); color: var(--bg); }
+  .pend-actions .full { grid-column: span 2; }
+
+  .sb { height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 30px 0 36px; position: relative; font-weight: 600; font-size: 16px; }
+  .sb-island { position: absolute; left: 50%; top: 11px; transform: translateX(-50%); width: 120px; height: 34px; border-radius: 20px; background: #000; }
+
+  .theme-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-top: 22px; }
+  .theme-toggle button { height: 40px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .theme-toggle button.on { background: var(--ink); color: var(--bg); }
+  .reset { display: block; margin: 14px auto 0; font-weight: 700; font-size: 14px; color: var(--muted); text-decoration: underline; }
+  .notes { max-width: 860px; margin: 0 auto 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 12px; }
+  .note { background: var(--card); border-radius: 20px; padding: 16px 18px; font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.45; }
+  .note b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">A-1 Duotono · balance</div>
+    <h1 class="p-title">Campana de pendientes</h1>
+    <p class="p-desc">El aviso de pendientes deja de ir debajo de "Este mes | Análisis" y pasa a la barra superior como una campana, junto a Métodos de pago. Con pendientes se vuelve una píldora con tinte rojo y el número; sin pendientes queda tenue y no responde.</p>
+    <div class="theme-toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+    <button class="reset" id="reset">Reiniciar pendientes (nueva apertura de la app)</button>
+  </header>
+
+  <div class="notes">
+    <div class="note"><b>Con pendientes</b>Píldora con tinte rojo, campana y número en rojo oscuro. Toca para abrir la hoja "Pendientes". Contraste del número: 5.2:1 en claro y 5.5:1 en oscuro.</div>
+    <div class="note"><b>Sin pendientes</b>Solo la campana, del mismo tamaño y gris que Métodos de pago y Ajustes, al 45 %. No responde al toque y se anuncia como "Pendientes, ninguno".</div>
+    <div class="note"><b>"Aún no"</b>La tarjeta sale de la hoja y el número baja. Con el último, la hoja se cierra y la campana queda tenue hasta la siguiente apertura de la app.</div>
+    <div class="note"><b>Botones de cada tarjeta</b>Cancelar o posponer siempre a la izquierda; confirmar a la derecha o abajo. En las dos tarjetas "Aún no" es el primero de su fila: cobro = [Aún no][No se cobró] y abajo [Sí, se cobró]; pago = [Aún no][Sí, pagué].</div>
+    <div class="note"><b>Sin cambios</b>Al abrir la app con pendientes, la hoja sigue apareciendo sola, excepto desde el atajo "Nuevo gasto". El aviso grande desaparece.</div>
+  </div>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p1"></div></div><div class="ph-cap">Hoy · aviso debajo del selector</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p2"></div></div><div class="ph-cap">Propuesta · toca la campana y prueba "Aún no"</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p3"></div></div><div class="ph-cap">Propuesta · sin pendientes</div></div>
+  </div>
+</div>
+<script>
+(() => {
+  const CARD = '<svg width="21" height="16" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="18" height="14" rx="3"/><path d="M1 6h18"/></svg>';
+  const GEAR = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const BELL = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+  const SB = '<div class="sb"><span>9:41</span><span class="sb-island"></span><span style="display:flex;gap:6px;align-items:center"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/></svg></span></div>';
+  const HOME = '<div class="home-ind"></div>';
+
+  const PENDING = [
+    { id: 'luz', kind: 'charge', name: 'Luz CFE', day: 11, sub: 'Bimestral · BBVA Débito', amount: '$1,400.00' },
+    { id: 'bbva', kind: 'payment', name: 'BBVA Azul', sub: 'Vencía el 5 nov · usado $7,457.50', amount: '$7,457.50' },
+  ];
+  let open = new Set(PENDING.map((p) => p.id));
+  let sheet = false;
+
+  const bell = (n, live) => n > 0
+    ? `<button class="bell on" ${live ? 'data-bell' : ''} aria-label="Pendientes, ${n}">${BELL}<b>${n}</b></button>`
+    : '<button class="bell" disabled aria-label="Pendientes, ninguno">' + BELL + '</button>';
+  const topbar = (bellHtml) => `<div class="topbar">${bellHtml}<button class="ghost" aria-label="Métodos de pago">${CARD}</button><button class="ghost" aria-label="Ajustes">${GEAR}</button></div>`;
+  const month = `<div class="month"><div><div class="m">Noviembre</div><div class="y">2026</div></div><div class="arrows"><span class="round">‹</span><span class="round">›</span></div></div>
+    <div class="seg"><span class="on">Este mes</span><span>Análisis</span></div>`;
+  const body = `<div class="total"><div class="lbl">Cargos de noviembre</div><div class="amt num">$19,247<small>.00</small></div><div class="proj">de <b>$33,595.00</b> proyectados</div>
+      <div class="prog"><span class="done" style="width:57%"></span><span class="due" style="width:4%"></span></div>
+      <div class="prog-leg"><span><i style="background:#fff"></i>Cobrado</span><span><i style="background:rgba(255,255,255,.5)"></i>Por confirmar $1,400.00</span><span>Falta $12,948.00</span></div></div>
+    <div class="s-lbl">Cargos del mes</div>
+    <div class="row" style="background:var(--f1)"><div class="date"><b>1</b><span>nov</span></div><div class="mid"><div class="name">Renta</div><div class="sub">Mensual</div></div><div class="ramt num">$12,000.00</div></div>
+    <div class="row" style="background:var(--f2)"><div class="date"><b>11</b><span>nov</span></div><div class="mid"><div class="name">Luz CFE</div><div class="sub">Bimestral<span class="ppill">Por confirmar</span></div></div><div class="ramt num">$1,400.00</div></div>`;
+  const screen = (top, extra = '') => `${SB}<div data-scroll><div class="content">${top}${month}${extra}${body}</div></div>${HOME}`;
+
+  const card = (p) => p.kind === 'charge' ? `
+    <div class="pend">
+      <div class="pend-h"><div class="date"><b>${p.day}</b><span>nov</span></div><div class="t"><b>¿Ya se cobró ${p.name}?</b><small>${p.sub}</small></div></div>
+      <div class="pend-amount"><span>Monto cobrado</span><b class="num">${p.amount}</b></div>
+      <div class="pend-actions"><button data-done="${p.id}">Aún no</button><button data-done="${p.id}">No se cobró</button><button class="primary full" data-done="${p.id}">Sí, se cobró</button></div>
+    </div>` : `
+    <div class="pend">
+      <div class="pend-h"><div class="badge">BBVA</div><div class="t"><b>¿Ya pagaste ${p.name}?</b><small>${p.sub}</small></div></div>
+      <div class="pend-amount"><span>Monto pagado</span><b class="num">${p.amount}</b></div>
+      <div class="pend-actions"><button data-done="${p.id}">Aún no</button><button class="primary" data-done="${p.id}">Sí, pagué</button></div>
+    </div>`;
+
+  const p1 = document.getElementById('p1');
+  const p2 = document.getElementById('p2');
+  const p3 = document.getElementById('p3');
+
+  p1.innerHTML = screen(topbar(''), '<button class="banner"><span class="dot">2</span><span><b>2 pendientes</b><small>Cobros y pagos por confirmar · toca para revisar</small></span></button>');
+  p3.innerHTML = screen(topbar(bell(0)));
+
+  const drawLive = () => {
+    const items = PENDING.filter((p) => open.has(p.id));
+    if (items.length === 0) sheet = false;
+    p2.innerHTML = screen(topbar(bell(items.length, true))) + (sheet ? `
+      <div class="sheet-bg"><div class="sheet"><div class="grab"></div>
+        <div class="sh-nav"><button data-close>Cerrar</button><b>Pendientes</b><span style="width:52px"></span></div>
+        <div data-scroll><div class="sh-body">${items.map(card).join('')}</div></div>
+      </div></div>` : '');
+  };
+  p2.addEventListener('click', (e) => {
+    if (e.target.closest('[data-bell]')) { sheet = true; drawLive(); return; }
+    if (e.target.closest('[data-close]')) { sheet = false; drawLive(); return; }
+    const done = e.target.closest('[data-done]');
+    if (done) { open.delete(done.dataset.done); drawLive(); }
+  });
+  drawLive();
+
+  document.getElementById('reset').addEventListener('click', () => { open = new Set(PENDING.map((p) => p.id)); sheet = false; drawLive(); });
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+})();
+</script>
+</body>
+</html>
