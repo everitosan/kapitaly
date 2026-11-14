@@ -39,7 +39,7 @@ Fijadas en `.github/workflows/android-beta.yml` y comprobadas por `scripts/__tes
 | Node | 24.11.0 (`npm ci`) |
 | JDK | Temurin 21.0.13+9 |
 | Android SDK | `platforms;android-37.0`, `build-tools;37.0.0`, `ndk;27.1.12297006`, `cmake;3.22.1` |
-| Arquitecturas | solo `arm64-v8a` (celulares actuales; sin 32 bits ni emuladores x86) |
+| Arquitecturas | `arm64-v8a` y `armeabi-v7a` (incluye celulares de 32 bits; sin emuladores x86) |
 | Caché | dependencias de Gradle (`setup-java`, llave `package-lock.json`); sin build cache ni configuration cache |
 | Acciones | fijadas por SHA completo (checkout v7, setup-node v7, setup-java v6, upload-artifact v7, upload-google-play v1.1.5) |
 
@@ -97,7 +97,7 @@ gh secret list
 
 El workflow valida que existan antes de compilar y solo muestra el nombre del que falta. GitHub enmascara los valores en los logs; los archivos temporales (`$RUNNER_TEMP/kapitaly-signing`, permisos 600) se borran al final aunque el job falle. Solo se cachean las dependencias descargadas de Gradle; el build cache y el configuration cache están desactivados, así que nada de la firma ni el AAB quedan en cachés.
 
-Compilar solo `arm64-v8a` baja el build de ~27 a ~10 minutos. Play no ofrecerá la beta a celulares de 32 bits; antes de producción, valora agregar `armeabi-v7a` a `-PreactNativeArchitectures`.
+Se compilan `arm64-v8a` y `armeabi-v7a` para que la beta llegue también a celulares de 32 bits. El build tarda ~27 minutos; con solo `arm64-v8a` baja a ~10, pero Play no ofrece la app a equipos de 32 bits.
 
 ## Cuenta de servicio de Google Play
 
