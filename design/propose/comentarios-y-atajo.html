@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comentarios y atajo</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --on-block: #141414; --page: #E6E0D3;
+    --backdrop: rgba(20,20,18,.55); --cobalt: #2B4BF2; --danger: #C41E33;
+    --f1: linear-gradient(135deg, #E6F87C 0%, #9EE36A 100%); --f2: linear-gradient(135deg, #C4E6FF 0%, #82B4FF 100%); --f3: linear-gradient(135deg, #E1D1FF 0%, #A98BFF 100%); --f6: linear-gradient(135deg, #FFD9AE 0%, #FF9E78 100%); --f12: linear-gradient(135deg, #FFC9E0 0%, #FF7FB2 100%);
+    --total: linear-gradient(135deg, #2B4BF2 0%, #7B3CF0 100%);
+    --alert-bg: #EDD3D0; --alert-ink: #A8182C;
+    --r-lg: 22px; --r-md: 16px;
+    --wall: linear-gradient(160deg, #3d4a7a 0%, #6a4f86 55%, #b0707a 100%);
+    --mail-bg: #FFFFFF; --mail-ink: #1F1F1F; --mail-muted: #5F6368; --mail-line: #E3E3E3; --mail-accent: #0B57D0;
+  }
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28; --page: #0A0A09; --backdrop: rgba(0,0,0,.7);
+    --f1: linear-gradient(135deg, #D9F06A 0%, #86D457 100%); --f2: linear-gradient(135deg, #AFD9FF 0%, #6C9EF5 100%); --f3: linear-gradient(135deg, #D2BFFF 0%, #9476F5 100%); --f6: linear-gradient(135deg, #FFCB98 0%, #F98A63 100%); --f12: linear-gradient(135deg, #FFB8D6 0%, #F56CA2 100%);
+    --total: linear-gradient(135deg, #3354FF 0%, #8344F5 100%);
+    --alert-bg: #381F1F; --alert-ink: #FF6B6B;
+    --wall: linear-gradient(160deg, #141a33 0%, #2a1f3a 55%, #3a2228 100%);
+    --mail-bg: #1F1F1F; --mail-ink: #E3E3E3; --mail-muted: #A8ABAF; --mail-line: #3C3C3C; --mail-accent: #A8C7FA;
+  }
+  body { background: var(--page); color: var(--ink); }
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 120px; }
+  .sb { height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 30px 0 36px; position: relative; font-weight: 600; font-size: 16px; }
+  .sb-island { position: absolute; left: 50%; top: 11px; transform: translateX(-50%); width: 120px; height: 34px; border-radius: 20px; background: #000; }
+  .topnav { display: flex; padding: 4px 0 12px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .mtitle { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; padding: 0 4px 6px; }
+  .mdesc { color: var(--muted); font-size: 15px; font-weight: 600; padding: 0 4px 20px; line-height: 1.4; }
+  .s-lbl { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 4px 4px 10px; }
+
+  /* Ajustes */
+  .set-list { background: var(--card); border-radius: var(--r-lg); padding: 4px 16px; margin-bottom: 18px; }
+  .set-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 0; border-top: 1px solid var(--line); text-align: left; }
+  .set-row:first-child { border-top: 0; }
+  .set-row .ic { width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; color: var(--on-block); flex: none; }
+  .set-row .ic svg[viewBox='18 18 72 72'] { width: 40px; height: 40px; }
+  .set-row .t { flex: 1; min-width: 0; font-size: 17px; font-weight: 700; }
+  .set-row .t small { display: block; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .set-row .n { font-size: 15px; font-weight: 700; color: var(--muted); }
+  .set-row .chev { font-size: 22px; color: var(--muted); font-weight: 600; }
+  .tag-new { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; background: var(--ink); color: var(--bg); margin-left: 6px; vertical-align: 2px; }
+
+  /* Formulario */
+  .field { background: var(--card); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .field textarea { width: 100%; min-height: 150px; border: 0; outline: 0; resize: none; background: transparent; color: var(--ink); font-family: inherit; font-size: 16px; font-weight: 600; line-height: 1.45; }
+  .field textarea::placeholder { color: var(--muted); font-weight: 600; }
+  .count { text-align: right; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .shots { display: flex; gap: 10px; flex-wrap: wrap; }
+  .shot { width: 74px; height: 96px; border-radius: 14px; position: relative; overflow: hidden; flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+  .shot .x { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; background: rgba(20,20,20,.72); color: #fff; font-size: 13px; font-weight: 800; display: grid; place-items: center; }
+  .shot .mini { position: absolute; inset: 10px 8px auto; display: flex; flex-direction: column; gap: 5px; }
+  .shot .mini i { display: block; height: 7px; border-radius: 4px; background: rgba(255,255,255,.7); }
+  .add { width: 74px; height: 96px; border-radius: 14px; border: 2px dashed var(--line); color: var(--muted); display: grid; place-items: center; font-size: 26px; font-weight: 600; background: var(--bg); }
+  .add[disabled] { opacity: .45; cursor: default; }
+  .hint { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-top: 10px; }
+  .info { background: var(--card); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 14px; font-size: 13px; font-weight: 600; color: var(--muted); line-height: 1.5; }
+  .info b { color: var(--ink); }
+  .fab-bar { position: absolute; left: 20px; right: 20px; bottom: 30px; }
+  .btn { height: 58px; border-radius: 999px; font-size: 17px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--ink); color: var(--bg); box-shadow: 0 12px 24px -10px rgba(20,20,20,.5); }
+  .btn[disabled] { opacity: .4; box-shadow: none; cursor: default; }
+  .toast { position: absolute; left: 20px; right: 20px; bottom: 100px; background: var(--ink); color: var(--bg); border-radius: 16px; padding: 12px 16px; font-size: 14px; font-weight: 700; text-align: center; }
+  .nomail { display: flex; gap: 12px; background: var(--alert-bg); color: var(--alert-ink); border-radius: 18px; padding: 14px; margin-bottom: 14px; }
+  .nomail b { display: block; font-size: 15px; }
+  .nomail p { font-size: 13px; font-weight: 600; margin-top: 2px; line-height: 1.4; }
+
+  /* Correo del sistema (simulado) */
+  .mail { background: var(--mail-bg); color: var(--mail-ink); font-family: Roboto, "Segoe UI", system-ui, sans-serif; }
+  .mail .bar { display: flex; align-items: center; gap: 18px; padding: 8px 18px 14px; font-size: 20px; }
+  .mail .bar .grow { flex: 1; font-size: 18px; }
+  .mail .row { display: flex; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--mail-line); font-size: 15px; }
+  .mail .row span:first-child { color: var(--mail-muted); width: 46px; }
+  .mail .chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--mail-line); font-size: 13.5px; }
+  .mail .body { padding: 14px 18px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
+  .mail .att { display: flex; gap: 8px; padding: 4px 18px 18px; flex-wrap: wrap; }
+  .mail .att span { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--mail-line); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+  .mail .send { color: var(--mail-accent); font-size: 22px; }
+  .sys-tag { position: absolute; left: 0; right: 0; bottom: 40px; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mail-muted); }
+
+  /* Pantalla de inicio */
+  .home { background: var(--wall); color: #fff; }
+  .grid-apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 8px; padding: 40px 22px 0; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,.4); }
+  .app svg { width: 58px; height: 58px; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
+  .ghost-app { width: 58px; height: 58px; border-radius: 50%; background: rgba(255,255,255,.18); }
+  .menu { position: absolute; left: 22px; top: 300px; width: 240px; background: rgba(250,250,250,.96); color: #1f1f1f; border-radius: 22px; padding: 8px; box-shadow: 0 20px 40px -10px rgba(0,0,0,.5); }
+  html[data-theme="dark"] .menu { background: rgba(40,40,40,.96); color: #eee; }
+  .menu .mi { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 14px; font-size: 15px; font-weight: 600; }
+  .menu .mi svg { width: 34px; height: 34px; }
+  .menu .sep { height: 1px; background: rgba(0,0,0,.1); margin: 4px 10px; }
+  .home-cap { position: absolute; left: 0; right: 0; top: 270px; text-align: center; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.8); }
+
+  /* Galería de íconos */
+  .icons { max-width: 980px; margin: 0 auto 56px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+  .ic-card { background: var(--card); border-radius: 22px; padding: 18px 12px 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+  .ic-card svg { width: 96px; height: 96px; }
+  .ic-card b { font-size: 14px; }
+  .ic-card small { font-size: 12px; font-weight: 600; color: var(--muted); line-height: 1.35; }
+  .ic-card.layers svg { background: repeating-conic-gradient(var(--line) 0 25%, transparent 0 50%) 50% / 12px 12px; border-radius: 12px; }
+
+  .theme-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-top: 22px; }
+  .theme-toggle button { height: 40px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .theme-toggle button.on { background: var(--ink); color: var(--bg); }
+  .reset { display: block; margin: 14px auto 0; font-weight: 700; font-size: 14px; color: var(--muted); text-decoration: underline; }
+  .notes { max-width: 900px; margin: 0 auto 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 12px; }
+  .note { background: var(--card); border-radius: 20px; padding: 16px 18px; font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.45; }
+  .note b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+  .sec-title { max-width: 980px; margin: 0 auto 14px; font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+  .sec-desc { max-width: 980px; margin: -6px auto 18px; color: var(--muted); font-size: 15px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">A-1 Duotono · beta</div>
+    <h1 class="p-title">Comentarios y atajo</h1>
+    <p class="p-desc">Un formulario en Ajustes para que quien prueba la beta mande comentarios con capturas usando su propia app de correo, sin servidor; y el ícono del acceso directo "Nuevo gasto" rehecho como ícono adaptativo a partir de la propuesta de diseño.</p>
+    <div class="theme-toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+    <button class="reset" id="reset">Reiniciar formulario</button>
+  </header>
+
+  <h2 class="sec-title">Ícono del acceso directo</h2>
+  <p class="sec-desc">Dos capas (fondo oscuro y frente con círculos y cartera dentro de la zona segura); cada launcher le pone su forma. En Android 7 se usa un ícono de respaldo con el mismo dibujo.</p>
+  <div class="icons" id="icons"></div>
+
+  <div class="notes">
+    <div class="note"><b>Comentarios</b>Texto obligatorio (hasta 2,000 caracteres) y hasta 3 capturas, elegidas con el selector de fotos del sistema (sin pedir permisos en Android 13+).</div>
+    <div class="note"><b>Enviar por correo</b>Abre la app de correo del teléfono con destinatario, asunto, texto y capturas listos; la persona revisa y toca Enviar. La app no manda nada por su cuenta.</div>
+    <div class="note"><b>Datos de diagnóstico</b>Al final del correo van la versión de la app y el modelo y la versión de Android, visibles antes de enviar.</div>
+    <div class="note"><b>Sin app de correo</b>Si el teléfono no tiene una configurada, el botón se deshabilita y se explica por qué; el texto escrito no se pierde.</div>
+  </div>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen home" id="p0"></div></div><div class="ph-cap">Acceso directo fijado y atajo al mantener presionado</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p1"></div></div><div class="ph-cap">Ajustes · nueva sección</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p2"></div></div><div class="ph-cap">Comentarios · interactivo (escribe, agrega capturas, envía)</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen mail" id="p3"></div></div><div class="ph-cap">Lo que se abre al enviar (app de correo del sistema)</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p4"></div></div><div class="ph-cap">Sin app de correo configurada</div></div>
+  </div>
+</div>
+<script>
+(() => {
+  const SB = (c = 'currentColor') => `<div class="sb" style="color:${c}"><span>9:41</span><span class="sb-island"></span><span style="display:flex;gap:6px;align-items:center"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/></svg></span></div>`;
+  const HOME = '<div class="home-ind"></div>';
+  const CARD = '<svg width="21" height="16" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="18" height="14" rx="3"/><path d="M1 6h18"/></svg>';
+  const DOTS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
+  const PLUS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+  const BELL = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+  const CHAT = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 11h7M8.5 14.5h4.5"/></svg>';
+  const CLIP = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21 12-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l9.2-9.2a3.7 3.7 0 0 1 5.2 5.2l-9.2 9.2a1.8 1.8 0 0 1-2.6-2.6l8.5-8.5"/></svg>';
+
+  /* ---------- Ícono adaptativo (lienzo 108; se ven los 72 del centro) ---------- */
+  let gid = 0;
+  const WALLET = (s) => `<g fill="none" stroke="#0A3315" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" transform="translate(${54 - 12 * s} ${54 - 12 * s}) scale(${s})">
+      <path d="M5.5 9.5 14.6 4.9a1.3 1.3 0 0 1 1.9 1.2V9.5"/>
+      <path d="M5.5 9.5h11.2a2.8 2.8 0 0 1 2.8 2.8v5.4a2.8 2.8 0 0 1-2.8 2.8H8.3a2.8 2.8 0 0 1-2.8-2.8z"/>
+      <circle cx="16.2" cy="15" r=".85" stroke-width="${1.4 * s / s}"/><path d="M16.2 14.15v1.7" stroke-width="${1.2}"/></g>`;
+  const fg = () => {
+    const id = `g${gid++}`;
+    return `<defs><linearGradient id="${id}" x1=".5" y1="0" x2=".5" y2="1"><stop stop-color="#328844"/><stop offset="1" stop-color="#063D12"/></linearGradient></defs>
+      <circle cx="54" cy="54" r="33" fill="url(#${id})"/><circle cx="54" cy="54" r="27" fill="url(#${id})"/><circle cx="54" cy="54" r="20.5" fill="url(#${id})"/>
+      ${WALLET(1.4)}`;
+  };
+  const bg = '<rect x="0" y="0" width="108" height="108" fill="#020903"/>';
+  const SHAPES = {
+    circle: '<circle cx="54" cy="54" r="36"/>',
+    squircle: '<path d="M54 18c26 0 36 10 36 36s-10 36-36 36-36-10-36-36 10-36 36-36z"/>',
+    rounded: '<rect x="18" y="18" width="72" height="72" rx="16"/>',
+  };
+  const adaptive = (shape) => {
+    const id = `m${gid++}`;
+    return `<svg viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="${id}">${SHAPES[shape]}</clipPath></defs><g clip-path="url(#${id})">${bg}${fg()}</g></svg>`;
+  };
+  const legacy = () => `<svg viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="18" width="72" height="72" rx="14" fill="#020903"/>${fg()}</svg>`;
+  const layerFg = () => `<svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">${fg()}<circle cx="54" cy="54" r="33" fill="none" stroke="#FF4D6D" stroke-width=".8" stroke-dasharray="2 2"/><rect x="18" y="18" width="72" height="72" fill="none" stroke="#2B4BF2" stroke-width=".8" stroke-dasharray="2 2"/></svg>`;
+  const today = '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#C2EE73"/><path d="M24 14v20M14 24h20" stroke="#141414" stroke-width="4" stroke-linecap="round"/></svg>';
+  const appIcon = '<svg viewBox="89 213 224 224" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ag" x1=".5" y1="0" x2=".5" y2="1"><stop stop-color="#328844"/><stop offset="1" stop-color="#063D12"/></linearGradient><clipPath id="ac"><circle cx="201" cy="325" r="112"/></clipPath></defs><g clip-path="url(#ac)"><rect x="89" y="213" width="224" height="224" fill="#020903"/><circle cx="215.9" cy="339.9" r="124.4" fill="url(#ag)"/><circle cx="237.1" cy="364.8" r="114.5" fill="url(#ag)"/><circle cx="261.4" cy="396.6" r="98.9" fill="url(#ag)"/><circle cx="283.1" cy="415.8" r="77.2" fill="url(#ag)"/></g></svg>';
+
+  document.getElementById('icons').innerHTML = [
+    ['Hoy', 'Vector plano lima con "+"; cada launcher lo trata distinto', today, ''],
+    ['Círculo', 'Pixel y la mayoría de launchers', adaptive('circle'), ''],
+    ['Squircle', 'Samsung One UI y otros', adaptive('squircle'), ''],
+    ['Redondeado', 'Launchers con forma cuadrada', adaptive('rounded'), ''],
+    ['Android 7', 'Respaldo sin capas (minSdk 24)', legacy(), ''],
+    ['Capa de frente', 'Rojo: zona segura (66) · azul: área visible (72)', layerFg(), 'layers'],
+  ].map(([t, d, svg, cls]) => `<div class="ic-card ${cls}">${svg}<b>${t}</b><small>${d}</small></div>`).join('');
+
+  /* ---------- Pantalla de inicio ---------- */
+  document.getElementById('p0').innerHTML = `${SB('#fff')}
+    <div class="grid-apps">
+      <div class="app">${appIcon}KPTLY expenses</div>
+      <div class="app">${adaptive('circle')}Nuevo gasto</div>
+      <div class="app"><span class="ghost-app"></span>Fotos</div>
+      <div class="app"><span class="ghost-app"></span>Mapas</div>
+    </div>
+    <div class="home-cap">Mantener presionado KPTLY expenses</div>
+    <div class="menu">
+      <div class="mi">${adaptive('circle')}<span>Nuevo gasto</span></div>
+      <div class="sep"></div>
+      <div class="mi" style="opacity:.7;font-size:14px">ⓘ Información de la app</div>
+    </div>${HOME}`;
+
+  /* ---------- Ajustes ---------- */
+  document.getElementById('p1').innerHTML = `${SB()}<div data-scroll><div class="content">
+    <div class="topnav"><button class="round" aria-label="Volver">‹</button></div>
+    <div class="mtitle">Ajustes</div>
+    <div class="mdesc">Configura cómo registras tus gastos</div>
+    <div class="set-list">
+      <button class="set-row"><span class="ic" style="background:var(--total);color:#fff">${CARD}</span><span class="t">Métodos de pago<small>Tarjetas, efectivo y transferencias</small></span><span class="n">4</span><span class="chev">›</span></button>
+      <button class="set-row"><span class="ic" style="background:var(--f1)">${DOTS}</span><span class="t">Categorías<small>Para clasificar cada gasto</small></span><span class="n">9</span><span class="chev">›</span></button>
+      <button class="set-row"><span class="ic" style="background:var(--f3)">${BELL}</span><span class="t">Notificaciones<small>2 activas</small></span><span class="chev">›</span></button>
+      <button class="set-row"><span class="ic" style="background:none;overflow:hidden">${adaptive('rounded')}</span><span class="t">Acceso directo: nuevo gasto<small>Un ícono en tu pantalla de inicio</small></span><span class="chev">›</span></button>
+    </div>
+    <div class="s-lbl">Beta</div>
+    <div class="set-list">
+      <button class="set-row"><span class="ic" style="background:var(--f2)">${CHAT}</span><span class="t">Comentarios<span class="tag-new">nuevo</span><small>Cuéntame qué mejorar, con capturas</small></span><span class="chev">›</span></button>
+    </div>
+  </div></div>${HOME}`;
+
+  /* ---------- Formulario interactivo ---------- */
+  const SHOT_COLORS = ['var(--total)', 'var(--f6)', 'var(--f12)', 'var(--f2)'];
+  const INITIAL = () => ({ text: '', shots: [], sent: false });
+  let st = INITIAL();
+  const MAX_SHOTS = 3;
+  const MAX_TEXT = 2000;
+  const p2 = document.getElementById('p2');
+  const p3 = document.getElementById('p3');
+
+  const shot = (i, removable) => `<div class="shot" style="background:${SHOT_COLORS[i % SHOT_COLORS.length]}"><div class="mini"><i style="width:70%"></i><i></i><i style="width:50%"></i></div>${removable ? `<button class="x" data-remove="${i}" aria-label="Quitar captura">✕</button>` : ''}</div>`;
+
+  const form = ({ interactive, noMail }) => {
+    const s = interactive ? st : { text: 'La campana de pendientes no se ve en modo oscuro.', shots: [0], sent: false };
+    const canSend = !noMail && s.text.trim().length > 0;
+    return `${SB()}<div data-scroll><div class="content">
+      <div class="topnav"><button class="round" aria-label="Volver">‹</button></div>
+      <div class="mtitle">Comentarios</div>
+      <div class="mdesc">Cuéntame qué te gustó, qué falló o qué te gustaría ver. Lo leo todo.</div>
+      ${noMail ? `<div class="nomail"><span style="font-size:20px">✉︎</span><div><b>No hay una app de correo</b><p>Configura una cuenta en Gmail u otra app de correo para poder enviar tus comentarios. Lo que escribiste se queda aquí.</p></div></div>` : ''}
+      <div class="field">
+        <label for="fb-text">Tu comentario</label>
+        <textarea id="fb-text" ${interactive ? '' : 'readonly'} maxlength="${MAX_TEXT}" placeholder="Ej.: Al guardar un gasto con tarjeta digital…">${s.text}</textarea>
+        <div class="count">${s.text.length} / ${MAX_TEXT.toLocaleString('es-MX')}</div>
+      </div>
+      <div class="field">
+        <label>Capturas · opcional</label>
+        <div class="shots">${s.shots.map((c, i) => shot(c, interactive)).join('')}
+          ${s.shots.length < MAX_SHOTS ? `<button class="add" data-add ${interactive ? '' : 'disabled'} aria-label="Agregar captura">+</button>` : ''}</div>
+        <div class="hint">Hasta ${MAX_SHOTS} imágenes de tu galería.</div>
+      </div>
+      <div class="info">Se agrega al final: <b>versión 0.1.0-beta.6</b>, <b>Pixel 7 · Android 15</b>. Lo verás en el correo antes de enviarlo.</div>
+    </div></div>
+    ${interactive && st.sent ? '<div class="toast">Se abrió tu correo para enviar los comentarios</div>' : ''}
+    <div class="fab-bar"><button class="btn" ${canSend ? '' : 'disabled'} ${interactive ? 'data-send' : ''}>Enviar por correo</button></div>${HOME}`;
+  };
+
+  const mail = () => {
+    const text = st.text.trim() || 'La campana de pendientes no se ve en modo oscuro.';
+    const shots = st.text.trim() ? st.shots : [0];
+    return `${SB()}
+      <div class="bar"><span>←</span><span class="grow">Redactar</span><span>${CLIP}</span><span class="send">➤</span><span>⋮</span></div>
+      <div class="row"><span>De</span><span>amigo.beta@gmail.com</span></div>
+      <div class="row"><span>Para</span><span class="chip">eve.san.dev@gmail.com</span></div>
+      <div class="row"><span>Asunto</span><span>Comentarios · KPTLY expenses 0.1.0-beta.6</span></div>
+      <div class="body">${text.replace(/</g, '&lt;')}
+
+—
+Versión: 0.1.0-beta.6
+Teléfono: Pixel 7 · Android 15</div>
+      <div class="att">${shots.map((_, i) => `<span>${CLIP} captura-${i + 1}.jpg</span>`).join('')}</div>
+      <div class="sys-tag">App de correo del sistema · simulado</div>
+      ${HOME}`;
+  };
+
+  const draw = () => {
+    const ta = p2.querySelector('#fb-text');
+    const focus = ta && document.activeElement === ta;
+    const pos = focus ? ta.selectionStart : 0;
+    p2.innerHTML = form({ interactive: true, noMail: false });
+    p3.innerHTML = mail();
+    if (focus) { const t = p2.querySelector('#fb-text'); t.focus(); t.setSelectionRange(pos, pos); }
+  };
+  p2.addEventListener('input', (e) => {
+    if (e.target.id !== 'fb-text') return;
+    st.text = e.target.value; st.sent = false;
+    p2.querySelector('.count').textContent = `${st.text.length} / ${MAX_TEXT.toLocaleString('es-MX')}`;
+    p2.querySelector('.btn').disabled = st.text.trim().length === 0;
+    p3.innerHTML = mail();
+  });
+  p2.addEventListener('click', (e) => {
+    const t = e.target.closest('button');
+    if (!t) return;
+    if (t.hasAttribute('data-add') && st.shots.length < MAX_SHOTS) st.shots.push(st.shots.length);
+    else if (t.dataset.remove) st.shots.splice(Number(t.dataset.remove), 1);
+    else if (t.hasAttribute('data-send') && st.text.trim()) st.sent = true;
+    else return;
+    draw();
+  });
+
+  document.getElementById('p4').innerHTML = form({ interactive: false, noMail: true });
+  draw();
+  document.getElementById('reset').addEventListener('click', () => { st = INITIAL(); draw(); });
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+})();
+</script>
+</body>
+</html>
