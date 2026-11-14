@@ -34,7 +34,7 @@ import { frequencyKeyForMonths } from '@/ui/theme';
 import { useTheme } from '@/ui/ThemeProvider';
 
 import { PendingSheet } from '../pending/PendingSheet';
-import { pendingSession } from '../pending/session';
+import { pendingSession, usePendingSession } from '../pending/session';
 import { registeredOnLocal, usePending } from '../pending/usePending';
 import {
   useCategories,
@@ -94,19 +94,26 @@ export function BalanceScreen({
   const [scrollTarget, setScrollTarget] = useState<Section | null>(null);
 
   const pending = usePending(today);
+  const session = usePendingSession();
   const [forceSheet, setForceSheet] = useState(false);
-  const [, setSessionTick] = useState(0);
   // La hoja se abre sola cuando el balance queda visible y hay pendientes; al cerrarla no vuelve
   // sola en esta sesión.
   const sheetVisible =
-    pending.loaded &&
-    pending.count > 0 &&
-    (forceSheet || (focused && !pendingSession.autoDismissed));
+    pending.loaded && pending.count > 0 && (forceSheet || (focused && !session.autoDismissed));
   const closeSheet = () => {
     pendingSession.dismissAuto();
     setForceSheet(false);
-    setSessionTick((t) => t + 1);
   };
+  // Si la hoja se cierra porque ya no quedan pendientes (todo se respondió o se pospuso), cuenta
+  // como cerrada: no vuelve a abrirse sola ni queda forzada si después aparece otro pendiente.
+  const wasVisible = useRef(sheetVisible);
+  useEffect(() => {
+    if (wasVisible.current && !sheetVisible) {
+      pendingSession.dismissAuto();
+      setForceSheet(false);
+    }
+    wasVisible.current = sheetVisible;
+  }, [sheetVisible]);
 
   // Se navega a la edición solo cuando el modal de la lista ya se cerró.
   useEffect(() => {
@@ -322,7 +329,12 @@ export function BalanceScreen({
       scrollRef={scrollRef}
       footer={<PrimaryButton label="Agregar gasto" plus onPress={onAdd} testID="add-expense" />}
     >
-      <BalanceTopBar onOpenMethods={onOpenMethods} onOpenSettings={onOpenSettings} />
+      <BalanceTopBar
+        onOpenMethods={onOpenMethods}
+        onOpenSettings={onOpenSettings}
+        pendingCount={pending.loaded ? pending.count : 0}
+        onOpenPending={() => setForceSheet(true)}
+      />
       <MonthSwitcher year={year} month={month} onPrev={() => go(-1)} onNext={() => go(1)} />
       <View style={styles.seg}>
         <SegmentedControl
@@ -335,28 +347,6 @@ export function BalanceScreen({
           onChange={changeView}
         />
       </View>
-      {pending.count > 0 ? (
-        <Pressable
-          testID="pending-banner"
-          accessibilityRole="button"
-          onPress={() => setForceSheet(true)}
-          style={[styles.banner, { backgroundColor: theme.colors.card }]}
-        >
-          <View style={[styles.bannerDot, { backgroundColor: theme.frequency.semiannual.from }]}>
-            <Text style={[styles.bannerDotText, { color: theme.colors.onBlock }]}>
-              {pending.count}
-            </Text>
-          </View>
-          <View>
-            <Text style={[styles.bannerTitle, { color: theme.colors.ink }]}>
-              {plural(pending.count, 'pendiente', 'pendientes')}
-            </Text>
-            <Text style={[styles.bannerSub, { color: theme.colors.muted }]}>
-              Cobros y pagos por confirmar · toca para revisar
-            </Text>
-          </View>
-        </Pressable>
-      ) : null}
       {body}
       {extra}
       <Modal
@@ -372,7 +362,6 @@ export function BalanceScreen({
             methods={pending.methods}
             today={today}
             onClose={closeSheet}
-            onSnooze={() => setSessionTick((t) => t + 1)}
           />
         ) : null}
       </Modal>
@@ -412,24 +401,6 @@ function Empty({ text }: { text: string }) {
 
 const styles = StyleSheet.create({
   seg: { marginBottom: 18 },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderRadius: 18,
-    padding: 12,
-    marginBottom: 16,
-  },
-  bannerDot: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bannerDotText: { fontWeight: '800' },
-  bannerTitle: { fontSize: 15, fontWeight: '800' },
-  bannerSub: { fontSize: 12, fontWeight: '600' },
   listHead: {
     flexDirection: 'row',
     alignItems: 'center',

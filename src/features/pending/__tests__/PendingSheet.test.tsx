@@ -60,7 +60,7 @@ describe('10.4 · cobros por confirmar', () => {
     await waitFor(() =>
       expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen(),
     );
-    expect(screen.queryByTestId('pending-banner')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Pendientes, ninguno' })).toBeDisabled();
   });
 
   it('con tarjeta de crédito permite no sumar el cobro al saldo', async () => {
@@ -111,15 +111,98 @@ describe('10.4 · cobros por confirmar', () => {
     expect(await screen.findByTestId(`pending-charge-${netflix.id}`)).toBeOnTheScreen();
   });
 
-  it('cerrar la hoja la deja disponible desde el aviso de pendientes', async () => {
+  it('cerrar la hoja la deja disponible desde la campana', async () => {
     const { repos, netflix } = await withNetflix();
     await renderBalance(repos, '2026-11-16');
     await screen.findByTestId(`pending-charge-${netflix.id}`);
     await fireEvent.press(screen.getByText('Cerrar'));
     expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen();
-    expect(screen.getByText('1 pendiente')).toBeOnTheScreen();
-    await fireEvent.press(screen.getByTestId('pending-banner'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Pendientes, 1' }));
     expect(screen.getByTestId(`pending-charge-${netflix.id}`)).toBeOnTheScreen();
+  });
+});
+
+describe('posponer durante la sesión', () => {
+  it('"Aún no" en uno de dos pendientes lo quita de la hoja y baja el conteo', async () => {
+    const repos = createInMemoryRepositories(testDeps());
+    const bbva = await repos.paymentMethods.create(
+      sampleMethod({
+        openingBalanceCents: 745750,
+        openingBalanceDate: '2026-11-01',
+        paymentDueDay: 5,
+      }),
+    );
+    const netflix = await repos.recurringExpenses.create(
+      sampleRecurring(bbva.id, { anchorDate: '2026-01-15' }),
+    );
+    await renderBalance(repos, '2026-12-05');
+    const charge = await screen.findByTestId(`pending-charge-${netflix.id}`);
+    expect(screen.getByTestId(`pending-payment-${bbva.id}`)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Pendientes, 2' })).toBeOnTheScreen();
+
+    await fireEvent.press(within(charge).getByText('Aún no'));
+
+    expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen();
+    expect(screen.getByTestId(`pending-payment-${bbva.id}`)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Pendientes, 1' })).toBeOnTheScreen();
+  });
+
+  it('posponer el último cierra la hoja y deja la campana inactiva', async () => {
+    const { repos, netflix } = await withNetflix();
+    await renderBalance(repos, '2026-11-16');
+    const charge = await screen.findByTestId(`pending-charge-${netflix.id}`);
+    await fireEvent.press(within(charge).getByText('Aún no'));
+    expect(screen.queryByText('Pendientes')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Pendientes, ninguno' })).toBeDisabled();
+    // Cuenta como cerrada: si en esta sesión aparece otro pendiente, no se abre sola.
+    expect(pendingSession.autoDismissed).toBe(true);
+  });
+
+  it('no muestra un aviso de pendientes en la lista del balance', async () => {
+    const { repos, netflix } = await withNetflix();
+    await renderBalance(repos, '2026-11-16');
+    await screen.findByTestId(`pending-charge-${netflix.id}`);
+    await fireEvent.press(screen.getByText('Cerrar'));
+    expect(screen.getByRole('button', { name: 'Pendientes, 1' })).toBeOnTheScreen();
+    expect(screen.queryByText(/por confirmar · toca para revisar/)).not.toBeOnTheScreen();
+    expect(screen.queryByText(/^\d+ pendientes?$/)).not.toBeOnTheScreen();
+  });
+});
+
+describe('orden de las acciones', () => {
+  /** Etiquetas de los botones, en el orden en que se muestran. */
+  const labels = (node: ReturnType<typeof screen.getByTestId>) =>
+    within(node)
+      .getAllByRole('button')
+      .map((b) => b.props.accessibilityLabel ?? within(b).queryByText(/./)?.props.children);
+
+  it('cobro: "Aún no" y "No se cobró" en una fila, "Sí, se cobró" debajo', async () => {
+    const { repos, netflix } = await withNetflix();
+    await renderBalance(repos, '2026-11-16');
+    const card = await screen.findByTestId(`pending-charge-${netflix.id}`);
+    expect(labels(screen.getByTestId(`pending-charge-actions-${netflix.id}`))).toEqual([
+      'Aún no',
+      'No se cobró',
+    ]);
+    const all = labels(card);
+    expect(all.slice(-3)).toEqual(['Aún no', 'No se cobró', 'Sí, se cobró']);
+  });
+
+  it('pago: "Aún no" a la izquierda y "Sí, pagué" a la derecha', async () => {
+    const repos = createInMemoryRepositories(testDeps());
+    const bbva = await repos.paymentMethods.create(
+      sampleMethod({
+        openingBalanceCents: 10000,
+        openingBalanceDate: '2026-11-01',
+        paymentDueDay: 5,
+      }),
+    );
+    await renderBalance(repos, '2026-12-05');
+    await screen.findByTestId(`pending-payment-${bbva.id}`);
+    expect(labels(screen.getByTestId(`pending-payment-actions-${bbva.id}`))).toEqual([
+      'Aún no',
+      'Sí, pagué',
+    ]);
   });
 });
 
@@ -189,7 +272,7 @@ describe('10.5 · marca "Por confirmar"', () => {
     await fireEvent.press(screen.getByText('Cerrar'));
     const row = screen.getByRole('button', { name: 'Netflix, por confirmar' });
     expect(within(row).getByText('POR CONFIRMAR')).toBeOnTheScreen();
-    await fireEvent.press(screen.getByTestId('pending-banner'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Pendientes, 1' }));
     await fireEvent.press(
       within(screen.getByTestId(`pending-charge-${netflix.id}`)).getByText('Sí, se cobró'),
     );
@@ -245,7 +328,7 @@ describe('Pendientes sin interrumpir el acceso rápido', () => {
     const { repos, netflix } = await withNetflix();
     await renderWithProviders(<Harness />, { repos });
     // Esperar a que carguen los datos antes de afirmar que la hoja no está.
-    expect(await screen.findByTestId('pending-banner')).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: 'Pendientes, 1' })).toBeOnTheScreen();
     expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen();
     expect(pendingSession.autoDismissed).toBe(false);
 

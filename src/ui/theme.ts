@@ -28,6 +28,10 @@ export interface ThemeColors {
   danger: string;
   /** Superficie translúcida de insignias y píldoras sobre bloques de color. */
   blockOverlay: string;
+  /** Avisos que piden atención sin ser un error (campana de pendientes): tinte rojo suave. */
+  alertBg: string;
+  /** Ícono y texto sobre `alertBg`; cumple AA. */
+  alertInk: string;
 }
 
 export interface Theme {
@@ -119,6 +123,8 @@ export const lightTheme: Theme = {
     onBlock: ON_BLOCK,
     danger: '#C41E33',
     blockOverlay: 'rgba(255,255,255,0.55)',
+    alertBg: '#EDD3D0',
+    alertInk: '#A8182C',
   },
   frequency: lightFrequency,
   totals: { thisMonth: g('#2B4BF2', '#7B3CF0', WHITE), average: g('#FFD45C', '#FF9A3C') },
@@ -159,6 +165,8 @@ export const darkTheme: Theme = {
     onBlock: ON_BLOCK,
     danger: '#FF6B6B',
     blockOverlay: 'rgba(255,255,255,0.45)',
+    alertBg: '#381F1F',
+    alertInk: '#FF6B6B',
   },
   frequency: darkFrequency,
   totals: { thisMonth: g('#3354FF', '#8344F5', WHITE), average: g('#FFD45C', '#FF9A3C') },

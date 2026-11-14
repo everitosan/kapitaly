@@ -10,7 +10,7 @@ import {
   usePaymentMethods,
   useRecurringExpenses,
 } from '../repositories';
-import { chargeKey, paymentKey, pendingSession } from './session';
+import { chargeKey, paymentKey, usePendingSession } from './session';
 
 export interface PendingPayment extends PendingCardPayment {
   method: PaymentMethod;
@@ -26,6 +26,7 @@ export function usePending(today: CivilDate) {
   const oneOffs = useOneOffExpenses();
   const payments = useCardPayments();
   const confirmations = useChargeConfirmations();
+  const { snoozed } = usePendingSession();
   const loaded = [methods, recurring, oneOffs, payments, confirmations].every((l) => !l.loading);
 
   const allCharges: PendingCharge[] = loaded
@@ -41,12 +42,8 @@ export function usePending(today: CivilDate) {
         })
     : [];
 
-  const charges = allCharges.filter(
-    (c) => !pendingSession.isSnoozed(chargeKey(c.expense.id, c.date)),
-  );
-  const cardPayments = allPayments.filter(
-    (p) => !pendingSession.isSnoozed(paymentKey(p.method.id, p.dueDate)),
-  );
+  const charges = allCharges.filter((c) => !snoozed.has(chargeKey(c.expense.id, c.date)));
+  const cardPayments = allPayments.filter((p) => !snoozed.has(paymentKey(p.method.id, p.dueDate)));
   return {
     loaded,
     allCharges,

@@ -28,6 +28,11 @@ describe.each(Object.values(themes))('tema $scheme', (theme) => {
     }
   });
 
+  it('el aviso de pendientes cumple AA sobre su tinte', () => {
+    const { alertBg, alertInk } = theme.colors;
+    expect(contrastRatio(alertInk, alertBg)).toBeGreaterThanOrEqual(AA_MIN);
+  });
+
   it('el texto sobre bloques es siempre oscuro', () => {
     expect(theme.colors.onBlock).toBe('#141414');
   });

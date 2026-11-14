@@ -128,6 +128,40 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
     expect(screen.queryByLabelText('Ajustes')).toBeNull();
   });
 
+  it('BalanceTopBar: campana activa con el número de pendientes', async () => {
+    const onOpenPending = jest.fn();
+    await renderIn(
+      scheme,
+      <BalanceTopBar
+        onOpenMethods={jest.fn()}
+        onOpenSettings={jest.fn()}
+        pendingCount={2}
+        onOpenPending={onOpenPending}
+      />,
+    );
+    const bell = screen.getByRole('button', { name: 'Pendientes, 2' });
+    expect(within(bell).getByText('2')).toBeOnTheScreen();
+    await fireEvent.press(bell);
+    expect(onOpenPending).toHaveBeenCalledTimes(1);
+  });
+
+  it('BalanceTopBar: campana tenue e inactiva sin pendientes', async () => {
+    const onOpenPending = jest.fn();
+    await renderIn(
+      scheme,
+      <BalanceTopBar
+        onOpenMethods={jest.fn()}
+        onOpenSettings={jest.fn()}
+        pendingCount={0}
+        onOpenPending={onOpenPending}
+      />,
+    );
+    const bell = screen.getByRole('button', { name: 'Pendientes, ninguno' });
+    expect(bell).toBeDisabled();
+    await fireEvent.press(bell);
+    expect(onOpenPending).not.toHaveBeenCalled();
+  });
+
   it('BalanceTopBar con Métodos de pago y Ajustes', async () => {
     const onOpenMethods = jest.fn();
     const onOpenSettings = jest.fn();

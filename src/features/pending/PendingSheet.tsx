@@ -27,21 +27,11 @@ export interface PendingSheetProps {
   methods: readonly PaymentMethod[];
   today: CivilDate;
   onClose: () => void;
-  /** Avisa que algo se pospuso ("Aún no"), para volver a calcular la lista. */
-  onSnooze: () => void;
 }
 
 const centsText = (c: number) => (c / 100).toFixed(2);
 
-function ChargeCard({
-  charge,
-  method,
-  onSnooze,
-}: {
-  charge: PendingCharge;
-  method: PaymentMethod | null;
-  onSnooze: () => void;
-}) {
+function ChargeCard({ charge, method }: { charge: PendingCharge; method: PaymentMethod | null }) {
   const theme = useTheme();
   const { colors } = theme;
   const repos = useRepositories();
@@ -112,14 +102,13 @@ function ChargeCard({
           />
         </FieldRow>
       ) : null}
-      <PrimaryButton label="Sí, se cobró" onPress={() => answer('charged')} />
-      <View style={styles.row}>
+      {/* Posponer a la izquierda, confirmar abajo (src/ui/README.md). */}
+      <View style={styles.row} testID={`pending-charge-actions-${charge.expense.id}`}>
         <SecondaryButton
           label="Aún no"
           style={[styles.flex, { backgroundColor: colors.bg }]}
           onPress={() => {
             pendingSession.snooze(chargeKey(charge.expense.id, charge.date));
-            onSnooze();
           }}
         />
         <SecondaryButton
@@ -128,19 +117,12 @@ function ChargeCard({
           onPress={() => answer('skipped')}
         />
       </View>
+      <PrimaryButton label="Sí, se cobró" onPress={() => answer('charged')} />
     </View>
   );
 }
 
-function PaymentCard({
-  pending,
-  today,
-  onSnooze,
-}: {
-  pending: PendingPayment;
-  today: CivilDate;
-  onSnooze: () => void;
-}) {
+function PaymentCard({ pending, today }: { pending: PendingPayment; today: CivilDate }) {
   const { colors } = useTheme();
   const repos = useRepositories();
   const [amountText, setAmountText] = useState(centsText(pending.suggestedCents));
@@ -187,16 +169,16 @@ function PaymentCard({
           {error}
         </Text>
       ) : null}
-      <View style={styles.row}>
-        <PrimaryButton label="Sí, pagué" style={styles.flex} onPress={paid} />
+      {/* Posponer a la izquierda, confirmar a la derecha (src/ui/README.md). */}
+      <View style={styles.row} testID={`pending-payment-actions-${pending.method.id}`}>
         <SecondaryButton
           label="Aún no"
           style={[styles.flex, { backgroundColor: colors.bg }]}
           onPress={() => {
             pendingSession.snooze(paymentKey(pending.method.id, pending.dueDate));
-            onSnooze();
           }}
         />
+        <PrimaryButton label="Sí, pagué" style={styles.flex} onPress={paid} />
       </View>
     </View>
   );
@@ -209,7 +191,6 @@ export function PendingSheet({
   methods,
   today,
   onClose,
-  onSnooze,
 }: PendingSheetProps) {
   const { colors } = useTheme();
   const methodById = new Map(methods.map((m) => [m.id, m]));
@@ -226,16 +207,10 @@ export function PendingSheet({
           key={chargeKey(c.expense.id, c.date)}
           charge={c}
           method={methodById.get(c.expense.paymentMethodId) ?? null}
-          onSnooze={onSnooze}
         />
       ))}
       {cardPayments.map((p) => (
-        <PaymentCard
-          key={paymentKey(p.method.id, p.dueDate)}
-          pending={p}
-          today={today}
-          onSnooze={onSnooze}
-        />
+        <PaymentCard key={paymentKey(p.method.id, p.dueDate)} pending={p} today={today} />
       ))}
     </SheetLayout>
   );

@@ -100,17 +100,84 @@ function GhostIconButton({
   );
 }
 
-/** Fila superior del balance: Métodos de pago y Ajustes, separados de las flechas del mes. */
+export function BellIcon({ color }: { color: string }) {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"
+        stroke={color}
+        strokeWidth={2.1}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M10.3 21a1.94 1.94 0 0 0 3.4 0"
+        stroke={color}
+        strokeWidth={2.1}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/**
+ * Campana de pendientes. Con pendientes: píldora con tinte rojo y el número; abre la hoja.
+ * Sin pendientes: ícono tenue que no responde.
+ */
+function PendingBell({ count, onPress }: { count: number; onPress?: () => void }) {
+  const { colors } = useTheme();
+  if (count === 0) {
+    return (
+      <Pressable
+        testID="pending-bell"
+        accessibilityRole="button"
+        accessibilityLabel="Pendientes, ninguno"
+        accessibilityState={{ disabled: true }}
+        disabled
+        style={[styles.ghost, styles.bellOff]}
+      >
+        <BellIcon color={colors.muted} />
+      </Pressable>
+    );
+  }
+  return (
+    <Pressable
+      testID="pending-bell"
+      accessibilityRole="button"
+      accessibilityLabel={`Pendientes, ${count}`}
+      onPress={onPress}
+      hitSlop={6}
+      style={({ pressed }) => [
+        styles.bell,
+        { backgroundColor: colors.alertBg, transform: [{ scale: pressed ? 0.96 : 1 }] },
+      ]}
+    >
+      <BellIcon color={colors.alertInk} />
+      <Text style={[styles.bellCount, { color: colors.alertInk }]}>{count}</Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Fila superior del balance: pendientes, Métodos de pago y Ajustes, separados de las flechas del mes.
+ */
 export function BalanceTopBar({
   onOpenMethods,
   onOpenSettings,
+  pendingCount = 0,
+  onOpenPending,
 }: {
   onOpenMethods: () => void;
   onOpenSettings: () => void;
+  /** Pendientes sin posponer; con 0 la campana queda inactiva. */
+  pendingCount?: number;
+  onOpenPending?: () => void;
 }) {
   const { colors } = useTheme();
   return (
     <View style={styles.topBar} testID="balance-top-bar">
+      <PendingBell count={pendingCount} onPress={onOpenPending} />
       <GhostIconButton label="Métodos de pago" onPress={onOpenMethods}>
         <CardIcon color={colors.muted} />
       </GhostIconButton>
@@ -549,7 +616,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   segText: { fontSize: 15, fontWeight: '700' },
-  topBar: { flexDirection: 'row', justifyContent: 'flex-end', gap: 4, paddingBottom: 6 },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 4,
+    paddingBottom: 6,
+  },
+  bell: {
+    height: 40,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingLeft: 11,
+    paddingRight: 13,
+  },
+  bellOff: { opacity: 0.45 },
+  bellCount: { fontSize: 15, fontWeight: '800', fontVariant: ['tabular-nums'] },
   ghost: {
     width: 40,
     height: 40,
