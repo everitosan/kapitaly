@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notificaciones</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --on-block: #141414; --switch-off: #D8D2C5; --page: #E6E0D3;
+    --backdrop: rgba(20,20,18,.55); --cobalt: #2B4BF2; --danger: #C41E33;
+    --f1: linear-gradient(135deg, #E6F87C 0%, #9EE36A 100%); --f3: linear-gradient(135deg, #E1D1FF 0%, #A98BFF 100%); --f6: linear-gradient(135deg, #FFD9AE 0%, #FF9E78 100%);
+    --total: linear-gradient(135deg, #2B4BF2 0%, #7B3CF0 100%);
+    --alert-bg: #EDD3D0; --alert-ink: #A8182C;
+    --r-xl: 30px; --r-lg: 22px; --r-md: 16px;
+    --wall: linear-gradient(160deg, #3d4a7a 0%, #6a4f86 55%, #b0707a 100%);
+  }
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28; --switch-off: #3A3833; --page: #0A0A09; --backdrop: rgba(0,0,0,.7);
+    --danger: #FF6B6B;
+    --f1: linear-gradient(135deg, #D9F06A 0%, #86D457 100%); --f3: linear-gradient(135deg, #D2BFFF 0%, #9476F5 100%); --f6: linear-gradient(135deg, #FFCB98 0%, #F98A63 100%);
+    --total: linear-gradient(135deg, #3354FF 0%, #8344F5 100%);
+    --alert-bg: #381F1F; --alert-ink: #FF6B6B;
+    --wall: linear-gradient(160deg, #141a33 0%, #2a1f3a 55%, #3a2228 100%);
+  }
+  body { background: var(--page); color: var(--ink); }
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 60px; }
+  .sb { height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 30px 0 36px; position: relative; font-weight: 600; font-size: 16px; }
+  .sb-island { position: absolute; left: 50%; top: 11px; transform: translateX(-50%); width: 120px; height: 34px; border-radius: 20px; background: #000; }
+
+  .topnav { display: flex; padding: 4px 0 12px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .mtitle { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; padding: 0 4px 6px; }
+  .mdesc { color: var(--muted); font-size: 15px; font-weight: 600; padding: 0 4px 20px; }
+
+  /* Ajustes */
+  .set-list { background: var(--card); border-radius: var(--r-lg); padding: 4px 16px; margin-bottom: 18px; }
+  .set-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 0; border-top: 1px solid var(--line); text-align: left; }
+  .set-row:first-child { border-top: 0; }
+  .set-row .ic { width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; color: var(--on-block); flex: none; }
+  .set-row .t { flex: 1; min-width: 0; font-size: 17px; font-weight: 700; }
+  .set-row .t small { display: block; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .set-row .n { font-size: 15px; font-weight: 700; color: var(--muted); }
+  .set-row .chev { font-size: 22px; color: var(--muted); font-weight: 600; }
+  .set-row.new { box-shadow: inset 4px 0 0 transparent; }
+  .tag-new { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; background: var(--ink); color: var(--bg); margin-left: 6px; vertical-align: 2px; }
+
+  /* Notificaciones */
+  .s-lbl { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 4px 4px 10px; }
+  .group { background: var(--card); border-radius: var(--r-lg); padding: 2px 16px; margin-bottom: 22px; }
+  .opt { padding: 14px 0; border-top: 1px solid var(--line); }
+  .opt:first-child { border-top: 0; }
+  .opt-h { display: flex; align-items: center; gap: 12px; }
+  .opt-h .t { flex: 1; min-width: 0; font-size: 17px; font-weight: 700; }
+  .opt-h .t small { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .sub { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; background: var(--bg); border-radius: 14px; padding: 10px 14px; }
+  .sub span { font-size: 15px; font-weight: 700; }
+  .sub small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .val { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; padding: 6px 12px; border-radius: 999px; background: var(--card); }
+  .link { font-size: 13px; font-weight: 800; color: var(--cobalt); padding: 8px 4px 0; display: inline-block; }
+  html[data-theme="dark"] .link { color: #9FB2FF; }
+  .stepper { display: flex; align-items: center; gap: 8px; }
+  .stepper button { width: 34px; height: 34px; border-radius: 50%; background: var(--card); font-size: 20px; font-weight: 700; }
+  .stepper b { min-width: 64px; text-align: center; font-size: 16px; font-variant-numeric: tabular-nums; }
+  .note-in { font-size: 13px; font-weight: 600; color: var(--muted); padding: 0 4px 18px; line-height: 1.45; }
+
+  .switch { width: 51px; height: 31px; border-radius: 999px; background: var(--switch-off); position: relative; transition: background .2s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); transition: transform .2s; }
+  .switch.on { background: var(--total); }
+  .switch.on::after { transform: translateX(20px); }
+  .switch[disabled] { opacity: .45; cursor: default; }
+
+  .blocked { display: flex; gap: 12px; align-items: flex-start; background: var(--alert-bg); color: var(--alert-ink); border-radius: 18px; padding: 14px; margin-bottom: 18px; }
+  .blocked svg { flex: none; margin-top: 1px; }
+  .blocked b { display: block; font-size: 15px; }
+  .blocked p { font-size: 13px; font-weight: 600; margin-top: 2px; line-height: 1.4; }
+  .blocked button { margin-top: 10px; height: 36px; padding: 0 14px; border-radius: 999px; background: var(--alert-ink); color: var(--alert-bg); font-weight: 800; font-size: 13px; }
+
+  /* Diálogos */
+  .scrim { position: absolute; inset: 0; background: var(--backdrop); z-index: 10; display: flex; align-items: center; justify-content: center; padding: 22px; }
+  .dialog { width: 100%; background: var(--card); border-radius: 28px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 50px -10px rgba(0,0,0,.45); }
+  .dialog .ic { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--bg); align-self: center; }
+  .dialog b { font-size: 18px; text-align: center; line-height: 1.3; }
+  .dialog .actions { display: flex; flex-direction: column; gap: 8px; }
+  .dialog .actions button { height: 46px; border-radius: 999px; font-weight: 700; font-size: 15px; background: var(--bg); }
+  .dialog .actions .pri { background: var(--ink); color: var(--bg); }
+  .dialog .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dialog .row2 button { height: 46px; border-radius: 999px; font-weight: 700; font-size: 15px; background: var(--bg); }
+  .dialog .row2 .pri { background: var(--ink); color: var(--bg); }
+  .picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .picker label { font-size: 12px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 6px; }
+  .picker select { width: 100%; height: 48px; border-radius: 14px; border: 0; background: var(--bg); color: var(--ink); font: 800 20px/1 inherit; text-align: center; font-variant-numeric: tabular-nums; }
+  .sys-tag { font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; letter-spacing: .04em; text-transform: uppercase; }
+
+  /* Pantalla de bloqueo */
+  .lock { background: var(--wall); color: #fff; }
+  .lock .clock { text-align: center; padding-top: 30px; }
+  .lock .clock .d { font-size: 17px; font-weight: 600; opacity: .9; }
+  .lock .clock .h { font-size: 84px; font-weight: 700; letter-spacing: -.03em; line-height: 1; margin-top: 2px; }
+  .nlist { display: flex; flex-direction: column; gap: 10px; padding: 26px 14px 0; }
+  .ntf { background: rgba(255,255,255,.88); color: #141414; border-radius: 22px; padding: 12px 14px; display: flex; gap: 12px; backdrop-filter: blur(10px); }
+  html[data-theme="dark"] .ntf { background: rgba(30,29,26,.86); color: #F4F1EA; }
+  .ntf .app { width: 38px; height: 38px; border-radius: 12px; background: #020903; display: grid; place-items: center; flex: none; overflow: hidden; }
+  .ntf .m { flex: 1; min-width: 0; }
+  .ntf .top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; opacity: .65; }
+  .ntf b { display: block; font-size: 15px; margin-top: 1px; }
+  .ntf p { font-size: 13.5px; font-weight: 500; line-height: 1.35; }
+  .ntf-cap { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.75); padding: 6px 6px 0; }
+
+  .theme-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-top: 22px; }
+  .theme-toggle button { height: 40px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .theme-toggle button.on { background: var(--ink); color: var(--bg); }
+  .reset { display: block; margin: 14px auto 0; font-weight: 700; font-size: 14px; color: var(--muted); text-decoration: underline; }
+  .notes { max-width: 900px; margin: 0 auto 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 12px; }
+  .note { background: var(--card); border-radius: 20px; padding: 16px 18px; font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.45; }
+  .note b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">A-1 Duotono · ajustes</div>
+    <h1 class="p-title">Notificaciones</h1>
+    <p class="p-desc">Recordatorios que agenda la propia app en el teléfono, sin servidor: el día de cada cobro o pago de tarjeta, un aviso diario para anotar los gastos y uno si pasan varios días sin registrar nada. Todo viene apagado; al encender el primero se pide el permiso.</p>
+    <div class="theme-toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+    <button class="reset" id="reset">Reiniciar (primera vez, sin permiso)</button>
+  </header>
+
+  <div class="notes">
+    <div class="note"><b>Cobros pendientes</b>El día de cada cobro recurrente o del vencimiento de una tarjeta, a la hora elegida. Si ese día hay varios, sale una sola notificación. Si lo confirmas antes de la hora, ya no avisa. Al tocarla se abre la hoja "Pendientes".</div>
+    <div class="note"><b>Recordatorio diario</b>Todos los días a la hora elegida (21:00 por omisión). Al tocarla se abre "Nuevo gasto".</div>
+    <div class="note"><b>Desuso</b>Tras <i>n</i> días sin registrar un gasto (3 por omisión, de 1 a 14), avisa; repite a los 2<i>n</i> y 3<i>n</i> días y luego calla hasta que registres algo. Usa la hora del recordatorio diario, salvo que elijas una propia.</div>
+    <div class="note"><b>Permiso y hora</b>El permiso se pide al encender el primer aviso. Si se niega, nada se enciende y se explica cómo habilitarlo. En Android la hora es aproximada (puede llegar unos minutos tarde), sin pedir el permiso de alarmas exactas.</div>
+  </div>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p1"></div></div><div class="ph-cap">Ajustes · nueva opción</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p2"></div></div><div class="ph-cap">Notificaciones · interactivo (enciende, cambia horas y días)</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p3"></div></div><div class="ph-cap">Permiso bloqueado en el sistema</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen lock" id="p4"></div></div><div class="ph-cap">Cómo llegan</div></div>
+  </div>
+</div>
+<script>
+(() => {
+  const SB = (c = 'currentColor') => `<div class="sb" style="color:${c}"><span>9:41</span><span class="sb-island"></span><span style="display:flex;gap:6px;align-items:center"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/></svg></span></div>`;
+  const HOME = '<div class="home-ind"></div>';
+  const CARD = '<svg width="21" height="16" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="18" height="14" rx="3"/><path d="M1 6h18"/></svg>';
+  const DOTS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
+  const PLUS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+  const BELL = (s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`;
+  const LOGO = '<svg width="38" height="38" viewBox="89 213 224 224"><defs><linearGradient id="lg" x1=".5" y1="0" x2=".5" y2="1"><stop stop-color="#328844"/><stop offset="1" stop-color="#063D12"/></linearGradient><clipPath id="lc"><rect x="89" y="213" width="224" height="224" rx="9"/></clipPath></defs><g clip-path="url(#lc)"><circle cx="215.9" cy="339.9" r="124.4" fill="url(#lg)"/><circle cx="237.1" cy="364.8" r="114.5" fill="url(#lg)"/><circle cx="261.4" cy="396.6" r="98.9" fill="url(#lg)"/><circle cx="283.1" cy="415.8" r="77.2" fill="url(#lg)"/></g></svg>';
+
+  const INITIAL = () => ({
+    perm: 'ask', // ask | granted | denied
+    charges: { on: false, hour: '10:00' },
+    daily: { on: false, hour: '21:00' },
+    idle: { on: false, days: 3, ownHour: null },
+    dialog: null, // { kind: 'perm', key } | { kind: 'hour', key }
+  });
+  let st = INITIAL();
+
+  const activeCount = () => ['charges', 'daily', 'idle'].filter((k) => st[k].on).length;
+  const summary = () => (activeCount() === 0 ? 'Apagadas' : activeCount() === 1 ? '1 activa' : `${activeCount()} activas`);
+  const idleHour = () => st.idle.ownHour ?? st.daily.hour;
+  const days = (n) => `${n} ${n === 1 ? 'día' : 'días'}`;
+
+  const settingsRows = (detail) => `
+    <div class="set-list">
+      <button class="set-row"><span class="ic" style="background:var(--total);color:#fff">${CARD}</span><span class="t">Métodos de pago<small>Tarjetas, efectivo y transferencias</small></span><span class="n">4</span><span class="chev">›</span></button>
+      <button class="set-row"><span class="ic" style="background:var(--f1)">${DOTS}</span><span class="t">Categorías<small>Para clasificar cada gasto</small></span><span class="n">9</span><span class="chev">›</span></button>
+      <button class="set-row"><span class="ic" style="background:var(--f3)">${BELL()}</span><span class="t">Notificaciones<span class="tag-new">nuevo</span><small>${detail}</small></span><span class="chev">›</span></button>
+      <button class="set-row"><span class="ic" style="background:var(--f1)">${PLUS}</span><span class="t">Acceso directo: nuevo gasto<small>Un ícono en tu pantalla de inicio</small></span><span class="chev">›</span></button>
+    </div>`;
+
+  const sw = (key, disabled) => `<button class="switch ${st[key].on ? 'on' : ''}" data-toggle="${key}" ${disabled ? 'disabled' : ''} aria-label="${key}"></button>`;
+
+  const notifScreen = ({ interactive, blocked }) => {
+    const dis = blocked;
+    const s = blocked ? INITIAL() : st;
+    const charges = `
+      <div class="opt">
+        <div class="opt-h"><span class="t">Avisar el día del cobro<small>Te avisaré en base a tus gastos recurrentes y vencimientos de tarjetas</small></span>${interactive ? sw('charges', dis) : `<span class="switch" ${dis ? 'disabled' : ''}></span>`}</div>
+        ${s.charges.on ? `<div class="sub"><span>Hora</span><button class="val" data-hour="charges">${s.charges.hour}</button></div>` : ''}
+      </div>`;
+    const daily = `
+      <div class="opt">
+        <div class="opt-h"><span class="t">Recordatorio diario<small>Configúralo para que no se te pase ningún gasto del día</small></span>${interactive ? sw('daily', dis) : `<span class="switch" ${dis ? 'disabled' : ''}></span>`}</div>
+        ${s.daily.on ? `<div class="sub"><span>Hora</span><button class="val" data-hour="daily">${s.daily.hour}</button></div>` : ''}
+      </div>`;
+    const idle = `
+      <div class="opt">
+        <div class="opt-h"><span class="t">Desuso<small>Te recordaré después de varios días en que no registres nada</small></span>${interactive ? sw('idle', dis) : `<span class="switch" ${dis ? 'disabled' : ''}></span>`}</div>
+        ${s.idle.on ? `
+          <div class="sub"><span>Después de</span><span class="stepper"><button data-days="-1" aria-label="Menos días">−</button><b>${days(s.idle.days)}</b><button data-days="1" aria-label="Más días">+</button></span></div>
+          <div class="sub"><span>Hora<small>${s.idle.ownHour ? 'Hora propia' : 'La del recordatorio diario'}</small></span><button class="val" data-hour="idle">${idleHour()}</button></div>
+          ${s.idle.ownHour ? '<button class="link" data-samehour>Usar la del recordatorio diario</button>' : ''}` : ''}
+      </div>`;
+    return `${SB()}
+      <div data-scroll><div class="content">
+        <div class="topnav"><button class="round" aria-label="Volver">‹</button></div>
+        <div class="mtitle">Notificaciones</div>
+        <div class="mdesc">Recordatorios en este teléfono</div>
+        ${blocked ? `<div class="blocked">${BELL(22)}<div><b>Notificaciones bloqueadas</b><p>Android no deja que KPTLY expenses te avise. Actívalas en los ajustes del sistema para poder encenderlas aquí.</p><button>Abrir ajustes del sistema</button></div></div>` : ''}
+        <div class="s-lbl">Cobros pendientes</div>
+        <div class="group">${charges}</div>
+        <div class="s-lbl">Registrar gastos</div>
+        <div class="group">${daily}${idle}</div>
+        ${!blocked && s.idle.on ? `<div class="note-in">Si pasan ${days(s.idle.days)} sin registrar gastos, avisa a las ${idleHour()}; repite a los ${s.idle.days * 2} y ${s.idle.days * 3} días y luego ya no.</div>` : ''}
+      </div></div>${HOME}`;
+  };
+
+  const dialog = () => {
+    if (!st.dialog) return '';
+    if (st.dialog.kind === 'perm') return `
+      <div class="scrim"><div class="dialog">
+        <span class="ic">${BELL(22)}</span>
+        <b>¿Permitir que KPTLY expenses te envíe notificaciones?</b>
+        <div class="actions"><button class="pri" data-perm="granted">Permitir</button><button data-perm="denied">No permitir</button></div>
+        <div class="sys-tag">Diálogo del sistema</div>
+      </div></div>`;
+    const key = st.dialog.key;
+    const [h, m] = (key === 'idle' ? idleHour() : st[key].hour).split(':');
+    const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+    const mins = ['00', '15', '30', '45'];
+    return `
+      <div class="scrim"><div class="dialog">
+        <b>${key === 'charges' ? 'Hora del aviso de cobros' : key === 'daily' ? 'Hora del recordatorio diario' : 'Hora del aviso por desuso'}</b>
+        <div class="picker">
+          <div><label>Hora</label><select data-h>${hours.map((x) => `<option ${x === h ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+          <div><label>Minutos</label><select data-m>${mins.map((x) => `<option ${x === m ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+        </div>
+        <div class="row2"><button data-cancel>Cancelar</button><button class="pri" data-save>Guardar</button></div>
+        <div class="sys-tag">Selector de hora del sistema</div>
+      </div></div>`;
+  };
+
+  const p1 = document.getElementById('p1');
+  const p2 = document.getElementById('p2');
+  const p3 = document.getElementById('p3');
+  const p4 = document.getElementById('p4');
+
+  const drawSettings = () => {
+    p1.innerHTML = `${SB()}<div data-scroll><div class="content">
+      <div class="topnav"><button class="round" aria-label="Volver">‹</button></div>
+      <div class="mtitle">Ajustes</div>
+      <div class="mdesc">Configura cómo registras tus gastos</div>
+      ${settingsRows(summary())}
+    </div></div>${HOME}`;
+  };
+  const drawLive = () => {
+    p2.innerHTML = notifScreen({ interactive: true, blocked: st.perm === 'denied' }) + dialog();
+    drawSettings();
+  };
+
+  p2.addEventListener('click', (e) => {
+    const t = e.target.closest('button');
+    if (!t) return;
+    if (t.dataset.toggle) {
+      const key = t.dataset.toggle;
+      if (st[key].on) { st[key].on = false; }
+      else if (st.perm === 'ask') { st.dialog = { kind: 'perm', key }; }
+      else if (st.perm === 'granted') { st[key].on = true; }
+    } else if (t.dataset.perm) {
+      st.perm = t.dataset.perm;
+      if (st.perm === 'granted') st[st.dialog.key].on = true;
+      st.dialog = null;
+    } else if (t.dataset.hour) {
+      st.dialog = { kind: 'hour', key: t.dataset.hour };
+    } else if (t.hasAttribute('data-cancel')) {
+      st.dialog = null;
+    } else if (t.hasAttribute('data-save')) {
+      const value = `${p2.querySelector('[data-h]').value}:${p2.querySelector('[data-m]').value}`;
+      const key = st.dialog.key;
+      if (key === 'idle') st.idle.ownHour = value === st.daily.hour ? null : value;
+      else st[key].hour = value;
+      st.dialog = null;
+    } else if (t.dataset.days) {
+      st.idle.days = Math.min(14, Math.max(1, st.idle.days + Number(t.dataset.days)));
+    } else if (t.hasAttribute('data-samehour')) {
+      st.idle.ownHour = null;
+    } else return;
+    drawLive();
+  });
+
+  p3.innerHTML = notifScreen({ interactive: false, blocked: true });
+
+  p4.innerHTML = `${SB('#fff')}
+    <div class="clock"><div class="d">martes, 15 de noviembre</div><div class="h">21:02</div></div>
+    <div class="nlist">
+      <div class="ntf-cap">Cobros pendientes · 10:00</div>
+      <div class="ntf"><span class="app">${LOGO}</span><div class="m"><div class="top"><span>KPTLY expenses</span><span>10:03</span></div><b>Hoy se cobra Netflix</b><p>$219.00 con BBVA Azul. Confírmalo cuando pase.</p></div></div>
+      <div class="ntf"><span class="app">${LOGO}</span><div class="m"><div class="top"><span>KPTLY expenses</span><span>10:03</span></div><b>Hoy vence BBVA Azul</b><p>Usado $7,457.50. Toca para registrar el pago.</p></div></div>
+      <div class="ntf-cap">Registrar gastos · 21:00</div>
+      <div class="ntf"><span class="app">${LOGO}</span><div class="m"><div class="top"><span>KPTLY expenses</span><span>21:01</span></div><b>¿Ya anotaste tus gastos de hoy?</b><p>Toca para agregar uno.</p></div></div>
+      <div class="ntf"><span class="app">${LOGO}</span><div class="m"><div class="top"><span>KPTLY expenses</span><span>21:02</span></div><b>Llevas 3 días sin registrar gastos</b><p>Toca para ponerte al día.</p></div></div>
+    </div>${HOME}`;
+
+  drawLive();
+  document.getElementById('reset').addEventListener('click', () => { st = INITIAL(); drawLive(); });
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+})();
+</script>
+</body>
+</html>
