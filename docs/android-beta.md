@@ -146,7 +146,21 @@ gh workflow run android-beta.yml --ref release/0.1.0 -f version=0.1.0-beta.2
 gh run download --name android-0.1.0-beta.2
 ```
 
+## Notas de la versión
+
+Cada beta publicada lleva sus notas en `release-notes/<versionName>/whatsnew-en-US` (texto plano, en inglés porque es el idioma predeterminado de la ficha, máximo 500 caracteres). Describen lo nuevo desde la beta anterior. El workflow las sube con `whatsNewDirectory`; si al publicar con tag falta el archivo, está vacío o pasa el límite, falla antes de compilar. En modo manual (sin publicar) no se exigen.
+
+```bash
+node scripts/release-notes.js 0.1.0-beta.9   # revisa el archivo y cuenta caracteres
+```
+
+Para otro idioma, agrega `whatsnew-<código>` en la misma carpeta (por ejemplo `whatsnew-es-419`). Al promover una versión a otra pista en Play Console, pega el mismo texto.
+
+Historial: las betas `0.1.0-beta.1` a `0.1.0-beta.7` salieron sin notas. `0.1.0-beta.8` tiene notas como primera beta cerrada.
+
 ## Publicar una beta (tag)
+
+Primero escribe y haz commit de `release-notes/X.Y.Z-beta.N/whatsnew-en-US`.
 
 ```bash
 git switch release/0.1.0 && git pull

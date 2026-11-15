@@ -38,7 +38,11 @@ test('valida, prueba, revisa tipos y lint antes de compilar', () => {
 test('publica solo en modo tag, a la pista interna y sin cancelar ejecuciones', () => {
   const publish = step('Publish to internal testing');
   expect(publish.if).toBe("steps.release.outputs.publish == 'true'");
-  expect(publish.with).toMatchObject({ packageName: 'com.kapitaly.expenses', tracks: 'internal' });
+  expect(publish.with).toMatchObject({
+    packageName: 'com.kapitaly.expenses',
+    tracks: 'internal',
+    whatsNewDirectory: '${{ steps.release.outputs.notesDir }}',
+  });
   expect(workflow.concurrency['cancel-in-progress']).toBe(false);
   expect(step('Prepare signing credentials').env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON).toContain(
     "publish == 'true'",

@@ -127,6 +127,7 @@ jobs:
           tracks: internal
           status: completed
           releaseName: ${{ steps.release.outputs.versionName }}
+          whatsNewDirectory: ${{ steps.release.outputs.notesDir }}
 
       - name: Remove temporary credentials
         if: always()

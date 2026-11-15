@@ -1,6 +1,7 @@
 const { execFileSync } = require('node:child_process');
 const { appendFileSync } = require('node:fs');
 const { betaVersion } = require('./beta-version');
+const { checkReleaseNotes, releaseNotesDir } = require('./release-notes');
 
 function validateRelease({ eventName, ref, inputVersion, baseVersion }, git = (args) =>
   execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()) {
@@ -35,8 +36,10 @@ if (require.main === module) {
       inputVersion: process.env.INPUT_BETA_VERSION,
       baseVersion: require('../app.json').expo.version,
     });
+    // Solo se exigen al publicar: sin notas, la beta no llega a Play.
+    if (release.publish) checkReleaseNotes(release.versionName);
     if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT,
-      `tag=${release.tag}\nversionName=${release.versionName}\nversionCode=${release.versionCode}\npublish=${release.publish}\n`);
+      `tag=${release.tag}\nversionName=${release.versionName}\nversionCode=${release.versionCode}\npublish=${release.publish}\nnotesDir=${releaseNotesDir(release.versionName)}\n`);
     console.log(JSON.stringify(release));
   } catch (error) {
     console.error(error.message);
