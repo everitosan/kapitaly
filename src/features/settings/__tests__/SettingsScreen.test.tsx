@@ -38,7 +38,10 @@ describe('Ajustes', () => {
     ]);
     expect(screen.getByText('Beta')).toBeOnTheScreen();
     // Los recordatorios solo viven dentro de "Notificaciones".
-    expect(screen.queryByText(/recordatorio/i)).toBeNull();
+    expect(screen.queryByText(/^recordatorios$/i)).toBeNull();
+    expect(screen.getByText('Configura alertas y recordatorios')).toBeOnTheScreen();
+    expect(screen.getByText('Apagadas')).toBeOnTheScreen();
+    expect(screen.getByText('Clasifica a tu gusto cada pago que registras')).toBeOnTheScreen();
     expect(screen.queryByText(/componentes/i)).toBeNull();
   });
 

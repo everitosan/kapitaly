@@ -19,7 +19,7 @@ describe('pantalla Categorías', () => {
     for (const b of BUILTIN_CATEGORIES) expect(await screen.findByText(b.name)).toBeOnTheScreen();
     expect(screen.getByText('8 activas · para clasificar cada gasto')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Otro, fija' })).toBeOnTheScreen();
-    expect(screen.queryByText('TUYAS')).toBeNull();
+    expect(screen.queryByText('PERSONALIZADAS')).toBeNull();
   });
 
   it('muestra las tuyas arriba, las ocultas atenuadas y cuántos gastos tiene cada una', async () => {
@@ -28,7 +28,7 @@ describe('pantalla Categorías', () => {
     await repos.recurringExpenses.create(sampleRecurring(CASH_METHOD_ID, { categoryId: gym.id }));
     await repos.categories.hide(id('Salud'));
     await renderWithProviders(<CategoryList {...listProps()} />, { repos });
-    expect(await screen.findByText('TUYAS')).toBeOnTheScreen();
+    expect(await screen.findByText('PERSONALIZADAS')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Salud, oculta' })).toBeOnTheScreen();
     expect(screen.getByText('1 gasto')).toBeOnTheScreen();
     expect(screen.getByText('8 activas · para clasificar cada gasto')).toBeOnTheScreen();

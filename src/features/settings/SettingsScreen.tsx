@@ -62,7 +62,8 @@ function SettingsRow({
 }: {
   label: string;
   detail: string;
-  count?: number;
+  /** Número o resumen corto a la derecha. */
+  count?: number | string;
   /** Etiqueta accesible propia; por omisión, el nombre y el conteo. */
   accessibilityLabel?: string;
   /** Ícono sobre un bloque duotono; se omite si `icon` ya trae su propio fondo. */
@@ -135,7 +136,7 @@ export function SettingsScreen({
       <View style={[styles.list, { backgroundColor: colors.card }]}>
         <SettingsRow
           label="Métodos de pago"
-          detail="Tarjetas, efectivo y transferencias"
+          detail="Administra tus tarjetas, transferencias, apartados en efectivo"
           count={methods.data.filter(isActiveMethod).length}
           gradient={theme.totals.thisMonth}
           icon={<CardIcon color={theme.totals.thisMonth.text} />}
@@ -144,7 +145,7 @@ export function SettingsScreen({
         <View style={[styles.sep, { backgroundColor: colors.line }]} />
         <SettingsRow
           label="Categorías"
-          detail="Para clasificar cada gasto"
+          detail="Clasifica a tu gusto cada pago que registras"
           count={categories.data.filter(isSelectableCategory).length}
           gradient={theme.frequency.monthly}
           icon={<CategoryIcon icon="dots" color={colors.onBlock} />}
@@ -153,7 +154,8 @@ export function SettingsScreen({
         <View style={[styles.sep, { backgroundColor: colors.line }]} />
         <SettingsRow
           label="Notificaciones"
-          detail={summary}
+          detail="Configura alertas y recordatorios"
+          count={summary}
           accessibilityLabel={`Notificaciones, ${summary}`}
           gradient={theme.frequency.quarterly}
           icon={<BellIcon color={colors.onBlock} />}
@@ -175,7 +177,7 @@ export function SettingsScreen({
       <View style={[styles.list, { backgroundColor: colors.card }]}>
         <SettingsRow
           label="Comentarios"
-          detail="Cuéntame qué mejorar, con capturas"
+          detail="¿Tienes alguna mejora en mente? Cuéntame más de eso aquí."
           gradient={theme.frequency.bimonthly}
           icon={<ChatIcon color={colors.onBlock} />}
           onPress={onOpenFeedback}

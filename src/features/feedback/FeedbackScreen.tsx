@@ -106,7 +106,9 @@ export function FeedbackScreen({
         Comentarios
       </Text>
       <Text style={[styles.desc, { color: colors.muted }]}>
-        Cuéntame qué te gustó, qué falló o qué te gustaría ver. Lo leo todo.
+        <Text style={{ color: colors.ink }}>¿Te es de ayuda la app?</Text>
+        {'\n'}Ayúdame a mejorar la experiencia compartiendo tus comentarios, inquietudes o propuestas
+        de mejora.
       </Text>
 
       {noMail ? (
@@ -189,9 +191,9 @@ export function FeedbackScreen({
 
       <View style={[styles.info, { backgroundColor: colors.card, borderRadius: radii.row }]}>
         <Text style={[styles.infoText, { color: colors.muted }]}>
-          Se agrega al final: <Text style={{ color: colors.ink }}>{`versión ${info.version}`}</Text>
-          , <Text style={{ color: colors.ink }}>{info.device}</Text>. Lo verás en el correo antes de
-          enviarlo.
+          Se compartirá la siguiente información para tener más contexto en caso de un problema:{' '}
+          <Text style={{ color: colors.ink }}>{`versión ${info.version}`}</Text>,{' '}
+          <Text style={{ color: colors.ink }}>{info.device}</Text>.
         </Text>
       </View>
 

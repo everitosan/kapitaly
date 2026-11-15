@@ -108,8 +108,8 @@ export function CategoryForm({ category, onDone }: CategoryFormProps) {
   };
 
   const subtitle = isNew
-    ? 'Categoría tuya'
-    : `${usesText} · ${category.builtin ? 'de inicio' : 'categoría tuya'}`;
+    ? 'Categoría personalizada'
+    : `${usesText} · ${category.builtin ? 'general' : 'personalizada'}`;
 
   return (
     <SheetLayout
@@ -184,7 +184,7 @@ export function CategoryForm({ category, onDone }: CategoryFormProps) {
         <View style={[styles.notice, { backgroundColor: colors.card }]}>
           <Text style={[styles.noticeText, { color: colors.muted }]}>
             {editable
-              ? 'Las categorías de inicio no se renombran ni se borran; si no te sirve, deja de ofrecerla.'
+              ? 'Las categorías generales no se renombran ni se borran; si no te sirve, deja de ofrecerla.'
               : '"Otro" recibe los gastos sin categoría y los de categorías borradas; no se puede cambiar.'}
           </Text>
         </View>

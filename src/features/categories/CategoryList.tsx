@@ -71,7 +71,7 @@ function CategoryRow({
   );
 }
 
-/** Categorías: las del usuario arriba y las de inicio abajo, con "Otro" al final. */
+/** Categorías: las personalizadas arriba y las generales abajo, con "Otro" al final. */
 export function CategoryList({ onBack, onOpen, onAdd }: CategoryListProps) {
   const { colors } = useTheme();
   const categories = useCategories();
@@ -123,12 +123,8 @@ export function CategoryList({ onBack, onOpen, onAdd }: CategoryListProps) {
       <Text style={[styles.desc, { color: colors.muted }]}>
         {`${active} ${active === 1 ? 'activa' : 'activas'} · para clasificar cada gasto`}
       </Text>
-      {section('TUYAS', mine)}
-      {section('DE INICIO', builtin)}
-      <Text style={[styles.note, { color: colors.muted }]}>
-        Las de inicio se pueden ocultar o cambiar de ícono. &quot;Otro&quot; recibe los gastos sin
-        categoría.
-      </Text>
+      {section('PERSONALIZADAS', mine)}
+      {section('GENERALES', builtin)}
     </ScreenLayout>
   );
 }
@@ -169,5 +165,4 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   chev: { fontSize: 20, fontWeight: '600' },
-  note: { fontSize: 13, fontWeight: '600', paddingHorizontal: 4, paddingTop: 14 },
 });
