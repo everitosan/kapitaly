@@ -27,7 +27,7 @@
 
 ## 6. Verificación en dispositivo
 
-- [ ] 6.1 Instalar la beta en Android 12+. Verificación:
+- [x] 6.1 Instalar la beta en Android 12+. Verificación:
   - el splash del sistema se ve solo con el fondo del tema, sin ícono, y la animación no tiene salto ni frame blanco;
   - el estado final coincide con `design/splash-expenses.svg`;
   - en modo claro el splash es claro y en modo oscuro es oscuro;

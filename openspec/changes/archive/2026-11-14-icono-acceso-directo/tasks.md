@@ -19,4 +19,4 @@
 ## 4. Cierre
 
 - [x] 4.1 Ejecutar `npm test`, `npm run typecheck` y `npm run lint`. Verificación: los tres pasan.
-- [ ] 4.2 Probar en el teléfono con la beta: el acceso directo fijado (quitándolo y volviendo a fijarlo si ya existía) y el atajo al mantener presionado muestran el ícono nuevo, no negro. Verificación: lo confirma el usuario.
+- [x] 4.2 Probar en el teléfono con la beta: el acceso directo fijado (quitándolo y volviendo a fijarlo si ya existía) y el atajo al mantener presionado muestran el ícono nuevo, no negro. Verificación: lo confirma el usuario.

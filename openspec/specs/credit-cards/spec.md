@@ -90,7 +90,7 @@ Desde Métodos de pago, el sistema SHALL permitir "Pagar tarjeta" con un monto m
 - **THEN** lo efectuado, lo proyectado y los cargos de "Este mes" y el costo mensual promedio de "Análisis" de noviembre no cambian
 
 ### Requirement: Aviso en la fecha de pago
-Al abrir la app, por cada tarjeta con día de pago, usado mayor que cero y cuya fecha de pago más reciente ya llegó (y es igual o posterior a la del saldo inicial) sin pago asociado, el sistema SHALL preguntar si ya se pagó, con el monto propuesto igual al usado y editable. "Sí, pagué" SHALL registrar el pago asociado a esa fecha; "Aún no" SHALL volver a preguntar en la siguiente apertura.
+Al abrir la app, por cada tarjeta con día de pago, usado mayor que cero y cuya fecha de pago más reciente ya llegó (y es igual o posterior a la del saldo inicial) sin pago asociado, el sistema SHALL preguntar si ya se pagó, con el monto propuesto igual al usado y editable. "Sí, pagué" SHALL registrar el pago asociado a esa fecha; "Posponer" SHALL volver a preguntar pasadas 6 horas (ver `pending-review`).
 
 #### Scenario: Aviso al llegar la fecha
 - **WHEN** el día de pago de "BBVA Azul" es 5, hoy es 05/12/2026, el usado es $7,457.50 y no hay pago para el 05/12/2026
@@ -101,8 +101,8 @@ Al abrir la app, por cada tarjeta con día de pago, usado mayor que cero y cuya 
 - **THEN** el 05/12/2026 la app no pregunta por el pago de esa tarjeta
 
 #### Scenario: Aún no
-- **WHEN** la app pregunta por el pago y el usuario elige "Aún no"
-- **THEN** no se registra ningún pago y la pregunta vuelve a aparecer la próxima vez que abra la app
+- **WHEN** la app pregunta por el pago y el usuario elige "Posponer"
+- **THEN** no se registra ningún pago y la pregunta vuelve a aparecer pasadas 6 horas
 
 #### Scenario: Sin aviso con usado en cero
 - **WHEN** llega la fecha de pago y el usado de la tarjeta es $0.00 o un saldo a favor

@@ -26,7 +26,7 @@ El encabezado del balance SHALL tener, en una fila propia arriba del nombre del 
 - **THEN** anuncia los botones como "Métodos de pago" y "Ajustes"
 
 ### Requirement: Opciones de Ajustes
-La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una con el número de elementos vigentes, y "Notificaciones", con un resumen de cuántos avisos están encendidos ("Apagadas", "1 activa", "N activas"). Cada opción SHALL abrir su pantalla al tocarla. En Android con soporte para fijar accesos directos SHALL mostrar además "Acceso directo: nuevo gasto". Una opción sin funcionalidad disponible no SHALL mostrarse.
+La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una con el número de elementos vigentes, y "Notificaciones", con un resumen de cuántos avisos están encendidos ("Apagadas", "1 activa", "N activas"). Cada opción SHALL abrir su pantalla al tocarla. En Android con soporte para fijar accesos directos SHALL mostrar además "Acceso directo: nuevo gasto". Debajo, en una sección "Beta", SHALL mostrar "Comentarios". Una opción sin funcionalidad disponible no SHALL mostrarse.
 
 #### Scenario: Ir a Categorías
 - **WHEN** el usuario toca "Categorías" en Ajustes
@@ -43,6 +43,10 @@ La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una
 #### Scenario: Resumen de notificaciones
 - **WHEN** el recordatorio diario y el aviso por desuso están encendidos y el de cobros apagado
 - **THEN** "Notificaciones" muestra "2 activas"
+
+#### Scenario: Ir a Comentarios
+- **WHEN** el usuario toca "Comentarios" en la sección "Beta" de Ajustes
+- **THEN** se abre la pantalla Comentarios
 
 #### Scenario: Sin recordatorios todavía
 - **WHEN** el usuario abre Ajustes
@@ -61,4 +65,4 @@ La app de producción no SHALL incluir pantallas ni enlaces de desarrollo, ni SH
 
 #### Scenario: Ajustes solo con opciones del usuario
 - **WHEN** el usuario abre Ajustes
-- **THEN** solo aparecen "Métodos de pago", "Categorías", "Notificaciones" y, si el dispositivo lo admite, "Acceso directo: nuevo gasto"
+- **THEN** solo aparecen "Métodos de pago", "Categorías", "Notificaciones", "Acceso directo: nuevo gasto" si el dispositivo lo admite, y "Comentarios" en la sección "Beta"

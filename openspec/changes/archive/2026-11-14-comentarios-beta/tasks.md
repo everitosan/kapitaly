@@ -22,4 +22,4 @@
 ## 5. Cierre
 
 - [x] 5.1 Ejecutar `npm test`, `npm run typecheck` y `npm run lint`. Verificación: los tres pasan.
-- [ ] 5.2 Probar en el teléfono con la beta: mandar un comentario con 2 capturas por Gmail y comprobar que llega a `eve.san.dev@gmail.com` con el asunto, el diagnóstico y los adjuntos. Verificación: lo confirma el usuario.
+- [x] 5.2 Probar en el teléfono con la beta: mandar un comentario con 2 capturas por Gmail y comprobar que llega a `eve.san.dev@gmail.com` con el asunto, el diagnóstico y los adjuntos. Verificación: lo confirma el usuario.

@@ -33,4 +33,4 @@
 
 ## 7. Verificación en dispositivo
 
-- [ ] 7.1 Probar en el teléfono con la beta: "Posponer" quita la tarjeta y muestra el aviso; al cerrar y abrir la app dentro de 6 horas no vuelve; "Cerrar" evita que la hoja salte sola al volver a abrir; la campana cuenta y se apaga correctamente. Verificación: lo confirma el usuario.
+- [x] 7.1 Probar en el teléfono con la beta: "Posponer" quita la tarjeta y muestra el aviso; al cerrar y abrir la app dentro de 6 horas no vuelve; "Cerrar" evita que la hoja salte sola al volver a abrir; la campana cuenta y se apaga correctamente. Verificación: lo confirma el usuario.
