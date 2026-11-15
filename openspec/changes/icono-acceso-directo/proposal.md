@@ -6,8 +6,8 @@ El acceso directo "Nuevo gasto" funciona, pero en el teléfono se ve como un íc
 
 ## What Changes
 
-- El ícono del acceso directo fijado y del atajo (mantener presionado el ícono de la app) pasa a ser el diseño de `design/acceso directo expenses.png`: los círculos verdes del logo y una cartera, sobre fondo `#020903`.
-- Se entrega como **ícono adaptativo**: una capa de fondo oscura y una capa de frente con los círculos y la cartera dentro de la zona segura. Así cada launcher le aplica su propia forma (círculo, squircle, redondeado).
+- El ícono del acceso directo fijado y del atajo (mantener presionado el ícono de la app) pasa a ser el diseño de `design/link-expeneses.svg` (reemplazó a la propuesta anterior, `design/acceso directo expenses.png`): un campo verde con degradado, una esquina oscura `#020903` arriba a la izquierda y una cartera grande en verde oscuro.
+- Se entrega como **ícono adaptativo**: la capa de fondo lleva el oscuro y el círculo verde (colocado para que la esquina oscura se vea en cualquier forma de launcher, también en la redonda), y la capa de frente, la cartera escalada dentro de la zona segura. Así cada launcher le aplica su propia forma.
 - En Android 7 (sin íconos adaptativos) se usa un ícono de respaldo con el mismo dibujo.
 - La fila "Acceso directo: nuevo gasto" en Ajustes muestra el mismo ícono.
 

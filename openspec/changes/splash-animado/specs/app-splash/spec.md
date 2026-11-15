@@ -7,22 +7,26 @@ Define lo que el usuario ve mientras KPTLY expenses arranca en frío: el splash 
 ## ADDED Requirements
 
 ### Requirement: Splash de marca
-Al abrir la app en frío, SHALL mostrarse el diseño de `design/splash-expenses.svg`: fondo `#020903`, el logo de cuatro círculos con degradado recortado en un cuadro de esquinas redondeadas y, debajo, el texto "KPTLY expenses" en blanco. El splash SHALL usar ese mismo fondo con el sistema en modo claro o en modo oscuro.
+Al abrir la app en frío, SHALL mostrarse el diseño de `design/splash-expenses.svg`: el logo de cuatro círculos con degradado recortado en un cuadro de esquinas redondeadas y, debajo, el texto "KPTLY expenses". El splash SHALL seguir el tema del sistema: en modo oscuro, fondo `#020903` y texto blanco; en modo claro, fondo `#F4F1EA` y texto `#141414`. Los círculos SHALL ser iguales en los dos temas.
 
 #### Scenario: Modo claro
 - **WHEN** el sistema está en modo claro y el usuario abre la app en frío
-- **THEN** el splash se ve con fondo `#020903`, el logo y el texto blanco, igual que en modo oscuro
+- **THEN** el splash se ve con fondo `#F4F1EA`, los círculos verdes y el texto "KPTLY expenses" oscuro
+
+#### Scenario: Modo oscuro
+- **WHEN** el sistema está en modo oscuro y el usuario abre la app en frío
+- **THEN** el splash se ve con fondo `#020903`, los círculos verdes y el texto blanco
 
 #### Scenario: Volver de segundo plano
 - **WHEN** la app estaba en segundo plano y el usuario vuelve a ella
 - **THEN** no aparece el splash
 
 ### Requirement: Sin salto entre el splash del sistema y el animado
-El splash del sistema SHALL mostrar solo el fondo `#020903`, sin logo ni ícono. El splash animado SHALL empezar sobre ese mismo fondo, para que el cambio entre los dos no se note.
+El splash del sistema SHALL mostrar solo el fondo del tema (`#F4F1EA` en claro, `#020903` en oscuro), sin logo ni ícono. El splash animado SHALL empezar sobre ese mismo fondo, para que el cambio entre los dos no se note.
 
 #### Scenario: Arranque en Android 12 o superior
 - **WHEN** el usuario abre la app en frío en un Android 12+
-- **THEN** primero ve la pantalla `#020903` sin ícono y después, sobre el mismo fondo, empieza la animación
+- **THEN** primero ve la pantalla del color de fondo del tema, sin ícono, y después, sobre el mismo fondo, empieza la animación
 
 ### Requirement: Animación de los círculos
 Los cuatro círculos SHALL aparecer uno tras otro, del menor al mayor, y crecer desde la esquina inferior derecha del cuadro del logo hasta su tamaño final. Cada círculo nuevo SHALL quedar detrás de los anteriores. Después de los círculos SHALL aparecer el texto. La animación completa SHALL durar 1.5 s o menos.
@@ -63,3 +67,14 @@ Si el sistema tiene activada la opción de reducir el movimiento, el splash SHAL
 #### Scenario: Reducir movimiento activado
 - **WHEN** el usuario abre la app en frío con reducir movimiento activado
 - **THEN** ve el logo y el texto completos desde el inicio, sin círculos apareciendo, y el splash se va en cuanto la base de datos está lista
+
+### Requirement: Sin splash al entrar por el atajo con la app abierta
+Si la app ya está abierta, en primer o segundo plano, tocar el atajo "Nuevo gasto" o el acceso directo fijado SHALL abrir el formulario de nuevo gasto sin mostrar el splash del sistema ni el de marca, y sin perder la pantalla en la que estaba el usuario. El splash de marca SHALL mostrarse a lo sumo una vez por arranque de la app.
+
+#### Scenario: Atajo con la app en segundo plano
+- **WHEN** la app estaba abierta en Métodos de pago, el usuario sale y toca el acceso directo "Nuevo gasto"
+- **THEN** se abre el formulario de nuevo gasto sin ningún splash y, al guardar o cancelar, vuelve a Métodos de pago
+
+#### Scenario: Atajo desde el menú del ícono
+- **WHEN** la app está en segundo plano y el usuario mantiene presionado su ícono y toca "Nuevo gasto"
+- **THEN** se abre el formulario sin ningún splash

@@ -12,6 +12,10 @@
 
 - [x] 3.1 Componente `ShortcutIcon` en `src/ui/icons/` y su uso en la fila "Acceso directo: nuevo gasto" de `SettingsScreen`. Verificación: prueba de componente de que la fila muestra el ícono, y que las pruebas de Ajustes siguen pasando.
 
+## 5. Rediseño con link-expeneses.svg (tras la beta 6)
+
+- [x] 5.1 Reemplazar la geometría por la de `design/link-expeneses.svg` según la decisión 4 de `design.md` (fondo con la esquina oscura y el círculo verde; frente con la cartera escalada; respaldo de Android 7 con `clip-path`) en `shortcutIconArt.ts`, `withAndroidShortcuts.js` y `ShortcutIcon`. Verificación: pruebas de la zona segura (cartera dentro del radio 33), de que el círculo verde cruza los bordes superior e izquierdo del área visible y deja la esquina, de los recursos del plugin y de que la geometría coincide; compilar y enlazar los recursos con `aapt2`.
+
 ## 4. Cierre
 
 - [x] 4.1 Ejecutar `npm test`, `npm run typecheck` y `npm run lint`. Verificación: los tres pasan.

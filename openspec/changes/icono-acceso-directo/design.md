@@ -45,6 +45,17 @@ Los textos del vector se generan en el plugin a partir de constantes, para poder
 
 Un componente `ShortcutIcon` en `src/ui/icons/` dibuja con `react-native-svg` la misma geometría (fondo, círculos y cartera) en un cuadro redondeado de 40 px. Así la fila coincide con lo que se agrega a la pantalla de inicio. Las constantes de geometría se comparten en `src/ui/shortcutIconArt.ts` y el plugin las replica, porque es CommonJS fuera de `src`; una prueba compara que coincidan.
 
+### 4. Rediseño con `design/link-expeneses.svg` (tras la beta 6)
+
+El usuario entregó un SVG nuevo (432 × 432). Era un ícono completo, no capas: traía su propio cuadro redondeado (`rx=101`), un fondo de 416.9 px de ancho (dejaba una franja transparente), una `mask` alfa que los vectores de Android no soportan, y la cartera ocupaba del 15 % al 88 % del lienzo, así que un launcher redondo la cortaba. Se adapta sin cambiar el dibujo:
+
+- **Fondo:** `#020903` en todo el lienzo y un círculo verde con el degradado del diseño (`#328844` → `#063D12`). En el lienzo de 432 tiene centro (306, 306) y radio 250, es decir, (76.5, 76.5) y 62.5 en el de 108. Así cruza los bordes superior e izquierdo: la esquina oscura es una cuña arriba a la izquierda, visible también con la máscara redonda, sin franjas oscuras en los demás bordes. Se probó con las máscaras de círculo, squircle, cuadro redondeado y cuadrado.
+- **Frente:** las tres rutas de la cartera tal cual el SVG (trazos de 18 y 8, `#0A2F11`), dentro de un grupo con `scale 0.13` y `translate (25.01, 25.92)`. Equivale a escalarla al 52 % alrededor de su centro (223, 216) y pasar de 432 a 108. Su caja, con el grosor del trazo, queda dentro de la zona segura.
+- Se descartan el cuadro redondeado y la máscara del SVG: el launcher pone la forma.
+- **Respaldo de Android 7:** el mismo dibujo recortado al área visible con un `clip-path` de cuadro redondeado, para que el círculo verde no pinte las esquinas.
+
+Los círculos concéntricos de la decisión 2 quedan reemplazados por esto.
+
 ## Risks / Trade-offs
 
 - [Algunos launchers cachean el ícono de accesos directos ya fijados] → si el usuario ya tenía el acceso directo, puede que tenga que quitarlo y volver a fijarlo. Se menciona en la nota de la beta.

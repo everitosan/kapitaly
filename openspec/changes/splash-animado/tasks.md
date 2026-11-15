@@ -15,6 +15,23 @@
 - [x] 3.2 Omitir la animación cuando la URL inicial trae `quick=1` (API de `expo-linking` v58, verificada en los docs) o cuando `useReducedMotion()` es verdadero. Verificación: pruebas del layout con URL de atajo y con movimiento reducido, en las que `BrandSplash` recibe `animate=false` y el overlay se va al terminar las migraciones. Las pruebas existentes de `quick-add-shortcut` siguen pasando.
 - [x] 3.3 Ejecutar `npm test`, `npm run typecheck` y `npm run lint`. Verificación: los tres pasan.
 
-## 4. Verificación en dispositivo
+## 4. Splash según el tema (tras la beta 6)
 
-- [ ] 4.1 Instalar un build release (beta interna o `npx expo run:android --variant release`) en Android 12+. Verificación: el splash del sistema se ve solo `#020903`, sin ícono; la animación no tiene salto ni frame blanco; el estado final coincide con `design/splash-expenses.svg`; en modo claro también se ve oscuro; volver de segundo plano no muestra el splash; el atajo "Nuevo gasto" abre el formulario sin animación y con el teclado listo; con reducir movimiento activado no hay animación. Si aparece el ícono del launcher, aplicar el plan del riesgo en `design.md` antes de marcar la tarea.
+- [x] 4.1 `app.json`: `expo-splash-screen` con `backgroundColor: #F4F1EA` y `dark.backgroundColor: #020903`. `BrandSplash` toma fondo y color del texto del tema (claro: `#F4F1EA` y `#141414`; oscuro: `#020903` y blanco). `SplashGate` pone la barra de estado según el tema. Verificación: `npx expo config --type public` muestra los dos fondos, y las pruebas de `BrandSplash` y `SplashGate` en tema claro y oscuro comprueban fondo, texto y barra de estado.
+
+## 5. Atajo con la app abierta (tras la beta 6)
+
+- [x] 5.1 `ShortcutTrampolineActivity` en `modules/kapitaly-shortcuts` (Kotlin y el `AndroidManifest.xml` del módulo: tema translúcido, `taskAffinity=""`, `excludeFromRecents`, `noHistory`): reenvía el mismo URI a `MainActivity` con `FLAG_ACTIVITY_NEW_TASK` y termina sin animación. El atajo estático (`targetClass` en `withAndroidShortcuts.js`) y el acceso directo fijado (`setComponent` en `requestPinNewExpense`) apuntan a ella. Verificación: pruebas del plugin con el nuevo `targetClass`; compilar el módulo y el manifiesto fusionado con Gradle (`./gradlew :app:processReleaseMainManifest` y la compilación del módulo) sobre un prebuild temporal.
+- [x] 5.2 `SplashGate` recuerda en memoria que el splash ya se mostró en esta sesión: si vuelve a montarse, oculta el splash nativo de inmediato y no monta el de marca. Verificación: prueba que monta, desmonta y vuelve a montar el layout y comprueba que la segunda vez no aparece el splash.
+- [x] 5.3 Ejecutar `npm test`, `npm run typecheck` y `npm run lint`. Verificación: los tres pasan.
+
+## 6. Verificación en dispositivo
+
+- [ ] 6.1 Instalar la beta en Android 12+. Verificación:
+  - el splash del sistema se ve solo con el fondo del tema, sin ícono, y la animación no tiene salto ni frame blanco;
+  - el estado final coincide con `design/splash-expenses.svg`;
+  - en modo claro el splash es claro y en modo oscuro es oscuro;
+  - volver de segundo plano no muestra el splash (confirmado en la beta 6);
+  - el atajo "Nuevo gasto" con la app cerrada abre el formulario sin animación y con el teclado listo;
+  - con la app en segundo plano, el atajo y el acceso directo (vuelto a fijar) abren el formulario sin ningún splash y encima de la pantalla anterior;
+  - con reducir movimiento activado no hay animación.
