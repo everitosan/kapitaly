@@ -1,0 +1,17 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <!--
+      Trampolín de los atajos "Nuevo gasto". Android lanza los atajos con FLAG_ACTIVITY_CLEAR_TASK,
+      que destruiría la actividad principal si la app está abierta. Esta actividad invisible recibe
+      el atajo y lo reenvía a la actividad que ya existe (singleTask, onNewIntent).
+      No se exporta: el launcher abre los atajos con la identidad de la app.
+    -->
+    <activity
+      android:name="expo.modules.kapitalyshortcuts.ShortcutTrampolineActivity"
+      android:exported="false"
+      android:excludeFromRecents="true"
+      android:noHistory="true"
+      android:taskAffinity=""
+      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+  </application>
+</manifest>

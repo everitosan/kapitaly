@@ -23,7 +23,9 @@ class KapitalyShortcutsModule : Module() {
     Function("requestPinNewExpense") { uri: String ->
       if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) return@Function false
       val res = context.resources
-      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri)).setPackage(context.packageName)
+      // A la trampolín, para no destruir la app si ya está abierta (ver ShortcutTrampolineActivity).
+      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+        .setClass(context, ShortcutTrampolineActivity::class.java)
       val shortcut = ShortcutInfoCompat.Builder(context, SHORTCUT_ID)
         .setShortLabel(res.getString(stringId("shortcut_new_expense_short")))
         .setLongLabel(res.getString(stringId("shortcut_new_expense_long")))

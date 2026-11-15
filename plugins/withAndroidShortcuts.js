@@ -17,6 +17,12 @@ const STRINGS = {
 
 const newExpenseUri = (scheme) => `${scheme}://expense/new?quick=1`;
 
+/**
+ * Los atajos estáticos se lanzan con FLAG_ACTIVITY_CLEAR_TASK; apuntan a la trampolín del módulo
+ * kapitaly-shortcuts para no destruir la app si ya está abierta.
+ */
+const TRAMPOLINE = 'expo.modules.kapitalyshortcuts.ShortcutTrampolineActivity';
+
 function shortcutsXml({ packageName, scheme }) {
   return `<?xml version="1.0" encoding="utf-8"?>
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
@@ -29,7 +35,7 @@ function shortcutsXml({ packageName, scheme }) {
     <intent
       android:action="android.intent.action.VIEW"
       android:targetPackage="${packageName}"
-      android:targetClass="${packageName}.MainActivity"
+      android:targetClass="${TRAMPOLINE}"
       android:data="${newExpenseUri(scheme)}" />
   </shortcut>
 </shortcuts>
@@ -37,8 +43,8 @@ function shortcutsXml({ packageName, scheme }) {
 }
 
 /**
- * Geometría del ícono (lienzo de 108 de los íconos adaptativos). Réplica de
- * src/ui/shortcutIconArt.ts; una prueba comprueba que coincidan.
+ * Geometría del ícono (design/link-expeneses.svg, lienzo de 108 de los íconos adaptativos). Réplica
+ * de src/ui/shortcutIconArt.ts; una prueba comprueba que coincidan.
  */
 const ICON_ART = {
   canvas: 108,
@@ -46,16 +52,29 @@ const ICON_ART = {
   visible: 72,
   safeRadius: 33,
   background: '#020903',
-  gradient: { top: '#328844', bottom: '#063D12' },
-  circleRadii: [33, 27, 20.5],
+  field: {
+    cx: 76.5,
+    cy: 76.5,
+    r: 62.5,
+    gradient: { top: '#328844', bottom: '#063D12' },
+  },
   wallet: {
-    stroke: '#0A3315',
-    strokeWidth: 2.38,
+    stroke: '#0A2F11',
+    transform: { scale: 0.13, translateX: 25.01, translateY: 25.92 },
     paths: [
-      'M44.9,50.5L57.64,44.06A1.82,1.82 0 0 1 60.3,45.74V50.5',
-      'M44.9,50.5h15.68a3.92,3.92 0 0 1 3.92,3.92v7.56a3.92,3.92 0 0 1 -3.92,3.92H48.82a3.92,3.92 0 0 1 -3.92,-3.92z',
+      {
+        d: 'M67.1819 153H275.649C324.785 153 349.353 153 364.618 168.816C379.883 184.633 379.883 210.089 379.883 261V279C379.883 329.911 379.883 355.367 364.618 371.183C349.353 387 324.785 387 275.649 387H171.416C122.279 387 97.7113 387 82.4466 371.183C67.1819 355.367 67.1819 329.911 67.1819 279V153Z',
+        strokeWidth: 18,
+      },
+      {
+        d: 'M275.649 152.97V73.9854C275.649 57.9773 263.124 45 247.675 45C243.226 45 238.841 46.0994 234.884 48.2072L80.4248 130.487C72.2935 134.818 67.1819 143.497 67.1819 152.97',
+        strokeWidth: 18,
+      },
+      {
+        d: 'M316.051 295.055C326.999 295.055 335.876 285.856 335.876 274.513C335.876 263.17 326.999 253.971 316.051 253.971M316.051 295.055C305.103 295.055 296.226 285.856 296.226 274.513C296.226 263.17 305.103 253.971 316.051 253.971M316.051 295.055V253.971',
+        strokeWidth: 8,
+      },
     ],
-    clasp: { cx: 59.88, cy: 58.2, r: 1.55, strokeWidth: 1.1, line: 'M59.88,56.65v3.1' },
   },
 };
 
@@ -63,34 +82,42 @@ const argb = (hex) => `#FF${hex.slice(1).toUpperCase()}`;
 const circlePath = (cx, cy, r) =>
   `M${cx},${cy - r}a${r},${r} 0 1 1 0,${2 * r}a${r},${r} 0 1 1 0,${-2 * r}z`;
 
-/** Círculos con degradado y cartera: el contenido de la capa de frente (coordenadas de 108). */
-function foregroundPaths() {
-  const { center: c, gradient, circleRadii, wallet } = ICON_ART;
-  const circles = circleRadii.map(
-    (r) => `  <path android:pathData="${circlePath(c, c, r)}">
+/** Fondo oscuro y campo verde con degradado (coordenadas de 108). */
+function backgroundPaths() {
+  const { background, field } = ICON_ART;
+  return `  <path android:fillColor="${background}" android:pathData="M0,0h108v108h-108z" />
+  <path android:pathData="${circlePath(field.cx, field.cy, field.r)}">
     <aapt:attr name="android:fillColor">
       <gradient
         android:type="linear"
-        android:startX="${c}" android:startY="${c - r}"
-        android:endX="${c}" android:endY="${c + r}"
-        android:startColor="${argb(gradient.top)}"
-        android:endColor="${argb(gradient.bottom)}" />
+        android:startX="${field.cx}" android:startY="${field.cy - field.r}"
+        android:endX="${field.cx}" android:endY="${field.cy + field.r}"
+        android:startColor="${argb(field.gradient.top)}"
+        android:endColor="${argb(field.gradient.bottom)}" />
     </aapt:attr>
-  </path>`,
-  );
-  const stroke = (pathData, width) => `  <path
-    android:pathData="${pathData}"
-    android:strokeColor="${wallet.stroke}"
-    android:strokeWidth="${width}"
-    android:strokeLineCap="round"
-    android:strokeLineJoin="round" />`;
-  const { clasp } = wallet;
-  return [
-    ...circles,
-    ...wallet.paths.map((d) => stroke(d, wallet.strokeWidth)),
-    stroke(circlePath(clasp.cx, clasp.cy, clasp.r), clasp.strokeWidth),
-    stroke(clasp.line, clasp.strokeWidth),
-  ].join('\n');
+  </path>`;
+}
+
+/** Cartera: las rutas del SVG en un grupo que las lleva de 432 a 108, dentro de la zona segura. */
+function walletGroup() {
+  const { stroke, transform, paths } = ICON_ART.wallet;
+  const strokes = paths
+    .map(
+      (p) => `    <path
+      android:pathData="${p.d}"
+      android:strokeColor="${stroke}"
+      android:strokeWidth="${p.strokeWidth}"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round" />`,
+    )
+    .join('\n');
+  return `  <group
+    android:scaleX="${transform.scale}"
+    android:scaleY="${transform.scale}"
+    android:translateX="${transform.translateX}"
+    android:translateY="${transform.translateY}">
+${strokes}
+  </group>`;
 }
 
 const VECTOR_OPEN = (size, viewport) => `<?xml version="1.0" encoding="utf-8"?>
@@ -101,15 +128,15 @@ const VECTOR_OPEN = (size, viewport) => `<?xml version="1.0" encoding="utf-8"?>
   android:viewportWidth="${viewport}"
   android:viewportHeight="${viewport}">`;
 
-/** Capa de fondo del ícono adaptativo: todo el lienzo en el color de la marca. */
+/** Capa de fondo del ícono adaptativo: oscuro y campo verde (la esquina oscura queda arriba a la izquierda). */
 const backgroundXml = () => `${VECTOR_OPEN(108, ICON_ART.canvas)}
-  <path android:fillColor="${ICON_ART.background}" android:pathData="M0,0h108v108h-108z" />
+${backgroundPaths()}
 </vector>
 `;
 
-/** Capa de frente: círculos y cartera dentro de la zona segura. */
+/** Capa de frente: la cartera dentro de la zona segura. */
 const foregroundXml = () => `${VECTOR_OPEN(108, ICON_ART.canvas)}
-${foregroundPaths()}
+${walletGroup()}
 </vector>
 `;
 
@@ -123,15 +150,19 @@ const adaptiveXml = () => `<?xml version="1.0" encoding="utf-8"?>
 
 /**
  * Respaldo para Android 7 (API 24–25, sin íconos adaptativos): el mismo dibujo recortado al área
- * visible, sobre un cuadro oscuro redondeado.
+ * visible con un cuadro redondeado (el campo verde no debe pintar las esquinas).
  */
 const legacyXml = () => {
   const offset = (ICON_ART.canvas - ICON_ART.visible) / 2;
+  const a = offset;
+  const b = ICON_ART.canvas - offset;
+  const r = 14;
+  const roundedSquare = `M${a + r},${a}H${b - r}A${r},${r} 0 0 1 ${b},${a + r}V${b - r}A${r},${r} 0 0 1 ${b - r},${b}H${a + r}A${r},${r} 0 0 1 ${a},${b - r}V${a + r}A${r},${r} 0 0 1 ${a + r},${a}z`;
   return `${VECTOR_OPEN(48, ICON_ART.visible)}
-  <path android:fillColor="${ICON_ART.background}"
-    android:pathData="M14,0h44a14,14 0 0 1 14,14v44a14,14 0 0 1 -14,14h-44a14,14 0 0 1 -14,-14v-44a14,14 0 0 1 14,-14z" />
   <group android:translateX="${-offset}" android:translateY="${-offset}">
-${foregroundPaths()}
+  <clip-path android:pathData="${roundedSquare}" />
+${backgroundPaths()}
+${walletGroup()}
   </group>
 </vector>
 `;
@@ -198,5 +229,6 @@ module.exports.shortcutsXml = shortcutsXml;
 module.exports.addShortcutsMetaData = addShortcutsMetaData;
 module.exports.newExpenseUri = newExpenseUri;
 module.exports.SHORTCUT_ID = SHORTCUT_ID;
+module.exports.TRAMPOLINE = TRAMPOLINE;
 module.exports.ICON_ART = ICON_ART;
 module.exports.iconResources = iconResources;

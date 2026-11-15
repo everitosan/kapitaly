@@ -8,7 +8,8 @@ import { SHORTCUT_ICON as ART } from '../shortcutIconArt';
  */
 export function ShortcutIcon({ size = 40, testID }: { size?: number; testID?: string }) {
   const offset = (ART.canvas - ART.visible) / 2;
-  const { wallet } = ART;
+  const { field, wallet } = ART;
+  const { scale, translateX, translateY } = wallet.transform;
   return (
     <Svg
       testID={testID}
@@ -18,8 +19,8 @@ export function ShortcutIcon({ size = 40, testID }: { size?: number; testID?: st
     >
       <Defs>
         <LinearGradient id="shortcutIconGradient" x1="0.5" y1="0" x2="0.5" y2="1">
-          <Stop offset="0" stopColor={ART.gradient.top} />
-          <Stop offset="1" stopColor={ART.gradient.bottom} />
+          <Stop offset="0" stopColor={field.gradient.top} />
+          <Stop offset="1" stopColor={field.gradient.bottom} />
         </LinearGradient>
         <ClipPath id="shortcutIconClip">
           <Rect x={offset} y={offset} width={ART.visible} height={ART.visible} rx={14} />
@@ -27,20 +28,17 @@ export function ShortcutIcon({ size = 40, testID }: { size?: number; testID?: st
       </Defs>
       <G clipPath="url(#shortcutIconClip)">
         <Rect x={0} y={0} width={ART.canvas} height={ART.canvas} fill={ART.background} />
-        {ART.circleRadii.map((r) => (
-          <Circle key={r} cx={ART.center} cy={ART.center} r={r} fill="url(#shortcutIconGradient)" />
-        ))}
-        <G fill="none" stroke={wallet.stroke} strokeLinecap="round" strokeLinejoin="round">
-          {wallet.paths.map((d) => (
-            <Path key={d} d={d} strokeWidth={wallet.strokeWidth} />
+        <Circle cx={field.cx} cy={field.cy} r={field.r} fill="url(#shortcutIconGradient)" />
+        <G
+          transform={`translate(${translateX} ${translateY}) scale(${scale})`}
+          fill="none"
+          stroke={wallet.stroke}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          {wallet.paths.map((p) => (
+            <Path key={p.d} d={p.d} strokeWidth={p.strokeWidth} />
           ))}
-          <Circle
-            cx={wallet.clasp.cx}
-            cy={wallet.clasp.cy}
-            r={wallet.clasp.r}
-            strokeWidth={wallet.clasp.strokeWidth}
-          />
-          <Path d={wallet.clasp.line} strokeWidth={wallet.clasp.strokeWidth} />
         </G>
       </G>
     </Svg>

@@ -25,7 +25,10 @@ test('el atajo abre el formulario en modo rápido dentro de la app', () => {
   expect(xml).toContain('android:shortcutId="new-expense"');
   expect(xml).toContain('android:data="kapitalyexpenses://expense/new?quick=1"');
   expect(xml).toContain('android:targetPackage="com.kapitaly.expenses"');
-  expect(xml).toContain('android:targetClass="com.kapitaly.expenses.MainActivity"');
+  // A la trampolín: Android lanza los atajos con CLEAR_TASK y destruiría la app abierta.
+  expect(xml).toContain(
+    'android:targetClass="expo.modules.kapitalyshortcuts.ShortcutTrampolineActivity"',
+  );
   expect(xml).toContain('android:shortcutShortLabel="@string/shortcut_new_expense_short"');
   expect(newExpenseUri('x')).toBe('x://expense/new?quick=1');
 });
@@ -60,28 +63,32 @@ describe('ícono del acceso directo', () => {
     );
   });
 
-  test('fondo oscuro de la marca en un lienzo de 108', () => {
+  test('fondo: oscuro de la marca y campo verde con degradado', () => {
     const bg = files['drawable/shortcut_new_expense_background.xml'];
     expect(bg).toContain('android:viewportWidth="108"');
     expect(bg).toContain('android:fillColor="#020903"');
+    expect(bg.match(/<gradient/g)).toHaveLength(1);
+    expect(bg).toContain('android:startColor="#FF328844"');
+    expect(bg).toContain('android:endColor="#FF063D12"');
+    expect(bg).not.toContain('#C2EE73');
   });
 
-  test('frente con tres círculos con degradado y la cartera', () => {
+  test('frente: la cartera escalada a la zona segura', () => {
     const fg = files['drawable/shortcut_new_expense_foreground.xml'];
-    expect(fg.match(/<gradient/g)).toHaveLength(3);
-    expect(fg).toContain('android:startColor="#FF328844"');
-    expect(fg).toContain('android:endColor="#FF063D12"');
-    for (const d of ICON_ART.wallet.paths) expect(fg).toContain(`android:pathData="${d}"`);
-    expect(fg).toContain('android:strokeColor="#0A3315"');
-    expect(fg).not.toContain('#C2EE73');
+    expect(fg).toContain('android:scaleX="0.13"');
+    expect(fg).toContain('android:translateX="25.01"');
+    for (const p of ICON_ART.wallet.paths) expect(fg).toContain(`android:pathData="${p.d}"`);
+    expect(fg).toContain('android:strokeColor="#0A2F11"');
+    expect(fg).not.toContain('<gradient');
   });
 
-  test('el respaldo de Android 7 recorta el dibujo al área visible', () => {
+  test('el respaldo de Android 7 recorta el dibujo al área visible con un cuadro redondeado', () => {
     const legacy = files['drawable/shortcut_new_expense.xml'];
     expect(legacy).toContain('android:viewportWidth="72"');
     expect(legacy).toContain('android:translateX="-18"');
+    expect(legacy).toContain('<clip-path');
     expect(legacy).toContain('android:fillColor="#020903"');
-    expect(legacy.match(/<gradient/g)).toHaveLength(3);
+    expect(legacy).toContain('android:scaleX="0.13"');
   });
 
   test('la geometría coincide con src/ui/shortcutIconArt.ts', () => {
