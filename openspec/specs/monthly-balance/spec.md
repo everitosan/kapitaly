@@ -216,7 +216,7 @@ Arriba de la lista de "Este mes" SHALL haber un buscador que filtra los cargos c
 - **THEN** la lista vuelve a mostrar todos los cargos del mes
 
 ### Requirement: Orden de la lista de Este mes
-La lista de "Este mes" SHALL ordenarse por fecha de cobro de la más antigua a la más reciente; en la misma fecha, por la hora en que se registró el gasto y luego por nombre. Un botón SHALL invertir el orden y mostrar el orden vigente.
+La lista de "Este mes" SHALL ordenarse por fecha de cobro de la más antigua a la más reciente; en la misma fecha, por la hora en que se registró el gasto y luego por nombre. Un botón SHALL invertir el orden y mostrar el orden vigente. El orden elegido SHALL conservarse al cerrar y volver a abrir la app; sin uno elegido, SHALL ser de la más antigua a la más reciente.
 
 #### Scenario: Mismo día
 - **WHEN** el 11/11/2026 hay dos gastos únicos, "Tacos" registrado a las 14:20 y "Súper" registrado a las 18:47
@@ -225,6 +225,14 @@ La lista de "Este mes" SHALL ordenarse por fecha de cobro de la más antigua a l
 #### Scenario: Invertir el orden
 - **WHEN** el usuario toca el botón de orden
 - **THEN** la lista muestra primero el cargo más reciente y el botón indica "Más reciente"
+
+#### Scenario: Orden conservado al volver a abrir la app
+- **WHEN** el usuario cambia el orden a "Más reciente", cierra la app y la vuelve a abrir
+- **THEN** la lista de "Este mes" muestra primero el cargo más reciente y el botón indica "Más reciente"
+
+#### Scenario: Sin orden elegido
+- **WHEN** el usuario abre la app por primera vez
+- **THEN** la lista muestra primero el cargo más antiguo y el botón indica "Más antiguo"
 
 ### Requirement: Estado de cada cobro en la lista
 En la lista de "Este mes", un cobro recurrente cuya fecha es posterior a hoy y no tiene confirmación SHALL verse tenue con la marca "Por cobrar". Un cobro marcado como no cobrado SHALL verse tenue, sin color y tachado, con la marca "No se cobró". Un cobro confirmado con otro monto SHALL mostrar el monto confirmado y el esperado.

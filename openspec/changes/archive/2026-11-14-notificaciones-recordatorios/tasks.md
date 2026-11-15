@@ -32,4 +32,4 @@
 ## 7. Cierre
 
 - [x] 7.1 Ejecutar `npm test`, `npm run typecheck` y `npm run lint`. Verificación: los tres pasan.
-- [ ] 7.2 Probar en el teléfono con una beta: permiso, recordatorio diario a una hora cercana, aviso de un cobro de prueba, aviso por desuso con n = 1, tocar cada notificación, y que llegue tras reiniciar el teléfono. Verificación: lo confirma el usuario.
+- [x] 7.2 Probar en el teléfono con una beta: permiso, recordatorio diario a una hora cercana, aviso de un cobro de prueba, aviso por desuso con n = 1, tocar cada notificación, y que llegue tras reiniciar el teléfono. Verificación: lo confirma el usuario.

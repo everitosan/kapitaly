@@ -26,7 +26,7 @@ El encabezado del balance SHALL tener, en una fila propia arriba del nombre del 
 - **THEN** anuncia los botones como "Métodos de pago" y "Ajustes"
 
 ### Requirement: Opciones de Ajustes
-La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una con el número de elementos vigentes, y abrir su pantalla al tocarla. En Android con soporte para fijar accesos directos SHALL mostrar además "Acceso directo: nuevo gasto". Una opción sin funcionalidad disponible, como recordatorios, no SHALL mostrarse.
+La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una con el número de elementos vigentes, y "Notificaciones", con un resumen de cuántos avisos están encendidos ("Apagadas", "1 activa", "N activas"). Cada opción SHALL abrir su pantalla al tocarla. En Android con soporte para fijar accesos directos SHALL mostrar además "Acceso directo: nuevo gasto". Una opción sin funcionalidad disponible no SHALL mostrarse.
 
 #### Scenario: Ir a Categorías
 - **WHEN** el usuario toca "Categorías" en Ajustes
@@ -36,13 +36,21 @@ La pantalla "Ajustes" SHALL mostrar "Métodos de pago" y "Categorías", cada una
 - **WHEN** el usuario toca "Métodos de pago" en Ajustes
 - **THEN** se abre la lista de métodos de pago, igual que antes desde el balance
 
+#### Scenario: Ir a Notificaciones
+- **WHEN** el usuario toca "Notificaciones" en Ajustes
+- **THEN** se abre la pantalla Notificaciones con sus tres avisos
+
+#### Scenario: Resumen de notificaciones
+- **WHEN** el recordatorio diario y el aviso por desuso están encendidos y el de cobros apagado
+- **THEN** "Notificaciones" muestra "2 activas"
+
 #### Scenario: Sin recordatorios todavía
 - **WHEN** el usuario abre Ajustes
-- **THEN** no aparece ninguna opción de recordatorios
+- **THEN** los recordatorios solo aparecen dentro de "Notificaciones", sin otra opción aparte en Ajustes
 
 #### Scenario: Acceso directo disponible
 - **WHEN** el usuario abre Ajustes en un Android que puede fijar accesos directos
-- **THEN** aparece "Acceso directo: nuevo gasto" debajo de "Categorías"
+- **THEN** aparece "Acceso directo: nuevo gasto" debajo de "Notificaciones"
 
 ### Requirement: Sin pantallas de desarrollo en producción
 La app de producción no SHALL incluir pantallas ni enlaces de desarrollo, ni SHALL poder abrirlas por enlace profundo. Ajustes solo SHALL mostrar opciones para el usuario.
@@ -53,4 +61,4 @@ La app de producción no SHALL incluir pantallas ni enlaces de desarrollo, ni SH
 
 #### Scenario: Ajustes solo con opciones del usuario
 - **WHEN** el usuario abre Ajustes
-- **THEN** solo aparecen "Métodos de pago", "Categorías" y, si el dispositivo lo admite, "Acceso directo: nuevo gasto"
+- **THEN** solo aparecen "Métodos de pago", "Categorías", "Notificaciones" y, si el dispositivo lo admite, "Acceso directo: nuevo gasto"
