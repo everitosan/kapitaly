@@ -24,4 +24,13 @@
 ## 5. Cierre
 
 - [x] 5.1 Ejecutar `npm test`, `npm run typecheck` y `npm run lint`. Verificación: los tres pasan.
-- [ ] 5.2 Probar en el teléfono (beta o build release): "Aún no" quita la tarjeta en el momento, la campana cuenta y se apaga, y la hoja se abre sola al arrancar. Verificación: lo confirma el usuario.
+## 6. Posponer 6 horas (tras la beta 6)
+
+- [x] 6.1 Dominio `src/domain/pendingSnooze.ts` (`SNOOZE_HOURS`, `snoozeUntil`, `isSnoozed`) y tabla `pending_snoozes` con migración, `PendingSnoozeRepository` (`list`, `snooze`, `purgeExpired`, `subscribe`) en memoria y SQLite. Verificación: pruebas unitarias en los bordes del plazo, pruebas de contrato en las dos versiones y prueba de actualización de base (`upgrade.test.ts`).
+- [x] 6.2 `pendingSession` lee del repositorio: snapshot con lo pospuesto vigente y el vencimiento de `sheet`; se recalcula al cambiar el repositorio, al volver a primer plano y al próximo vencimiento. Verificación: pruebas con reloj falso de "Abrir la app dentro del plazo", "Pasado el plazo" y "Plazo vencido con la app abierta".
+- [x] 6.3 "Aún no" pasa a "Posponer" en las dos tarjetas, con el aviso "Volveré a avisarte dentro de 6 hrs"; "Cerrar" pospone la apertura automática 6 horas; `purgeExpired()` al abrir. Verificación: pruebas de "Posponer uno de dos" (con el aviso), "Cerrar y volver a abrir la app", "Pasadas 6 horas de cerrar la hoja" y el orden de botones con "Posponer". Las pruebas existentes que usan "Aún no" se actualizan.
+- [x] 6.4 Ejecutar `npm test`, `npm run typecheck` y `npm run lint`. Verificación: los tres pasan.
+
+## 7. Verificación en dispositivo
+
+- [ ] 7.1 Probar en el teléfono con la beta: "Posponer" quita la tarjeta y muestra el aviso; al cerrar y abrir la app dentro de 6 horas no vuelve; "Cerrar" evita que la hoja salte sola al volver a abrir; la campana cuenta y se apaga correctamente. Verificación: lo confirma el usuario.

@@ -74,6 +74,37 @@ Se reutilizan `PrimaryButton` y `SecondaryButton`, sin componentes nuevos.
 
 En `src/ui/README.md`: "La acción que cancela, cierra o pospone va a la izquierda; la que confirma va a la derecha o abajo. En alertas, `Cancelar` va primero con `style: 'cancel'`." Esto ya se cumple en `SheetLayout` y en las alertas existentes.
 
+### 7. Posponer 6 horas, persistente (tras la beta 6)
+
+Que la hoja saltara en cada arranque resultaba muy intensa, porque lo pospuesto y el "ya la cerré" vivían solo en memoria. Ahora se guardan con fecha límite.
+
+**Datos.** Tabla `pending_snoozes` en SQLite, con migración de Drizzle:
+
+| Columna | Contenido |
+|---|---|
+| `key` (PK) | `chargeKey`/`paymentKey` (`c|gasto|fecha`, `p|método|vencimiento`) o `sheet` para "Cerrar" |
+| `until` | ISO UTC: momento en que vence el plazo |
+
+El repositorio `PendingSnoozeRepository` ofrece `list()` (solo los vigentes según el reloj inyectado), `snooze(key, until)` (inserta o reemplaza), `purgeExpired()` y `subscribe`. Tiene versión en memoria y en SQLite, con pruebas de contrato. Es configuración del dispositivo, no un registro sincronizable.
+
+**Dominio.** En `src/domain/pendingSnooze.ts`: `SNOOZE_HOURS = 6`, `snoozeUntil(now)` y `isSnoozed(key, snoozes, now)`, con pruebas en los bordes del plazo (5:59 h y 6:00 h).
+
+**Sesión.** `pendingSession` deja de guardar un `Set` propio: su snapshot sale del repositorio (`{ snoozed: Set<key>, sheetDismissedUntil }`) y se recalcula:
+- al cambiar el repositorio;
+- al volver a primer plano (`AppState`), para que un plazo vencido con la app abierta vuelva a contar;
+- con un temporizador al próximo vencimiento, para que la campana se actualice aunque no cambie nada más.
+
+`usePending` y la apertura automática de `BalanceScreen` siguen leyendo el snapshot, así que el arreglo del React Compiler (decisión 1) se conserva.
+
+**Acciones.**
+- "Posponer" en una tarjeta: `snooze(key, ahora + 6 h)` y el aviso "Volveré a avisarte dentro de 6 hrs".
+- "Cerrar" sin responder: `snooze('sheet', ahora + 6 h)`. La apertura automática solo ocurre si `sheet` no está vigente y hay pendientes sin posponer.
+- Abrir la hoja con la campana no se ve afectado por `sheet`.
+
+**Aviso.** Un mensaje breve dentro de la hoja o del balance (tipo toast, ~3 s), con el tono `ink` sobre `bg` que ya usan los avisos de la app. No hace falta una librería.
+
+**Limpieza.** `purgeExpired()` al abrir la app borra las filas vencidas.
+
 ## Risks / Trade-offs
 
 - [Activar el compilador en Jest rompe muchas pruebas] → la tarea 1 lo mide primero. Si el ruido es grande, se activa solo para `src/features/**` y se deja una nota con lo pendiente.
