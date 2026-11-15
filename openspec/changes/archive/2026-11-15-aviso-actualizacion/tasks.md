@@ -15,4 +15,4 @@
 
 ## 4. Verificación en dispositivo
 
-- [ ] 4.1 Instalar desde Play una beta que ya traiga esto, publicar la siguiente y abrir la app: aparece el aviso, "Actualizar" descarga en segundo plano, "Reiniciar" instala y la app abre en la versión nueva. Verificación: lo confirma el usuario.
+- [x] 4.1 Instalar desde Play una beta que ya traiga esto, publicar la siguiente y abrir la app: aparece el aviso, "Actualizar" descarga en segundo plano, "Reiniciar" instala y la app abre en la versión nueva. Verificación: lo confirma el usuario.
