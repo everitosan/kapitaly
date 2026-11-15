@@ -4,6 +4,7 @@ import * as Linking from 'expo-linking';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import RootLayout from '@/app/_layout';
+import { resetSplashSession } from '@/features/startup/SplashGate';
 
 jest.mock('expo-splash-screen', () => ({ hide: jest.fn(), preventAutoHideAsync: jest.fn() }));
 jest.mock('expo-linking', () => ({ getLinkingURL: jest.fn(() => null) }));
@@ -48,6 +49,7 @@ function splashMode() {
 
 describe('RootLayout y el splash', () => {
   beforeEach(() => {
+    resetSplashSession();
     mockedMigrations.mockReturnValue({ success: false, error: undefined });
     mockedURL.mockReturnValue(null);
     mockedReducedMotion.mockReturnValue(false);

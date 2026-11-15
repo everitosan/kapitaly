@@ -3,10 +3,15 @@ import * as SplashScreen from 'expo-splash-screen';
 import { Text } from 'react-native';
 
 import { SPLASH_DURATION } from '@/ui/BrandSplash';
+import { ThemeProvider } from '@/ui/ThemeProvider';
 
-import { SPLASH_FADE_MS, SplashGate } from '../SplashGate';
+import { resetSplashSession, SPLASH_FADE_MS, SplashGate } from '../SplashGate';
 
 jest.mock('expo-splash-screen', () => ({ hide: jest.fn(), preventAutoHideAsync: jest.fn() }));
+const mockStatusBar = jest.fn((_props: { style: string }) => null);
+jest.mock('expo-status-bar', () => ({
+  StatusBar: (props: { style: string }) => mockStatusBar(props),
+}));
 
 const advance = (ms: number) => act(async () => jest.advanceTimersByTime(ms));
 
@@ -19,8 +24,36 @@ function App({ ready, animate = true }: { ready: boolean; animate?: boolean }) {
 }
 
 describe('SplashGate', () => {
-  beforeEach(() => jest.useFakeTimers());
+  beforeEach(() => {
+    jest.useFakeTimers();
+    resetSplashSession();
+    jest.mocked(SplashScreen.hide).mockClear();
+  });
   afterEach(() => jest.useRealTimers());
+
+  it('si se vuelve a montar en la misma sesión, no muestra el splash y oculta el nativo', async () => {
+    const first = await render(<App ready />);
+    expect(screen.getByTestId('splash-gate')).toBeOnTheScreen();
+    await first.unmount();
+    jest.mocked(SplashScreen.hide).mockClear();
+
+    await render(<App ready />);
+    expect(screen.queryByTestId('splash-gate')).not.toBeOnTheScreen();
+    expect(screen.getByText('Balance')).toBeOnTheScreen();
+    expect(SplashScreen.hide).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['light', 'dark'],
+    ['dark', 'light'],
+  ] as const)('en tema %s la barra de estado va en %s', async (scheme, style) => {
+    await render(
+      <ThemeProvider scheme={scheme}>
+        <App ready={false} />
+      </ThemeProvider>,
+    );
+    expect(mockStatusBar).toHaveBeenLastCalledWith(expect.objectContaining({ style }));
+  });
 
   it('oculta el splash nativo en cuanto el de marca está pintado', async () => {
     await render(<App ready={false} />);

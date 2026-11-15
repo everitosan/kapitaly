@@ -12,7 +12,14 @@ export const ORIGIN = { x: LOGO_BOX.x + LOGO_BOX.size, y: LOGO_BOX.y + LOGO_BOX.
 /** Degradado de cada círculo, de arriba a abajo. */
 export const GRADIENT = { top: '#328844', bottom: '#063D12' } as const;
 
-export const BACKGROUND = '#020903';
+/**
+ * Fondo y texto del splash según el tema del sistema. Los fondos coinciden con los del splash nativo
+ * en app.json (`backgroundColor` y `dark.backgroundColor`), para que el paso entre los dos no se note.
+ */
+export const SPLASH_COLORS = {
+  dark: { background: '#020903', text: '#FFFFFF', statusBar: 'light' },
+  light: { background: '#F4F1EA', text: '#141414', statusBar: 'dark' },
+} as const;
 
 /**
  * Círculos en orden de pintado (el mayor al fondo). `delay` es el retraso de entrada en ms:

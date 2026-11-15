@@ -1,7 +1,9 @@
 import { act, render, screen } from '@testing-library/react-native';
+import { processColor } from 'react-native';
 
 import { BrandSplash, circleAt, SPLASH_DURATION } from '../BrandSplash';
 import { CIRCLES, ORIGIN } from '../brandSplashArt';
+import { ThemeProvider } from '../ThemeProvider';
 
 describe('BrandSplash', () => {
   it('sin animación muestra los cuatro círculos completos y el texto, y avisa de inmediato', async () => {
@@ -28,6 +30,22 @@ describe('BrandSplash', () => {
       expect(end.cx).toBeCloseTo(circle.cx);
       expect(end.cy).toBeCloseTo(circle.cy);
       expect(end.r).toBeCloseTo(circle.r);
+    });
+  });
+
+  it.each([
+    ['light', '#F4F1EA', '#141414'],
+    ['dark', '#020903', '#FFFFFF'],
+  ] as const)('en tema %s usa fondo %s y texto %s', async (scheme, background, text) => {
+    await render(
+      <ThemeProvider scheme={scheme}>
+        <BrandSplash animate={false} />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('brand-splash')).toHaveStyle({ backgroundColor: background });
+    expect(screen.getByTestId('brand-splash-text').props.fill).toEqual({
+      type: 0,
+      payload: processColor(text),
     });
   });
 

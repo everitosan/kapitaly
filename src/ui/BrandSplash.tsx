@@ -13,14 +13,15 @@ import Svg, { Circle, ClipPath, Defs, G, LinearGradient, Path, Rect, Stop } from
 import { scheduleOnRN } from 'react-native-worklets';
 
 import {
-  BACKGROUND,
   CIRCLES,
   GRADIENT,
   LOGO_BOX,
   ORIGIN,
+  SPLASH_COLORS,
   TEXT_BOX,
   TEXT_PATH,
 } from './brandSplashArt';
+import { useTheme } from './ThemeProvider';
 
 /** Tiempos de la variante C aprobada en la maqueta. */
 export const SPLASH_TIMING = {
@@ -72,9 +73,10 @@ function GrowingCircle({ index, progress }: { index: number; progress: SharedVal
   );
 }
 
-/** Splash de marca: logo de círculos y "KPTLY expenses" sobre el fondo de la marca. */
+/** Splash de marca: logo de círculos y "KPTLY expenses" sobre el fondo del tema. */
 export function BrandSplash({ animate, onDone }: Props) {
   const { width } = useWindowDimensions();
+  const colors = SPLASH_COLORS[useTheme().scheme];
   const logoSize = width * LOGO_WIDTH_RATIO;
   const unit = logoSize / LOGO_BOX.size;
 
@@ -119,7 +121,7 @@ export function BrandSplash({ animate, onDone }: Props) {
   }));
 
   return (
-    <View style={styles.root} testID="brand-splash">
+    <View style={[styles.root, { backgroundColor: colors.background }]} testID="brand-splash">
       <Svg
         width={logoSize}
         height={logoSize}
@@ -156,7 +158,7 @@ export function BrandSplash({ animate, onDone }: Props) {
           viewBox={`${TEXT_BOX.x} ${TEXT_BOX.y} ${TEXT_BOX.width} ${TEXT_BOX.height}`}
           accessibilityLabel="KPTLY expenses"
         >
-          <Path d={TEXT_PATH} fill="#FFFFFF" />
+          <Path testID="brand-splash-text" d={TEXT_PATH} fill={colors.text} />
         </Svg>
       </Animated.View>
     </View>
@@ -166,7 +168,6 @@ export function BrandSplash({ animate, onDone }: Props) {
 const styles = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: BACKGROUND,
     alignItems: 'center',
     justifyContent: 'center',
   },
