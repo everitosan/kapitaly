@@ -10,7 +10,8 @@ import {
   usePaymentMethods,
   useRecurringExpenses,
 } from '../repositories';
-import { chargeKey, paymentKey, usePendingSession } from './session';
+import { chargeKey, paymentKey } from './session';
+import { usePendingSnoozes } from './snoozes';
 
 export interface PendingPayment extends PendingCardPayment {
   method: PaymentMethod;
@@ -26,8 +27,11 @@ export function usePending(today: CivilDate) {
   const oneOffs = useOneOffExpenses();
   const payments = useCardPayments();
   const confirmations = useChargeConfirmations();
-  const { snoozed } = usePendingSession();
-  const loaded = [methods, recurring, oneOffs, payments, confirmations].every((l) => !l.loading);
+  const snoozes = usePendingSnoozes();
+  const { snoozed } = snoozes;
+  const loaded =
+    snoozes.loaded &&
+    [methods, recurring, oneOffs, payments, confirmations].every((l) => !l.loading);
 
   const allCharges: PendingCharge[] = loaded
     ? pendingConfirmations(recurring.data, confirmations.data, today, registeredOnLocal)
@@ -46,6 +50,8 @@ export function usePending(today: CivilDate) {
   const cardPayments = allPayments.filter((p) => !snoozed.has(paymentKey(p.method.id, p.dueDate)));
   return {
     loaded,
+    /** "Cerrar" la hoja sigue vigente: no debe abrirse sola. */
+    sheetDismissed: snoozes.sheetDismissed,
     allCharges,
     charges,
     cardPayments,

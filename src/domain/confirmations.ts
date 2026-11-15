@@ -6,7 +6,7 @@ import { occurrenceInMonth } from './schedule';
 
 export type ConfirmationStatus = 'charged' | 'skipped';
 
-/** Respuesta del usuario a un cobro recurrente. "Aún no" no se guarda. */
+/** Respuesta del usuario a un cobro recurrente. "Posponer" no se guarda aquí (ver pendingSnooze). */
 export interface ChargeConfirmation extends SyncMeta {
   recurringExpenseId: string;
   occurrenceDate: CivilDate;

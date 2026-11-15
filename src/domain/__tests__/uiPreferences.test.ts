@@ -1,0 +1,18 @@
+import { BALANCE_SORT_KEY, DEFAULT_BALANCE_SORT, parseBalanceSort } from '../uiPreferences';
+
+describe('preferencias de interfaz', () => {
+  it('el orden de Este mes empieza en "Más antiguo"', () => {
+    expect(BALANCE_SORT_KEY).toBe('balance.sort');
+    expect(DEFAULT_BALANCE_SORT).toBe('asc');
+  });
+
+  it.each([
+    ['asc', 'asc'],
+    ['desc', 'desc'],
+    [null, 'asc'],
+    ['', 'asc'],
+    ['DESC', 'asc'],
+  ])('lee %p como %p', (value, expected) => {
+    expect(parseBalanceSort(value)).toBe(expected);
+  });
+});

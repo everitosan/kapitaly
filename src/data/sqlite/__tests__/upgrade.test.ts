@@ -139,3 +139,27 @@ describe('actualización de esquema 0005 → 0006', () => {
     expect(after.n).toBe(before.n);
   });
 });
+
+describe('actualización de esquema 0006 → 0007', () => {
+  it('agrega la tabla de pendientes pospuestos vacía sin tocar las preferencias', () => {
+    const client = new Database(':memory:');
+    const db = drizzle(client);
+    migrate(db, { migrationsFolder: folderUpTo(7) });
+    client.exec("UPDATE reminder_settings SET daily_on = 1 WHERE id = 'default'");
+
+    migrate(db, { migrationsFolder: MIGRATIONS });
+
+    expect(client.prepare('SELECT * FROM pending_snoozes').all()).toEqual([]);
+    expect(client.prepare('SELECT daily_on FROM reminder_settings').get()).toEqual({ daily_on: 1 });
+  });
+});
+
+describe('actualización de esquema 0007 → 0008', () => {
+  it('agrega la tabla de preferencias de interfaz vacía', () => {
+    const client = new Database(':memory:');
+    const db = drizzle(client);
+    migrate(db, { migrationsFolder: folderUpTo(8) });
+    migrate(db, { migrationsFolder: MIGRATIONS });
+    expect(client.prepare('SELECT * FROM ui_preferences').all()).toEqual([]);
+  });
+});

@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, gt, isNull, lte } from 'drizzle-orm';
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core';
 
 import {
@@ -22,6 +22,7 @@ import {
 } from '@/domain/paymentMethod';
 import type { RecurringExpense, RecurringExpenseInput } from '@/domain/recurringExpense';
 import { DEFAULT_REMINDER_SETTINGS, type ReminderSettings } from '@/domain/reminderSettings';
+import { snoozeUntil, type PendingSnooze } from '@/domain/pendingSnooze';
 
 import type { AppDatabase } from '../sqlite/database';
 import {
@@ -31,7 +32,9 @@ import {
   paymentMethods,
   recurringChargeConfirmations,
   recurringExpenses,
+  pendingSnoozes,
   reminderSettings,
+  uiPreferences,
 } from '../sqlite/schema';
 import {
   assertCategoryInput,
@@ -48,9 +51,11 @@ import type {
   ChargeConfirmationRepository,
   OneOffExpenseRepository,
   PaymentMethodRepository,
+  PendingSnoozeRepository,
   RecurringExpenseRepository,
   ReminderSettingsRepository,
   Repositories,
+  UiPreferencesRepository,
   Repository,
   RepositoryDeps,
 } from './types';
@@ -377,6 +382,67 @@ class SqliteReminderSettingsRepository implements ReminderSettingsRepository {
   }
 }
 
+/** Pendientes pospuestos: una fila por clave con la fecha en que vence (ISO UTC, comparable como texto). */
+class SqlitePendingSnoozeRepository implements PendingSnoozeRepository {
+  private readonly emitter = new ChangeEmitter();
+
+  constructor(
+    private readonly db: AppDatabase,
+    private readonly deps: RepositoryDeps,
+  ) {}
+
+  async list(): Promise<PendingSnooze[]> {
+    return this.db
+      .select()
+      .from(pendingSnoozes)
+      .where(gt(pendingSnoozes.until, this.deps.now()))
+      .all();
+  }
+
+  async snooze(key: string): Promise<void> {
+    const until = snoozeUntil(this.deps.now());
+    this.db
+      .insert(pendingSnoozes)
+      .values({ key, until })
+      .onConflictDoUpdate({ target: pendingSnoozes.key, set: { until } })
+      .run();
+    this.emitter.emit();
+  }
+
+  async purgeExpired(): Promise<void> {
+    this.db.delete(pendingSnoozes).where(lte(pendingSnoozes.until, this.deps.now())).run();
+  }
+
+  subscribe(listener: () => void): () => void {
+    return this.emitter.subscribe(listener);
+  }
+}
+
+/** Preferencias de interfaz: una fila por clave. */
+class SqliteUiPreferencesRepository implements UiPreferencesRepository {
+  private readonly emitter = new ChangeEmitter();
+
+  constructor(private readonly db: AppDatabase) {}
+
+  async get(key: string): Promise<string | null> {
+    const row = this.db.select().from(uiPreferences).where(eq(uiPreferences.key, key)).get();
+    return row?.value ?? null;
+  }
+
+  async set(key: string, value: string): Promise<void> {
+    this.db
+      .insert(uiPreferences)
+      .values({ key, value })
+      .onConflictDoUpdate({ target: uiPreferences.key, set: { value } })
+      .run();
+    this.emitter.emit();
+  }
+
+  subscribe(listener: () => void): () => void {
+    return this.emitter.subscribe(listener);
+  }
+}
+
 export function createSqliteRepositories(db: AppDatabase, deps: RepositoryDeps): Repositories {
   const paymentMethodRepo = new SqlitePaymentMethodRepository(
     db,
@@ -476,5 +542,7 @@ export function createSqliteRepositories(db: AppDatabase, deps: RepositoryDeps):
     cardPayments: cardPaymentRepo as CardPaymentRepository,
     chargeConfirmations: confirmationRepo,
     reminderSettings: new SqliteReminderSettingsRepository(db, deps),
+    pendingSnoozes: new SqlitePendingSnoozeRepository(db, deps),
+    uiPreferences: new SqliteUiPreferencesRepository(db),
   };
 }

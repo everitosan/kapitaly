@@ -457,6 +457,74 @@ export function describeRepositoryContracts(name: string, factory: HarnessFactor
     });
   });
 
+  describe(`${name} · preferencias de interfaz`, () => {
+    let h: ContractHarness;
+    beforeEach(() => {
+      h = factory(testDeps());
+    });
+
+    it('sin valor guardado devuelve null', async () => {
+      expect(await h.repos.uiPreferences.get('balance.sort')).toBeNull();
+    });
+
+    it('guarda, reemplaza y avisa a los suscriptores', async () => {
+      const listener = jest.fn();
+      h.repos.uiPreferences.subscribe(listener);
+      await h.repos.uiPreferences.set('balance.sort', 'desc');
+      expect(await h.repos.uiPreferences.get('balance.sort')).toBe('desc');
+      await h.repos.uiPreferences.set('balance.sort', 'asc');
+      expect(await h.repos.uiPreferences.get('balance.sort')).toBe('asc');
+      expect(listener).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe(`${name} · pendientes pospuestos`, () => {
+    const HOUR = 60 * 60 * 1000;
+    let t: number;
+    let h: ContractHarness;
+    beforeEach(() => {
+      t = Date.UTC(2026, 10, 14, 10, 0);
+      h = factory({ ...testDeps(), now: () => new Date(t).toISOString() });
+    });
+
+    it('pospone 6 horas y vence a las 6', async () => {
+      await h.repos.pendingSnoozes.snooze('c|netflix|2026-11-15');
+      expect(await h.repos.pendingSnoozes.list()).toEqual([
+        { key: 'c|netflix|2026-11-15', until: '2026-11-14T16:00:00.000Z' },
+      ]);
+      t += 5 * HOUR + 59 * 60 * 1000;
+      expect(await h.repos.pendingSnoozes.list()).toHaveLength(1);
+      t += 60 * 1000;
+      expect(await h.repos.pendingSnoozes.list()).toEqual([]);
+    });
+
+    it('posponer de nuevo reemplaza el plazo', async () => {
+      await h.repos.pendingSnoozes.snooze('sheet');
+      t += 7 * HOUR;
+      await h.repos.pendingSnoozes.snooze('sheet');
+      expect(await h.repos.pendingSnoozes.list()).toEqual([
+        { key: 'sheet', until: '2026-11-14T23:00:00.000Z' },
+      ]);
+    });
+
+    it('borra los vencidos y conserva los vigentes', async () => {
+      await h.repos.pendingSnoozes.snooze('a');
+      t += 3 * HOUR;
+      await h.repos.pendingSnoozes.snooze('b');
+      t += 4 * HOUR;
+      await h.repos.pendingSnoozes.purgeExpired();
+      t -= 7 * HOUR; // de vuelta a las 10:00: "a" ya no existe, aunque seguiría vigente
+      expect((await h.repos.pendingSnoozes.list()).map((s) => s.key)).toEqual(['b']);
+    });
+
+    it('avisa a los suscriptores al posponer', async () => {
+      const listener = jest.fn();
+      h.repos.pendingSnoozes.subscribe(listener);
+      await h.repos.pendingSnoozes.snooze('a');
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe(`${name} · preferencias de notificaciones`, () => {
     let h: ContractHarness;
     beforeEach(() => {

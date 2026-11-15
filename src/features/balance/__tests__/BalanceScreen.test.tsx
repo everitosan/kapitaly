@@ -251,6 +251,30 @@ describe('8.2 · vista Este mes', () => {
     expect(rowLabels()[3]).toBe('Recarga metro, gasto único, $100.00');
   });
 
+  it('sin orden elegido empieza en "Más antiguo"', async () => {
+    const { repos } = await novemberScenario();
+    await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });
+    await waitFor(() => expect(rowLabels()).toHaveLength(4));
+    expect(screen.getByText('↑ Más antiguo')).toBeOnTheScreen();
+    expect(rowLabels()[0]).toBe('Recarga metro, gasto único, $100.00');
+  });
+
+  it('conserva el orden elegido al volver a abrir la app', async () => {
+    const { repos } = await novemberScenario();
+    const view = await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, {
+      repos,
+    });
+    await waitFor(() => expect(rowLabels()).toHaveLength(4));
+    await fireEvent.press(screen.getByTestId('sort-toggle'));
+    await waitFor(async () => expect(await repos.uiPreferences.get('balance.sort')).toBe('desc'));
+
+    await view.unmount();
+    await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });
+    await waitFor(() => expect(rowLabels()).toHaveLength(4));
+    expect(screen.getByText('↓ Más reciente')).toBeOnTheScreen();
+    expect(rowLabels()[0]).toBe('Internet, por cobrar');
+  });
+
   it('los atajos cambian a Análisis y desplazan hasta la sección', async () => {
     const { repos } = await novemberScenario();
     await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });

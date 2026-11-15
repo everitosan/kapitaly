@@ -3,6 +3,7 @@ import type { ChargeConfirmation, ChargeConfirmationInput } from '@/domain/confi
 import type { CardPayment, CardPaymentInput } from '@/domain/creditCard';
 import type { OneOffExpense, OneOffExpenseInput } from '@/domain/oneOffExpense';
 import type { PaymentMethod, PaymentMethodInput } from '@/domain/paymentMethod';
+import type { PendingSnooze } from '@/domain/pendingSnooze';
 import type { RecurringExpense, RecurringExpenseInput } from '@/domain/recurringExpense';
 import type { ReminderSettings } from '@/domain/reminderSettings';
 
@@ -72,6 +73,26 @@ export interface ReminderSettingsRepository {
   subscribe(listener: () => void): () => void;
 }
 
+/** Pendientes pospuestos. El plazo y "vigente" se calculan con el reloj de `RepositoryDeps`. */
+export interface PendingSnoozeRepository {
+  /** Solo los vigentes ahora. */
+  list(): Promise<PendingSnooze[]>;
+  /** Pospone `key` 6 horas desde ahora (reemplaza un plazo anterior). */
+  snooze(key: string): Promise<void>;
+  /** Borra los vencidos. */
+  purgeExpired(): Promise<void>;
+  subscribe(listener: () => void): () => void;
+}
+
+/** Preferencias de interfaz (clave-valor). */
+export interface UiPreferencesRepository {
+  /** El valor guardado, o `null` si no hay. */
+  get(key: string): Promise<string | null>;
+  /** Guarda o reemplaza. */
+  set(key: string, value: string): Promise<void>;
+  subscribe(listener: () => void): () => void;
+}
+
 export interface Repositories {
   paymentMethods: PaymentMethodRepository;
   categories: CategoryRepository;
@@ -80,6 +101,8 @@ export interface Repositories {
   cardPayments: CardPaymentRepository;
   chargeConfirmations: ChargeConfirmationRepository;
   reminderSettings: ReminderSettingsRepository;
+  pendingSnoozes: PendingSnoozeRepository;
+  uiPreferences: UiPreferencesRepository;
 }
 
 /** Dependencias inyectables (reloj e ids), para pruebas deterministas. */

@@ -20,6 +20,7 @@ import {
 } from '@/domain/paymentMethod';
 import type { RecurringExpense, RecurringExpenseInput } from '@/domain/recurringExpense';
 import { DEFAULT_REMINDER_SETTINGS, type ReminderSettings } from '@/domain/reminderSettings';
+import { isActiveSnooze, snoozeUntil, type PendingSnooze } from '@/domain/pendingSnooze';
 
 import {
   assertCategoryInput,
@@ -36,9 +37,11 @@ import type {
   ChargeConfirmationRepository,
   OneOffExpenseRepository,
   PaymentMethodRepository,
+  PendingSnoozeRepository,
   RecurringExpenseRepository,
   ReminderSettingsRepository,
   Repositories,
+  UiPreferencesRepository,
   Repository,
   RepositoryDeps,
 } from './types';
@@ -262,6 +265,53 @@ class InMemoryReminderSettingsRepository implements ReminderSettingsRepository {
   }
 }
 
+class InMemoryPendingSnoozeRepository implements PendingSnoozeRepository {
+  private readonly emitter = new ChangeEmitter();
+  private readonly rows = new Map<string, string>();
+
+  constructor(private readonly deps: RepositoryDeps) {}
+
+  async list(): Promise<PendingSnooze[]> {
+    const now = this.deps.now();
+    return [...this.rows]
+      .map(([key, until]) => ({ key, until }))
+      .filter((s) => isActiveSnooze(s, now));
+  }
+
+  async snooze(key: string): Promise<void> {
+    this.rows.set(key, snoozeUntil(this.deps.now()));
+    this.emitter.emit();
+  }
+
+  async purgeExpired(): Promise<void> {
+    const now = this.deps.now();
+    for (const [key, until] of this.rows)
+      if (!isActiveSnooze({ until }, now)) this.rows.delete(key);
+  }
+
+  subscribe(listener: () => void): () => void {
+    return this.emitter.subscribe(listener);
+  }
+}
+
+class InMemoryUiPreferencesRepository implements UiPreferencesRepository {
+  private readonly emitter = new ChangeEmitter();
+  private readonly values = new Map<string, string>();
+
+  async get(key: string): Promise<string | null> {
+    return this.values.get(key) ?? null;
+  }
+
+  async set(key: string, value: string): Promise<void> {
+    this.values.set(key, value);
+    this.emitter.emit();
+  }
+
+  subscribe(listener: () => void): () => void {
+    return this.emitter.subscribe(listener);
+  }
+}
+
 export function createInMemoryRepositories(deps: RepositoryDeps): InMemoryRepositories {
   const recurringExpenses = new InMemoryRepository<RecurringExpense, RecurringExpenseInput>(
     'Gasto recurrente',
@@ -292,6 +342,8 @@ export function createInMemoryRepositories(deps: RepositoryDeps): InMemoryReposi
     cardPayments: cardPayments as CardPaymentRepository,
     chargeConfirmations,
     reminderSettings: new InMemoryReminderSettingsRepository(),
+    pendingSnoozes: new InMemoryPendingSnoozeRepository(deps),
+    uiPreferences: new InMemoryUiPreferencesRepository(),
     raw: {
       paymentMethods: paymentMethods.rows,
       categories: categories.rows,

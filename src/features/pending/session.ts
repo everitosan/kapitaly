@@ -1,19 +1,18 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * Estado de la sesión (en memoria, se pierde al cerrar la app): los pendientes que el usuario pospuso
- * con "Aún no" y si ya cerró la hoja automática. Así la pregunta vuelve en la siguiente apertura.
+ * Estado de esta apertura de la app (en memoria): si la hoja de Pendientes ya se abrió sola. Lo
+ * pospuesto ("Posponer" y "Cerrar") vive en SQLite con su plazo de 6 horas (ver snoozes.ts).
  *
  * Es un store suscribible: cada cambio crea un snapshot nuevo, para que React (y el React Compiler,
  * que memoiza por identidad) vuelva a calcular lo que depende de él. No leer estado mutable de módulo
  * durante el render: el compilador no lo ve cambiar.
  */
 export interface PendingSessionSnapshot {
-  snoozed: ReadonlySet<string>;
   autoDismissed: boolean;
 }
 
-const INITIAL: PendingSessionSnapshot = { snoozed: new Set(), autoDismissed: false };
+const INITIAL: PendingSessionSnapshot = { autoDismissed: false };
 let snapshot = INITIAL;
 const listeners = new Set<() => void>();
 
@@ -34,22 +33,17 @@ const getSnapshot = () => snapshot;
 export const pendingSession = {
   subscribe,
   getSnapshot,
-  isSnoozed: (key: string) => snapshot.snoozed.has(key),
-  snooze: (key: string) => {
-    if (snapshot.snoozed.has(key)) return;
-    update({ ...snapshot, snoozed: new Set(snapshot.snoozed).add(key) });
-  },
   get autoDismissed() {
     return snapshot.autoDismissed;
   },
   dismissAuto: () => {
-    if (!snapshot.autoDismissed) update({ ...snapshot, autoDismissed: true });
+    if (!snapshot.autoDismissed) update({ autoDismissed: true });
   },
   /** Solo para pruebas: simula una nueva apertura de la app. */
   reset: () => update(INITIAL),
 };
 
-/** Lo pospuesto y si ya se cerró la hoja automática, como valor que React puede seguir. */
+/** Si la hoja ya se abrió sola en esta apertura, como valor que React puede seguir. */
 export function usePendingSession(): PendingSessionSnapshot {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }

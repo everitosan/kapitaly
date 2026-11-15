@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { useState } from 'react';
-import { Pressable, Text } from 'react-native';
+import { AppState, Pressable, Text } from 'react-native';
 
 import { sampleMethod, sampleRecurring, testDeps } from '@/data/repositories/contract';
 import {
@@ -37,7 +37,37 @@ async function withNetflix() {
   return { repos, bbva, netflix };
 }
 
-beforeEach(() => pendingSession.reset());
+const HOUR = 60 * 60 * 1000;
+
+/** Repositorios con un reloj que solo avanza a mano (para los plazos de 6 horas). */
+function withClock() {
+  // Mismo inicio que testDeps (11/11/2026): los gastos quedan registrados antes de sus cobros.
+  let t = Date.UTC(2026, 10, 11, 12, 0);
+  const repos = createInMemoryRepositories({ ...testDeps(), now: () => new Date(t).toISOString() });
+  return { repos, advance: (hours: number) => (t += hours * HOUR) };
+}
+
+async function addNetflix(repos: InMemoryRepositories) {
+  const bbva = await repos.paymentMethods.create(
+    sampleMethod({ openingBalanceCents: 0, openingBalanceDate: '2026-11-01' }),
+  );
+  return repos.recurringExpenses.create(sampleRecurring(bbva.id, { anchorDate: '2026-01-15' }));
+}
+
+/** Simula volver a la app desde segundo plano. */
+function goToForeground() {
+  const calls = (AppState.addEventListener as jest.Mock).mock.calls as [
+    string,
+    (s: string) => void,
+  ][];
+  calls.filter(([type]) => type === 'change').forEach(([, handler]) => handler('active'));
+}
+
+beforeEach(() => {
+  pendingSession.reset();
+  jest.spyOn(AppState, 'addEventListener');
+});
+afterEach(() => jest.restoreAllMocks());
 
 describe('10.4 · cobros por confirmar', () => {
   it('pregunta al abrir la app y confirma con otro monto', async () => {
@@ -97,16 +127,75 @@ describe('10.4 · cobros por confirmar', () => {
     );
   });
 
-  it('"Aún no" no guarda nada y vuelve a preguntar en la siguiente apertura', async () => {
-    const { repos, netflix } = await withNetflix();
+  it('"Posponer" no guarda nada, avisa y lo calla mientras dure el plazo', async () => {
+    const { repos, advance } = withClock();
+    const netflix = await addNetflix(repos);
     const view = await renderBalance(repos, '2026-11-16');
     await fireEvent.press(
-      within(await screen.findByTestId(`pending-charge-${netflix.id}`)).getByText('Aún no'),
+      within(await screen.findByTestId(`pending-charge-${netflix.id}`)).getByText('Posponer'),
+    );
+    await waitFor(() =>
+      expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen(),
+    );
+    expect(screen.getByTestId('snooze-notice')).toHaveTextContent(
+      'Volveré a avisarte dentro de 6 hrs',
+    );
+    expect(await repos.chargeConfirmations.list()).toEqual([]);
+
+    // Abrir la app dentro del plazo: no aparece ni cuenta.
+    await view.unmount();
+    pendingSession.reset();
+    advance(3);
+    const again = await renderBalance(repos, '2026-11-16');
+    expect(await screen.findByText('Cargos de noviembre')).toBeOnTheScreen();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Pendientes, ninguno' })).toBeOnTheScreen(),
     );
     expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen();
-    expect(await repos.chargeConfirmations.list()).toEqual([]);
+
+    // Pasado el plazo: vuelve a preguntar, con la opción de posponer.
+    await again.unmount();
+    pendingSession.reset();
+    advance(3.1);
+    await renderBalance(repos, '2026-11-16');
+    const card = await screen.findByTestId(`pending-charge-${netflix.id}`);
+    expect(within(card).getByText('Posponer')).toBeOnTheScreen();
+  });
+
+  it('si el plazo vence con la app abierta, vuelve a contar al regresar a ella', async () => {
+    const { repos, advance } = withClock();
+    const netflix = await addNetflix(repos);
+    await renderBalance(repos, '2026-11-16');
+    await fireEvent.press(
+      within(await screen.findByTestId(`pending-charge-${netflix.id}`)).getByText('Posponer'),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Pendientes, ninguno' })).toBeOnTheScreen(),
+    );
+    advance(6.5);
+    goToForeground();
+    expect(await screen.findByRole('button', { name: 'Pendientes, 1' })).toBeOnTheScreen();
+  });
+
+  it('"Cerrar" evita que la hoja se abra sola durante 6 horas', async () => {
+    const { repos, advance } = withClock();
+    const netflix = await addNetflix(repos);
+    const view = await renderBalance(repos, '2026-11-16');
+    await screen.findByTestId(`pending-charge-${netflix.id}`);
+    await fireEvent.press(screen.getByText('Cerrar'));
+
+    // Volver a abrir la app 2 horas después: la hoja no salta, la campana sigue contando.
     await view.unmount();
-    pendingSession.reset(); // nueva apertura de la app
+    pendingSession.reset();
+    advance(2);
+    const again = await renderBalance(repos, '2026-11-16');
+    expect(await screen.findByRole('button', { name: 'Pendientes, 1' })).toBeOnTheScreen();
+    expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen();
+
+    // Pasadas 6 horas de cerrarla: vuelve a abrirse sola.
+    await again.unmount();
+    pendingSession.reset();
+    advance(4.5);
     await renderBalance(repos, '2026-11-16');
     expect(await screen.findByTestId(`pending-charge-${netflix.id}`)).toBeOnTheScreen();
   });
@@ -122,8 +211,8 @@ describe('10.4 · cobros por confirmar', () => {
   });
 });
 
-describe('posponer durante la sesión', () => {
-  it('"Aún no" en uno de dos pendientes lo quita de la hoja y baja el conteo', async () => {
+describe('posponer 6 horas', () => {
+  it('"Posponer" en uno de dos pendientes lo quita de la hoja y baja el conteo', async () => {
     const repos = createInMemoryRepositories(testDeps());
     const bbva = await repos.paymentMethods.create(
       sampleMethod({
@@ -140,10 +229,13 @@ describe('posponer durante la sesión', () => {
     expect(screen.getByTestId(`pending-payment-${bbva.id}`)).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Pendientes, 2' })).toBeOnTheScreen();
 
-    await fireEvent.press(within(charge).getByText('Aún no'));
+    await fireEvent.press(within(charge).getByText('Posponer'));
 
-    expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen();
+    await waitFor(() =>
+      expect(screen.queryByTestId(`pending-charge-${netflix.id}`)).not.toBeOnTheScreen(),
+    );
     expect(screen.getByTestId(`pending-payment-${bbva.id}`)).toBeOnTheScreen();
+    expect(screen.getByTestId('snooze-notice')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Pendientes, 1' })).toBeOnTheScreen();
   });
 
@@ -151,8 +243,8 @@ describe('posponer durante la sesión', () => {
     const { repos, netflix } = await withNetflix();
     await renderBalance(repos, '2026-11-16');
     const charge = await screen.findByTestId(`pending-charge-${netflix.id}`);
-    await fireEvent.press(within(charge).getByText('Aún no'));
-    expect(screen.queryByText('Pendientes')).not.toBeOnTheScreen();
+    await fireEvent.press(within(charge).getByText('Posponer'));
+    await waitFor(() => expect(screen.queryByText('Pendientes')).not.toBeOnTheScreen());
     expect(screen.getByRole('button', { name: 'Pendientes, ninguno' })).toBeDisabled();
     // Cuenta como cerrada: si en esta sesión aparece otro pendiente, no se abre sola.
     expect(pendingSession.autoDismissed).toBe(true);
@@ -208,19 +300,19 @@ describe('orden de las acciones', () => {
       .getAllByRole('button')
       .map((b) => b.props.accessibilityLabel ?? within(b).queryByText(/./)?.props.children);
 
-  it('cobro: "Aún no" y "No se cobró" en una fila, "Sí, se cobró" debajo', async () => {
+  it('cobro: "Posponer" y "No se cobró" en una fila, "Sí, se cobró" debajo', async () => {
     const { repos, netflix } = await withNetflix();
     await renderBalance(repos, '2026-11-16');
     const card = await screen.findByTestId(`pending-charge-${netflix.id}`);
     expect(labels(screen.getByTestId(`pending-charge-actions-${netflix.id}`))).toEqual([
-      'Aún no',
+      'Posponer',
       'No se cobró',
     ]);
     const all = labels(card);
-    expect(all.slice(-3)).toEqual(['Aún no', 'No se cobró', 'Sí, se cobró']);
+    expect(all.slice(-3)).toEqual(['Posponer', 'No se cobró', 'Sí, se cobró']);
   });
 
-  it('pago: "Aún no" a la izquierda y "Sí, pagué" a la derecha', async () => {
+  it('pago: "Posponer" a la izquierda y "Sí, pagué" a la derecha', async () => {
     const repos = createInMemoryRepositories(testDeps());
     const bbva = await repos.paymentMethods.create(
       sampleMethod({
@@ -232,7 +324,7 @@ describe('orden de las acciones', () => {
     await renderBalance(repos, '2026-12-05');
     await screen.findByTestId(`pending-payment-${bbva.id}`);
     expect(labels(screen.getByTestId(`pending-payment-actions-${bbva.id}`))).toEqual([
-      'Aún no',
+      'Posponer',
       'Sí, pagué',
     ]);
   });
@@ -285,13 +377,15 @@ describe('10.4 · aviso en la fecha de pago', () => {
     expect(screen.queryByTestId(`pending-payment-${bbva.id}`)).not.toBeOnTheScreen();
   });
 
-  it('"Aún no" pospone el aviso del pago', async () => {
+  it('"Posponer" pospone el aviso del pago', async () => {
     const { repos, bbva } = await withCard(10000);
     await renderBalance(repos, '2026-12-05');
     await fireEvent.press(
-      within(await screen.findByTestId(`pending-payment-${bbva.id}`)).getByText('Aún no'),
+      within(await screen.findByTestId(`pending-payment-${bbva.id}`)).getByText('Posponer'),
     );
-    expect(screen.queryByTestId(`pending-payment-${bbva.id}`)).not.toBeOnTheScreen();
+    await waitFor(() =>
+      expect(screen.queryByTestId(`pending-payment-${bbva.id}`)).not.toBeOnTheScreen(),
+    );
     expect(await repos.cardPayments.list()).toEqual([]);
   });
 });

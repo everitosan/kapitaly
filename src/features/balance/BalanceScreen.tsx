@@ -6,9 +6,9 @@ import {
   buildThisMonthView,
   sortCharges,
   type MonthCharge,
-  type SortDirection,
 } from '@/domain/balance';
 import { resolveCategory } from '@/domain/category';
+import { SHEET_SNOOZE_KEY } from '@/domain/pendingSnooze';
 import { civilDateFromLocal, parseCivilDate, shiftMonth, type CivilDate } from '@/domain/date';
 import { methodLabel } from '@/domain/paymentMethod';
 import { frequencyLabel, monthsPerInterval } from '@/domain/recurringExpense';
@@ -35,6 +35,7 @@ import { useTheme } from '@/ui/ThemeProvider';
 
 import { PendingSheet } from '../pending/PendingSheet';
 import { pendingSession, usePendingSession } from '../pending/session';
+import { SnoozeNotice } from '../pending/SnoozeNotice';
 import { registeredOnLocal, usePending } from '../pending/usePending';
 import {
   useCategories,
@@ -42,8 +43,12 @@ import {
   useOneOffExpenses,
   usePaymentMethods,
   useRecurringExpenses,
+  useRepositories,
 } from '../repositories';
+import { UpdateBanner } from '../updates/UpdateBanner';
+import { useAppUpdate } from '../updates/useAppUpdate';
 import { AnalysisListSheet } from './AnalysisListSheet';
+import { useBalanceSort } from './useBalanceSort';
 
 export type BalanceView = 'this' | 'avg';
 type Section = 'category' | 'method';
@@ -70,6 +75,8 @@ export interface BalanceScreenProps {
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+/** Cuánto se muestra el aviso tras posponer. */
+const NOTICE_MS = 3000;
 const METHOD_NOTE = 'Estimado con prorrateo, no es lo cobrado. Lo real del mes está en "Este mes".';
 
 export function BalanceScreen({
@@ -92,13 +99,15 @@ export function BalanceScreen({
   const [{ year, month }, setMonth] = useState({ year: start.year, month: start.month });
   const [view, setView] = useState<BalanceView>('this');
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<SortDirection>('asc');
+  const { sort, loaded: sortLoaded, toggle: toggleSort } = useBalanceSort();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [list, setList] = useState<AverageListKind | null>(null);
   const editAfterClose = useRef<{ kind: 'recurring' | 'oneOff'; id: string } | null>(null);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const [scrollTarget, setScrollTarget] = useState<Section | null>(null);
 
+  const repos = useRepositories();
+  const appUpdate = useAppUpdate();
   const pending = usePending(today);
   const session = usePendingSession();
   const [forceSheet, setForceSheet] = useState(false);
@@ -107,14 +116,24 @@ export function BalanceScreen({
     setSeenPendingKey(openPendingKey);
     if (openPendingKey) setForceSheet(true);
   }
-  // La hoja se abre sola cuando el balance queda visible y hay pendientes; al cerrarla no vuelve
-  // sola en esta sesión.
+  // La hoja se abre sola una vez por apertura cuando el balance queda visible y hay pendientes sin
+  // posponer, salvo que se haya cerrado con "Cerrar" en las últimas 6 horas.
   const sheetVisible =
-    pending.loaded && pending.count > 0 && (forceSheet || (focused && !session.autoDismissed));
+    pending.loaded &&
+    pending.count > 0 &&
+    (forceSheet || (focused && !session.autoDismissed && !pending.sheetDismissed));
   const closeSheet = () => {
     pendingSession.dismissAuto();
     setForceSheet(false);
+    repos.pendingSnoozes.snooze(SHEET_SNOOZE_KEY);
   };
+  // Aviso "Volveré a avisarte…" tras posponer, unos segundos.
+  const [notice, setNotice] = useState(0);
+  useEffect(() => {
+    if (notice === 0) return;
+    const t = setTimeout(() => setNotice(0), NOTICE_MS);
+    return () => clearTimeout(t);
+  }, [notice]);
   // Si la hoja se cierra porque ya no quedan pendientes (todo se respondió o se pospuso), cuenta
   // como cerrada: no vuelve a abrirse sola ni queda forzada si después aparece otro pendiente.
   const wasVisible = useRef(sheetVisible);
@@ -231,7 +250,7 @@ export function BalanceScreen({
           onByCategory={() => jumpTo('category')}
           onByMethod={() => jumpTo('method')}
         />
-        {v.count > 0 ? (
+        {!sortLoaded ? null : v.count > 0 ? (
           <>
             <SearchField
               value={query}
@@ -247,7 +266,7 @@ export function BalanceScreen({
                 testID="sort-toggle"
                 accessibilityRole="button"
                 accessibilityLabel={`Orden: ${sort === 'asc' ? 'más antiguo primero' : 'más reciente primero'}`}
-                onPress={() => setSort((s) => (s === 'asc' ? 'desc' : 'asc'))}
+                onPress={toggleSort}
                 hitSlop={8}
                 style={[styles.sort, { backgroundColor: theme.colors.card }]}
               >
@@ -346,6 +365,15 @@ export function BalanceScreen({
         pendingCount={pending.loaded ? pending.count : 0}
         onOpenPending={() => setForceSheet(true)}
       />
+      {notice > 0 && !sheetVisible ? <SnoozeNotice /> : null}
+      {appUpdate.banner ? (
+        <UpdateBanner
+          banner={appUpdate.banner}
+          onUpdate={appUpdate.update}
+          onRestart={appUpdate.restart}
+          onDismiss={appUpdate.dismiss}
+        />
+      ) : null}
       <MonthSwitcher year={year} month={month} onPrev={() => go(-1)} onNext={() => go(1)} />
       <View style={styles.seg}>
         <SegmentedControl
@@ -373,6 +401,8 @@ export function BalanceScreen({
             methods={pending.methods}
             today={today}
             onClose={closeSheet}
+            onSnoozed={() => setNotice((n) => n + 1)}
+            notice={notice > 0}
           />
         ) : null}
       </Modal>

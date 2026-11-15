@@ -116,6 +116,25 @@ export const reminderSettings = sqliteTable('reminder_settings', {
   updatedAt: text('updated_at').notNull(),
 });
 
+/**
+ * Pendientes pospuestos (migración 0007): "Posponer" en una tarjeta o "Cerrar" la hoja (clave
+ * `sheet`), con la fecha en que vence el plazo. Configuración del dispositivo, no sincronizable.
+ */
+export const pendingSnoozes = sqliteTable('pending_snoozes', {
+  key: text('key').primaryKey(),
+  /** ISO 8601 UTC. */
+  until: text('until').notNull(),
+});
+
+/**
+ * Preferencias de interfaz (migración 0008), clave-valor: p. ej. `balance.sort`. Configuración del
+ * dispositivo, no sincronizable.
+ */
+export const uiPreferences = sqliteTable('ui_preferences', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+});
+
 export const schema = {
   paymentMethods,
   categories,
@@ -124,4 +143,6 @@ export const schema = {
   cardPayments,
   recurringChargeConfirmations,
   reminderSettings,
+  pendingSnoozes,
+  uiPreferences,
 };

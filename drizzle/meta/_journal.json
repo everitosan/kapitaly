@@ -50,6 +50,20 @@
       "when": 1794684971204,
       "tag": "0006_reminder_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794707142911,
+      "tag": "0007_pending_snoozes",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794708386333,
+      "tag": "0008_ui_preferences",
+      "breakpoints": true
     }
   ]
 }
