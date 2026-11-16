@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estado de cobros en el detalle</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --page: #E6E0D3;
+    --r-xl: 30px; --r-lg: 22px; --r-md: 16px;
+  }
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28; --page: #0A0A09;
+  }
+  body { background: var(--page); color: var(--ink); }
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 120px; }
+
+  .month { display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 4px 22px; }
+  .month .m { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .month .y { font-size: 15px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+  .arrows { display: flex; gap: 8px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-bottom: 18px; }
+  .seg span { height: 42px; border-radius: 999px; font-size: 15px; font-weight: 700; color: var(--muted); display: grid; place-items: center; }
+  .seg span.on { background: linear-gradient(135deg, #2a2a2a, #141414); color: #F4F1EA; }
+  html[data-theme="dark"] .seg span.on { background: linear-gradient(135deg, #FFFFFF, #E4DFD3); color: #141414; }
+
+  .card { background: var(--card); border-radius: var(--r-lg); padding: 18px; margin-bottom: 22px; }
+  .card-h { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .card-h small { font-size: 12px; letter-spacing: 0; text-transform: none; }
+  .card-d { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+  .leg { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: 12px; width: 100%; text-align: left; font-size: 14.5px; font-weight: 700; }
+  .leg.on { background: var(--bg); }
+  .leg i { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+  .leg .n { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .leg .p { color: var(--muted); font-size: 12.5px; width: 38px; text-align: right; }
+
+  /* Detalle */
+  .det { margin: 2px 0 8px 11px; padding: 2px 6px 2px 14px; border-left: 2px solid var(--c); }
+  .det-r { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; font-size: 13.5px; font-weight: 600; }
+  .det-r + .det-r { border-top: 1px solid var(--line); }
+  .det-r .d { width: 78px; flex: none; color: var(--muted); }
+  .det-r .c { flex: 1; min-width: 0; }
+  .det-r .c .t { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .det-r .a { font-weight: 700; }
+  .det-r.faded > * { opacity: .42; }
+
+  /* Marcas: mismo lenguaje que "Tus gastos" */
+  .mk { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .06em; padding: 2px 6px; border-radius: 999px; line-height: 1.3; white-space: nowrap; }
+  .mk.solid { background: var(--ink); color: var(--bg); }
+  .mk.dash { border: 1px dashed var(--ink); color: var(--ink); }
+  .below .mk { margin-top: 4px; }
+  .inline .c { display: flex; align-items: baseline; gap: 6px; }
+  .inline .c .t { flex: 0 1 auto; min-width: 0; }
+  .inline .mk { flex: none; }
+
+  .theme-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-top: 22px; }
+  .theme-toggle button { height: 40px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .theme-toggle button.on { background: var(--ink); color: var(--bg); }
+  .notes { max-width: 860px; margin: 0 auto 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 12px; }
+  .note { background: var(--card); border-radius: 20px; padding: 16px 18px; font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.45; }
+  .note b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">A-1 Duotono · Análisis</div>
+    <h1 class="p-title">Estado de cobros en el detalle</h1>
+    <p class="p-desc">El detalle por categoría y por método marca cada gasto con el mismo lenguaje de "Tus gastos": lo pendiente se nota sin cambiar montos, suma ni orden. Hoy es 21 de noviembre de 2026. Compara la marca debajo del concepto contra en línea.</p>
+    <div class="theme-toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+  </header>
+
+  <div class="notes">
+    <div class="note"><b>Sin marca</b>Únicos y mensuales cobrados (confirmados o anteriores al registro). Se ven como hoy.</div>
+    <div class="note"><b>Por confirmar</b>Mensual cuya fecha ya pasó sin confirmar. Marca sólida, sin ponerse tenue: hay que atenderlo.</div>
+    <div class="note"><b>Por cobrar · Prorrateo</b>Tenues, con marca punteada. Prorrateo es la parte mensual de un cobro de intervalo mayor, aunque caiga en el mes.</div>
+    <div class="note"><b>No se cobró</b>Tenue y <i>sin tachar</i>: Análisis sigue sumando el monto de la regla, así que la fila sí cuenta en la cifra.</div>
+  </div>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="pA"></div></div><div class="ph-cap">A · Marca debajo del concepto</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="pB"></div></div><div class="ph-cap">B · Marca en línea</div></div>
+  </div>
+</div>
+<script>
+(() => {
+  const SB = '<div class="sb"><span>9:41</span><span class="sb-island"></span><span></span></div>';
+  const fmt = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const MARK = {
+    pending: ['POR CONFIRMAR', 'solid', false],
+    future: ['POR COBRAR', 'dash', true],
+    skipped: ['NO SE COBRÓ', 'dash', true],
+    prorated: ['PRORRATEO', 'dash', true],
+  };
+  const HOGAR = [
+    ['3 nov', 'Focos', 8500, 'none'],
+    ['10 nov', 'Agua', 32000, 'none'],
+    ['18 nov', 'Luz', 64000, 'pending'],
+    ['20 nov', 'Renta', 150000, 'skipped'],
+    ['28 nov', 'Internet', 45000, 'future'],
+    ['15 mar 2027', 'Seguro de hogar', 25000, 'prorated'],
+  ];
+  const CATS = [
+    { n: 'Hogar', c: '#E8892B', v: HOGAR.reduce((s, i) => s + i[2], 0), items: HOGAR },
+    { n: 'Transporte', c: '#2B6BE8', v: 60000 },
+    { n: 'Entretenimiento', c: '#C23BD9', v: 21900 },
+  ];
+  const total = CATS.reduce((s, x) => s + x.v, 0);
+
+  const detail = (x, mode) => `<div class="det ${mode}" style="--c:${x.c}">${x.items.map(([d, c, a, st]) => {
+    const m = MARK[st];
+    const mk = m ? `<span class="mk ${m[1]}">${m[0]}</span>` : '';
+    return `<div class="det-r ${m && m[2] ? 'faded' : ''}"><span class="d num">${d}</span><span class="c"><span class="t">${c}</span>${mk}</span><span class="a num">${fmt(a)}</span></div>`;
+  }).join('')}</div>`;
+
+  const draw = (el, mode) => {
+    el.innerHTML = `${SB}<div data-scroll><div class="content">
+      <div class="month"><div><div class="m">Noviembre</div><div class="y">2026</div></div><div class="arrows"><span class="round">‹</span><span class="round">›</span></div></div>
+      <div class="seg"><span>Tus gastos</span><span class="on">Análisis</span></div>
+      <div class="card"><div class="card-h"><span>Por categoría</span><small>al mes</small></div>
+        <div class="card-d">Estimado con prorrateo, no es lo cobrado. Lo real del mes está en "Tus gastos".</div>
+        ${CATS.map((x, i) => `<div class="leg ${i === 0 ? 'on' : ''}"><i style="background:${x.c}"></i><span class="n">${x.n}</span><span class="num">${fmt(x.v)}</span><span class="p">${Math.round((x.v / total) * 100)}%</span></div>${i === 0 ? detail(x, mode) : ''}`).join('')}
+      </div></div></div><div class="home-ind"></div>`;
+  };
+  draw(document.getElementById('pA'), 'below');
+  draw(document.getElementById('pB'), 'inline');
+
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+})();
+</script>
+</body>
+</html>
