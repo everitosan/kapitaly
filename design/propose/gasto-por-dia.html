@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gasto por día</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --page: #E6E0D3;
+    --sw-off: #D8D2C5; --overlay: rgba(255,255,255,0.55); --rec: #CBC4B6;
+    --r-xl: 30px; --r-lg: 22px; --r-md: 16px;
+    /* Degradados que ya existen en la app (theme.ts) */
+    --lime-a: #E6F87C; --lime-b: #9EE36A;
+    --mint-a: #BFF4DF; --mint-b: #6FD7B5;
+    --cobalt-a: #2B4BF2; --cobalt-b: #7B3CF0;
+  }
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28; --page: #0A0A09;
+    --sw-off: #3A3833; --overlay: rgba(255,255,255,0.45); --rec: #57534B;
+    --lime-a: #D9F06A; --lime-b: #86D457;
+    --mint-a: #A9EDD3; --mint-b: #57C7A2;
+    --cobalt-a: #3354FF; --cobalt-b: #8344F5;
+  }
+  body { background: var(--page); color: var(--ink); }
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 120px; }
+
+  .month { display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 4px 22px; }
+  .month .m { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .month .y { font-size: 15px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+  .arrows { display: flex; gap: 8px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-bottom: 18px; }
+  .seg span { height: 42px; border-radius: 999px; font-size: 15px; font-weight: 700; color: var(--muted); display: grid; place-items: center; }
+  .seg span.on { background: linear-gradient(135deg, #2a2a2a, #141414); color: #F4F1EA; }
+  html[data-theme="dark"] .seg span.on { background: linear-gradient(135deg, #FFFFFF, #E4DFD3); color: #141414; }
+
+  .total { border-radius: var(--r-xl); padding: 20px; margin-bottom: 14px; background: linear-gradient(135deg, #FFD45C, #FF9A3C); color: #141414; }
+  .total small { font-size: 14px; font-weight: 600; opacity: .85; }
+  .total b { display: block; font-size: 34px; font-weight: 800; letter-spacing: -.03em; margin-top: 4px; }
+  .card { background: var(--card); border-radius: var(--r-lg); padding: 18px; margin-bottom: 14px; }
+  .card-h { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .card-h small { font-size: 12px; letter-spacing: 0; text-transform: none; }
+  .stub { height: 60px; display: grid; place-items: center; color: var(--muted); font-weight: 700; font-size: 13px; }
+
+  /* Tarjeta del gasto diario: o bloque duotono (A, B) o tarjeta blanca (C) */
+  .daily { border-radius: var(--r-xl); padding: 18px; margin-bottom: 14px; position: relative; overflow: hidden; }
+  .daily.block { color: #141414; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+  .daily.block.lime { background: linear-gradient(135deg, var(--lime-a), var(--lime-b)); }
+  .daily.block.mint { background: linear-gradient(135deg, var(--mint-a), var(--mint-b)); }
+  .daily.plain { background: var(--card); border-radius: var(--r-lg); }
+  .daily .lbl { font-size: 14px; font-weight: 700; opacity: .85; }
+  .daily.plain .lbl { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); opacity: 1; }
+  .daily .note { font-size: 12.5px; font-weight: 600; opacity: .7; margin-top: 2px; }
+  .daily.plain .note { color: var(--muted); opacity: 1; }
+  .daily .big { font-size: 40px; font-weight: 800; letter-spacing: -.035em; margin-top: 8px; line-height: 1.05; }
+  .daily .facts { font-size: 13.5px; font-weight: 700; margin: 4px 0 12px; opacity: .8; }
+  .daily.plain .facts { color: var(--muted); opacity: 1; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 12px; }
+  .stat { background: var(--bg); border-radius: 14px; padding: 10px 10px 9px; }
+  .stat b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+  .stat small { display: block; font-size: 11.5px; font-weight: 700; color: var(--muted); margin-top: 3px; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; }
+  .head small { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 6px 0 12px; border-radius: 999px; background: var(--overlay); font-size: 13px; font-weight: 700; cursor: pointer; user-select: none; }
+  .daily.plain .pill { background: var(--bg); }
+  .pill i { width: 34px; height: 20px; border-radius: 999px; background: rgba(20,20,20,.18); position: relative; flex: none; }
+  .daily.plain .pill i { background: var(--sw-off); }
+  .pill i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: left .15s; }
+  .pill.on i { background: #141414; }
+  .daily.plain .pill.on i { background: linear-gradient(135deg, var(--cobalt-a), var(--cobalt-b)); }
+  .pill.on i::after { left: 17px; }
+  .legend { display: flex; gap: 14px; font-size: 12px; font-weight: 700; margin: 0 0 6px; opacity: .8; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend b { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .chart { position: relative; height: 150px; margin: 0 -2px; touch-action: none; cursor: ew-resize; user-select: none; }
+  .hint { font-size: 11.5px; font-weight: 700; opacity: .6; margin: 2px 0 0; text-align: center; }
+  .daily.plain .hint { color: var(--muted); opacity: 1; }
+  .step { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; font-weight: 800; background: var(--overlay); cursor: pointer; flex: none; }
+  .daily.plain .step { background: var(--bg); }
+  .step[disabled] { opacity: .3; pointer-events: none; }
+  .day-h .mid { flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 8px; }
+  .day-h { align-items: center; }
+  .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .tip { position: absolute; transform: translate(-50%, -100%); background: #141414; color: #F4F1EA; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 999px; white-space: nowrap; pointer-events: none; }
+  .daily.plain .tip { background: var(--ink); color: var(--bg); }
+  .day-list { margin-top: 12px; padding: 10px 12px; border-radius: 16px; background: var(--overlay); }
+  .daily.plain .day-list { background: transparent; padding: 10px 0 0; border-top: 1px solid var(--line); border-radius: 0; }
+  .day-h { display: flex; justify-content: space-between; font-size: 14.5px; font-weight: 800; margin-bottom: 2px; }
+  .day-r { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13.5px; font-weight: 600; }
+  .day-r + .day-r { border-top: 1px solid rgba(20,20,20,.12); }
+  .daily.plain .day-r + .day-r { border-top-color: var(--line); }
+  .day-r .c { display: flex; align-items: center; gap: 6px; }
+  .day-r .a { font-weight: 700; }
+  .day-r.up > * { opacity: .55; }
+  .mk { font-size: 9.5px; font-weight: 800; letter-spacing: .06em; padding: 2px 6px; border-radius: 999px; border: 1px solid currentColor; }
+  .mk.dash { border-style: dashed; }
+  .day-empty { font-size: 13.5px; font-weight: 600; opacity: .7; padding: 4px 0; }
+
+  .theme-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-top: 22px; }
+  .theme-toggle button { height: 40px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .theme-toggle button.on { background: var(--ink); color: var(--bg); }
+  .notes { max-width: 1100px; margin: 0 auto 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 12px; }
+  .note-c { background: var(--card); border-radius: 20px; padding: 16px 18px; font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.45; }
+  .note-c b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">A-1 Duotono · Análisis</div>
+    <h1 class="p-title">Gasto del día a día</h1>
+    <p class="p-desc">Versión sobria: la última sección de Análisis, después de "Por método", con su mismo formato. Toca o <b>arrastra el dedo (o el mouse) sobre las barras</b> para cambiar de día, usa las flechas ‹ › junto a la fecha y prueba el switch "Incluir domiciliados". En un teléfono Android vibra en cada día. Hoy es 21 de noviembre de 2026.</p>
+    <div class="theme-toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+  </header>
+
+  <div class="notes">
+    <div class="note-c"><b>Al final de Análisis</b>Después de "Por método": el total queda junto a su desglose estimado y el día a día cierra con lo real. Tarjeta blanca con el mismo encabezado, sin competir con el total.</div>
+    <div class="note-c"><b>Cifras en fila</b>Total del mes, promedio por día y días sin registros con el mismo peso, en mosaicos chicos en lugar de un número enorme.</div>
+    <div class="note-c"><b>Color solo en la selección</b>Barras en tinta; el día elegido con el degradado azul-violeta de "Cargos de noviembre". Domiciliados en neutro, apilados encima.</div>
+    <div class="note-c"><b>Elegir el día</b>Toca o arrastra el dedo sobre las barras (vibra en cada día) o usa las flechas ‹ › junto a la fecha.</div>
+  </div>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="pA"></div></div><div class="ph-cap">Solo únicos · el 7 seleccionado</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="pB"></div></div><div class="ph-cap">Con domiciliados · el 15 seleccionado</div></div>
+  </div>
+</div>
+<script>
+(() => {
+  const SB = '<div class="sb"><span>9:41</span><span class="sb-island"></span><span></span></div>';
+  const fmt = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const WD = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const weekday = (d) => WD[new Date(Date.UTC(2026, 10, d)).getUTCDay()];
+  const DAYS = 30, TODAY = 21;
+  const ONE = { 3: [['Café', 4500]], 7: [['Súper', 35000], ['Uber', 7000]], 8: [['Recarga metro', 10000]], 10: [['Tacos', 25000]], 15: [['Cine', 18000]] };
+  const REC = { 15: [['Netflix', 23900, 'charged']], 20: [['Renta', 150000, 'pending']], 28: [['Internet', 45000, 'future']] };
+
+  // Estilo de marcas por variante
+  const STYLE = {
+    lime: { one: '#141414', rec: 'rgba(255,255,255,.7)', dim: 0.32, axis: 'rgba(20,20,20,.55)', base: 'rgba(20,20,20,.25)', future: 'rgba(20,20,20,.45)' },
+    mint: { one: '#141414', rec: 'rgba(255,255,255,.7)', dim: 0.32, axis: 'rgba(20,20,20,.55)', base: 'rgba(20,20,20,.25)', future: 'rgba(20,20,20,.45)' },
+    plain: { one: 'var(--ink)', rec: 'var(--rec)', dim: 0.85, axis: 'var(--muted)', base: 'var(--line)', future: 'var(--muted)', selGrad: true },
+  };
+  let gid = 0;
+
+  function chart(v, rec, sel) {
+    const st = STYLE[v];
+    const W = 300, H = 150, top = 26, base = 128;
+    const slot = W / DAYS, bw = Math.min(24, slot - 2);
+    const gradId = 'sg' + (++gid);
+    const day = (d) => {
+      const o = (ONE[d] || []).reduce((s, x) => s + x[1], 0);
+      const l = rec ? REC[d] || [] : [];
+      return { o, r: l.filter((x) => x[2] !== 'future').reduce((s, x) => s + x[1], 0), u: l.filter((x) => x[2] === 'future').reduce((s, x) => s + x[1], 0) };
+    };
+    const all = Array.from({ length: DAYS }, (_, i) => day(i + 1));
+    const max = Math.max(...all.map((x) => x.o + x.r + x.u), 1);
+    const hOf = (c) => (c / max) * (base - top);
+    let marks = '', hits = '', labels = '', tip = '';
+    all.forEach(({ o, r, u }, i) => {
+      const d = i + 1, x = i * slot + (slot - bw) / 2, cx = i * slot + slot / 2;
+      const isSel = sel === d;
+      const op = sel === null || isSel ? 1 : st.dim;
+      const rad = Math.min(4, bw / 2);
+      const oneFill = isSel && st.selGrad ? `url(#${gradId})` : st.one;
+      const round = (y0, y1, fill) => `<path d="M${x},${y1} V${y0 + rad} Q${x},${y0} ${x + rad},${y0} H${x + bw - rad} Q${x + bw},${y0} ${x + bw},${y0 + rad} V${y1} Z" fill="${fill}" opacity="${op}"/>`;
+      const sq = (y0, y1, fill) => `<rect x="${x}" y="${y0}" width="${bw}" height="${Math.max(0, y1 - y0)}" fill="${fill}" opacity="${op}"/>`;
+      let yTop = base;
+      if (o > 0) { const y = base - Math.max(3, hOf(o)); marks += r > 0 ? sq(y, base, oneFill) : round(y, base, oneFill); yTop = y; }
+      if (r > 0) { const y1 = o > 0 ? yTop - 2 : base; const y = y1 - Math.max(3, hOf(r)); marks += round(y, y1, st.rec); yTop = y; }
+      if (u > 0) {
+        const y = yTop - hOf(u);
+        marks += `<rect x="${x + 0.5}" y="${y}" width="${bw - 1}" height="${yTop - y - (o || r ? 2 : 0)}" rx="${rad}" fill="none" stroke="${st.future}" stroke-width="1" stroke-dasharray="2 2"/>`;
+      } else if (d > TODAY && !o && !r) {
+        marks += `<line x1="${cx}" x2="${cx}" y1="${base - 10}" y2="${base}" stroke="${st.future}" stroke-width="1.5" stroke-dasharray="2 2"/>`;
+      }
+      if (isSel) {
+        const ty = o || r ? yTop : base - 10;
+        tip = `<div class="tip" style="left:${(cx / W) * 100}%;top:${((ty - 6) / H) * 100}%">${fmt(o + r)}</div>`;
+      }
+      if (d === 1 || d % 5 === 0 || d === DAYS) labels += `<text x="${cx}" y="${H - 6}" text-anchor="middle" font-size="10" font-weight="700" fill="${st.axis}">${d}</text>`;
+    });
+    labels += `<line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="${st.base}" stroke-width="1"/>`;
+    labels += `<text x="${(TODAY - 1) * slot + slot / 2}" y="${top - 10}" text-anchor="middle" font-size="9.5" font-weight="800" fill="${st.axis}">HOY</text>`;
+    const defs = `<defs><linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--cobalt-a)"/><stop offset="1" stop-color="var(--cobalt-b)"/></linearGradient></defs>`;
+    return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${defs}${labels}${marks}${hits}</svg>${tip}</div>`;
+  }
+
+  function card(v, sel, on) {
+    const oneTotal = Object.values(ONE).flat().reduce((s, x) => s + x[1], 0);
+    const recTotal = on ? Object.values(REC).flat().filter((x) => x[2] !== 'future').reduce((s, x) => s + x[1], 0) : 0;
+    const total = oneTotal + recTotal;
+    let without = 0;
+    for (let d = 1; d < TODAY; d++) if (!ONE[d]) without++;
+    const avg = Math.round(total / 100 / TODAY);
+    let list = '';
+    if (sel !== null) {
+      const rows = (ONE[sel] || []).map(([c, a]) => `<div class="day-r"><span class="c">${c}</span><span class="a num">${fmt(a)}</span></div>`);
+      const recs = on ? REC[sel] || [] : [];
+      recs.forEach(([c, a, s]) => rows.push(`<div class="day-r ${s === 'future' ? 'up' : ''}"><span class="c">${c} <span class="mk ${s === 'future' ? 'dash' : ''}">${s === 'future' ? 'POR COBRAR' : 'DOMICILIADO'}</span></span><span class="a num">${fmt(a)}</span></div>`));
+      const sum = (ONE[sel] || []).reduce((s, x) => s + x[1], 0) + recs.filter((x) => x[2] !== 'future').reduce((s, x) => s + x[1], 0);
+      list = `<div class="day-list"><div class="day-h"><button class="step" data-step="-1" ${sel === 1 ? 'disabled' : ''} aria-label="Día anterior">‹</button><div class="mid"><span>${weekday(sel)} ${sel} nov</span><span class="num">${sum ? fmt(sum) : ''}</span></div><button class="step" data-step="1" ${sel === DAYS ? 'disabled' : ''} aria-label="Día siguiente">›</button></div>${rows.length ? rows.join('') : '<div class="day-empty">Sin registros este día</div>'}</div>`;
+    }
+    const recSwatch = v === 'plain' ? 'var(--rec)' : 'rgba(255,255,255,.7)';
+    const oneSwatch = v === 'plain' ? 'var(--ink)' : '#141414';
+    const legend = on ? `<div class="legend"><span><b style="background:${oneSwatch}"></b>Únicos</span><span><b style="background:${recSwatch};outline:1px solid rgba(20,20,20,.15)"></b>Domiciliados</span></div>` : '';
+    const cls = v === 'plain' ? 'daily plain' : `daily block ${v}`;
+    const top = v === 'plain'
+      ? `<div class="head"><div class="lbl">Gasto del día a día</div><small>noviembre</small></div>
+      <div class="note">${on ? 'Gastos únicos y domiciliados' : 'Solo gastos únicos: lo que decides cada día'}</div>
+      <div class="stats"><div class="stat"><b class="num">${fmt(total).replace('.00', '')}</b><small>en el mes</small></div><div class="stat"><b class="num">~$${avg}</b><small>al día</small></div><div class="stat"><b class="num">${without}</b><small>días sin registros</small></div></div>`
+      : `<div class="lbl">Gasto del día a día</div>
+      <div class="note">${on ? 'Gastos únicos y domiciliados' : 'Solo gastos únicos: lo que decides cada día'}</div>
+      <div class="big num">${fmt(total)}</div>
+      <div class="facts">~$${avg} al día · ${without} días sin registros</div>`;
+    return `<div class="${cls}">
+      ${top}
+      <div class="pill-row"><span class="pill ${on ? 'on' : ''}" data-sw role="switch" aria-checked="${on}">Incluir domiciliados<i></i></span></div>
+      ${legend}${chart(v, on, sel)}<div class="hint">Toca o desliza el dedo sobre las barras</div>${list}</div>`;
+  }
+
+  const screen = (v, sel, on) => `${SB}<div data-scroll><div class="content">
+      <div class="month"><div><div class="m">Noviembre</div><div class="y">2026</div></div><div class="arrows"><span class="round">‹</span><span class="round">›</span></div></div>
+      <div class="seg"><span>Tus gastos</span><span class="on">Análisis</span></div>
+      <div class="total"><small>Costo mensual promedio</small><b class="num">$4,869.00</b></div>
+      <div class="card"><div class="card-h"><span>Por categoría</span><small>al mes</small></div><div class="stub">(dona y leyenda, sin cambios)</div></div>
+      <div class="card"><div class="card-h"><span>Por método</span><small>al mes</small></div><div class="stub">(barras por método, sin cambios)</div></div>
+      ${card(v, sel, on)}
+    </div></div><div class="home-ind"></div>`;
+
+  const mount = (id, v, sel, on) => {
+    const el = document.getElementById(id);
+    const st = { sel, on };
+    const draw = () => { el.innerHTML = screen(v, st.sel, st.on); };
+    const pick = (d) => {
+      d = Math.max(1, Math.min(DAYS, d));
+      if (d === st.sel) return;
+      st.sel = d;
+      try { navigator.vibrate && navigator.vibrate(8); } catch (_) {}
+      draw();
+    };
+    const dayAt = (clientX) => {
+      const r = el.querySelector('.chart').getBoundingClientRect();
+      return Math.floor(((clientX - r.left) / r.width) * DAYS) + 1;
+    };
+    let dragging = false;
+    el.addEventListener('pointerdown', (e) => {
+      if (!e.target.closest('.chart')) return;
+      dragging = true;
+      e.preventDefault();
+      pick(dayAt(e.clientX));
+    });
+    window.addEventListener('pointermove', (e) => { if (dragging) pick(dayAt(e.clientX)); });
+    window.addEventListener('pointerup', () => { dragging = false; });
+    window.addEventListener('pointercancel', () => { dragging = false; });
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('[data-sw]')) { st.on = !st.on; draw(); return; }
+      const b = e.target.closest('[data-step]');
+      if (b) pick(st.sel + Number(b.dataset.step));
+    });
+    draw();
+  };
+  mount('pA', 'plain', 7, false);
+  mount('pB', 'plain', 15, true);
+
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+})();
+</script>
+</body>
+</html>
