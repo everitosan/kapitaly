@@ -24,7 +24,7 @@
 
 ## 5. Play Console
 
-- [ ] 5.1 (Usuario) Registrar la URL de la política en Play Console, llenar Seguridad de los datos con "No recopila ni comparte datos" y elegir como público objetivo 13-15, 16-17 y 18+. Verificación: Play Console no muestra pendientes en esas secciones.
+- [x] 5.1 (Usuario) Registrar la URL de la política en Play Console, llenar Seguridad de los datos con "No recopila ni comparte datos" y elegir como público objetivo 13-15, 16-17 y 18+. Verificación: Play Console no muestra pendientes en esas secciones.
 - [ ] 5.2 Probar en el teléfono con una beta que incluya el cambio: en Ajustes, "Política de privacidad" abre la página y al cerrarla se vuelve a Ajustes; TalkBack la anuncia como enlace. Verificación: el usuario lo confirma.
 
 ## Workflow follow-up
