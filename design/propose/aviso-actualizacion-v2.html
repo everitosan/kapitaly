@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aviso de actualización</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --grab: #CFC9BC; --page: #E6E0D3; --backdrop: rgba(20,20,18,.55);
+    --on-block: #141414;
+    /* Amarillo limón: distinto del ámbar de "Análisis" (#FFD45C → #FF9A3C). Tinta oscura en ambos temas. */
+    --lemon: linear-gradient(135deg, #FFF27A 0%, #FFD23F 100%);
+    --lemon-solid: #FFE45A;
+    --f1: linear-gradient(135deg, #E6F87C 0%, #9EE36A 100%); --f2: linear-gradient(135deg, #C4E6FF 0%, #82B4FF 100%);
+    --r-xl: 30px; --r-lg: 22px; --r-md: 16px;
+  }
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28; --grab: #3A3833; --page: #0A0A09; --backdrop: rgba(0,0,0,.7);
+    --lemon: linear-gradient(135deg, #FFEE6B 0%, #F5C52E 100%);
+    --lemon-solid: #F7DA4A;
+    --f1: linear-gradient(135deg, #D9F06A 0%, #86D457 100%); --f2: linear-gradient(135deg, #AFD9FF 0%, #6C9EF5 100%);
+  }
+  body { background: var(--page); color: var(--ink); }
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 130px; }
+
+  .topbar { display: flex; justify-content: flex-end; align-items: center; gap: 4px; padding: 2px 0 6px; min-height: 46px; }
+  .ghost { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+  .bell { width: 40px; height: 40px; display: grid; place-items: center; color: var(--muted); opacity: .45; }
+  .month { display: flex; align-items: flex-end; justify-content: space-between; padding: 0 4px 22px; }
+  .month .m { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .month .y { font-size: 15px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+  .arrows { display: flex; gap: 8px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-bottom: 18px; }
+  .seg span { height: 42px; border-radius: 999px; font-size: 15px; font-weight: 700; color: var(--muted); display: grid; place-items: center; }
+  .seg span.on { background: linear-gradient(135deg, #2a2a2a, #141414); color: #F4F1EA; }
+  html[data-theme="dark"] .seg span.on { background: linear-gradient(135deg, #FFFFFF, #E4DFD3); color: #141414; }
+  .total { border-radius: var(--r-xl); padding: 22px 22px 20px; margin-bottom: 22px; background: linear-gradient(135deg, #2B4BF2 0%, #7B3CF0 100%); color: #fff; }
+  html[data-theme="dark"] .total { background: linear-gradient(135deg, #3354FF 0%, #8344F5 100%); }
+  .total .lbl { font-size: 14px; font-weight: 600; opacity: .85; }
+  .total .amt { font-size: 44px; font-weight: 800; letter-spacing: -.03em; margin: 6px 0 4px; line-height: 1; }
+  .total .amt small { font-size: 24px; opacity: .7; }
+  .total .proj { font-size: 15px; font-weight: 700; opacity: .9; }
+  .row { border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; color: var(--on-block); }
+  .date { width: 50px; height: 50px; border-radius: var(--r-md); background: rgba(255,255,255,.55); display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; }
+  .date b { font-size: 19px; line-height: 1; } .date span { font-size: 10.5px; font-weight: 700; text-transform: uppercase; opacity: .7; margin-top: 2px; }
+  .mid { flex: 1; min-width: 0; } .name { font-size: 16.5px; font-weight: 700; } .sub { font-size: 12.5px; font-weight: 600; opacity: .65; }
+  .ramt { font-size: 16.5px; font-weight: 800; }
+  .footer { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 20px 30px; background: linear-gradient(transparent, var(--bg) 30%); }
+  .add { height: 56px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 800; font-size: 17px; display: grid; place-items: center; width: 100%; }
+
+  /* Hoy */
+  .old { display: flex; align-items: center; gap: 10px; border-radius: 18px; padding: 12px 10px 12px 16px; margin-bottom: 14px; background: var(--card); }
+  .old .t { flex: 1; } .old b { font-size: 15px; font-weight: 800; display: block; } .old small { color: var(--muted); font-weight: 600; font-size: 12.5px; }
+  .old .btn { background: #7B3CF0; color: #fff; border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 800; }
+  .x { width: 28px; height: 28px; display: grid; place-items: center; color: inherit; opacity: .6; font-weight: 800; font-size: 14px; }
+
+  /* Ícono de actualizar */
+  .up { width: 40px; height: 40px; border-radius: 50%; background: rgba(20,20,20,.9); color: var(--lemon-solid); display: grid; place-items: center; flex: none; }
+
+  /* A · bloque limón */
+  .a { display: flex; align-items: center; gap: 12px; border-radius: var(--r-lg); padding: 14px 10px 14px 14px; margin-bottom: 16px; background: var(--lemon); color: var(--on-block); box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+  .a .t { flex: 1; min-width: 0; } .a b { display: block; font-size: 16px; font-weight: 800; } .a small { font-size: 12.5px; font-weight: 700; opacity: .7; }
+  .a .btn { background: #141414; color: #FFF27A; border-radius: 999px; padding: 9px 15px; font-size: 13.5px; font-weight: 800; white-space: nowrap; }
+  .bar { height: 6px; border-radius: 999px; background: rgba(20,20,20,.15); margin-top: 8px; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: #141414; border-radius: 999px; }
+
+  /* B · hoja */
+  .sheet-bg { position: absolute; inset: 0; background: var(--backdrop); z-index: 10; display: flex; flex-direction: column; justify-content: flex-end; animation: fade .2s ease-out; }
+  .sheet { background: var(--bg); border-radius: 34px 34px 0 0; padding: 0 22px 34px; animation: up .3s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fade { from { opacity: 0; } } @keyframes up { from { transform: translateY(40%); } }
+  .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--grab); margin: 10px auto 18px; }
+  .hero { border-radius: 26px; background: var(--lemon); color: var(--on-block); padding: 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .hero .up { width: 48px; height: 48px; }
+  .hero .t { flex: 1; min-width: 0; }
+  .hero b { display: block; font-size: 20px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; } .hero small { display: block; font-size: 13.5px; font-weight: 700; opacity: .7; margin-top: 2px; }
+  .news { font-size: 14px; font-weight: 600; color: var(--muted); margin: 0 4px 18px; line-height: 1.5; }
+  .news b { color: var(--ink); display: block; margin-bottom: 4px; }
+  .primary { height: 54px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 800; font-size: 16px; width: 100%; margin-bottom: 8px; }
+  .secondary { height: 48px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); width: 100%; }
+  .reopen { display: block; margin: 0 auto 14px; font-size: 13px; font-weight: 700; color: var(--muted); text-decoration: underline; }
+
+  /* C · píldora en la barra */
+  .pill { height: 40px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px 0 6px; background: var(--lemon); color: var(--on-block); font-weight: 800; font-size: 14px; margin-right: auto; }
+  .pill .up { width: 28px; height: 28px; }
+  .pill[data-open] { cursor: pointer; }
+  .pill[data-open]:active { transform: scale(.96); }
+  .pill.ready { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,210,63,.7); } 50% { box-shadow: 0 0 0 7px rgba(255,210,63,0); } }
+
+  /* D · aviso flotante */
+  .toast { position: absolute; left: 16px; right: 16px; bottom: 104px; z-index: 5; display: flex; align-items: center; gap: 10px; border-radius: 20px; padding: 10px 8px 10px 10px; background: #141414; color: #F4F1EA; box-shadow: 0 14px 30px -10px rgba(0,0,0,.45); animation: up .3s cubic-bezier(.2,.8,.2,1); }
+  html[data-theme="dark"] .toast { background: #2A2925; }
+  .toast .up { background: var(--lemon-solid); color: #141414; width: 34px; height: 34px; }
+  .toast .t { flex: 1; min-width: 0; } .toast b { display: block; font-size: 14.5px; } .toast small { font-size: 12px; font-weight: 600; opacity: .7; }
+  .toast .btn { background: var(--lemon-solid); color: #141414; border-radius: 999px; padding: 8px 13px; font-size: 13px; font-weight: 800; white-space: nowrap; }
+  .toast .bar { background: rgba(255,255,255,.18); } .toast .bar span { background: var(--lemon-solid); }
+
+  .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 22px; }
+  .toggle { display: inline-grid; grid-auto-flow: column; background: var(--card); border-radius: 999px; padding: 5px; }
+  .toggle button { height: 40px; padding: 0 18px; border-radius: 999px; font-weight: 700; font-size: 14.5px; color: var(--muted); }
+  .toggle button.on { background: var(--ink); color: var(--bg); }
+  .notes { max-width: 980px; margin: 0 auto 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 12px; }
+  .note { background: var(--card); border-radius: 20px; padding: 16px 18px; font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.45; }
+  .note b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+  .note.rec { outline: 2px solid var(--lemon-solid); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">A-1 Duotono · balance</div>
+    <h1 class="p-title">Aviso de actualización</h1>
+    <p class="p-desc">Hoy el aviso es una tarjeta blanca igual a las demás y pasa desapercibido. Cuatro formas de que llame la atención, más la combinación recomendada. Cambia el estado para ver "disponible", "descargando" y "lista para instalar" en todas.</p>
+    <div class="controls">
+      <div class="toggle" role="group" aria-label="Estado"><button data-state="available" class="on">Disponible</button><button data-state="downloading">Descargando</button><button data-state="ready">Lista</button></div>
+      <div class="toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+    </div>
+  </header>
+
+  <div class="notes">
+    <div class="note"><b>A · Bloque limón</b>Misma posición, pero como bloque de color con ícono. Amarillo limón para no confundirse con el ámbar de "Análisis". Cambio solo de estilo.</div>
+    <div class="note"><b>B · Hoja</b>La más visible. No puede mostrar las notas de la versión: Play no las entrega a la app antes de actualizar. Choca con la hoja de Pendientes al abrir: solo tiene sentido una vez por versión.</div>
+    <div class="note"><b>C · Píldora en la barra</b>Como la campana: siempre visible, no ocupa la lista. Al estar lista, late suave. Discreta si no miras la barra.</div>
+    <div class="note"><b>D · Aviso flotante</b>Se ve en cualquier parte del scroll. Tapa contenido y compite con el aviso de "Pospuesto" en esa zona.</div>
+    <div class="note rec"><b>C + B (elegida para probar)</b>La píldora vive en la barra. Al tocarla se abre la hoja con el estado actual: "Actualizar ahora", el avance de la descarga o "Reiniciar ahora". "Más tarde" cierra la hoja y la píldora sigue ahí. Sin ✕: la píldora no estorba.</div>
+    <div class="note"><b>A + B</b>Bloque limón para disponible y descargando. Cuando la descarga termina, una hoja pequeña una sola vez empuja el último paso, "Reiniciar". No compite con Pendientes porque no aparece al abrir.</div>
+  </div>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="now"></div></div><div class="ph-cap">Hoy</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="a"></div></div><div class="ph-cap">A · Bloque limón</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="b"></div></div><div class="ph-cap">B · Hoja</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="c"></div></div><div class="ph-cap">C · Píldora en la barra</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="d"></div></div><div class="ph-cap">D · Aviso flotante</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="ab"></div></div><div class="ph-cap">A + B</div></div>
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="cb"></div></div><div class="ph-cap">C + B · toca la píldora</div></div>
+  </div>
+</div>
+<script>
+(() => {
+  const CARD = '<svg width="21" height="16" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="18" height="14" rx="3"/><path d="M1 6h18"/></svg>';
+  const GEAR = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>';
+  const BELL = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+  const UP = (s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>`;
+  const SB = '<div class="sb"><span>9:41</span><span class="sb-island"></span><span></span></div>';
+  const VERSION = '0.1.0-beta.9';
+  const PCT = 45;
+  let state = 'available';
+  const closed = { b: false, ab: false, cb: true };
+
+  const topbar = (extra = '') => `<div class="topbar">${extra}<span class="bell">${BELL}</span><span class="ghost">${CARD}</span><span class="ghost">${GEAR}</span></div>`;
+  const month = `<div class="month"><div><div class="m">Noviembre</div><div class="y">2026</div></div><div class="arrows"><span class="round">‹</span><span class="round">›</span></div></div>`;
+  const body = `<div class="seg"><span class="on">Tus gastos</span><span>Análisis</span></div>
+    <div class="total"><div class="lbl">Cargos de noviembre</div><div class="amt num">$19,247<small>.00</small></div><div class="proj">de <b>$33,595.00</b> proyectados</div></div>
+    <div class="row" style="background:var(--f1)"><div class="date"><b>1</b><span>nov</span></div><div class="mid"><div class="name">Renta</div><div class="sub">Mensual</div></div><div class="ramt num">$12,000.00</div></div>
+    <div class="row" style="background:var(--f2)"><div class="date"><b>11</b><span>nov</span></div><div class="mid"><div class="name">Luz CFE</div><div class="sub">Bimestral</div></div><div class="ramt num">$1,400.00</div></div>`;
+  const footer = '<div class="footer"><div class="add">+ Agregar gasto</div></div>';
+  const screen = (top, above = '', overlay = '') => `${SB}<div data-scroll><div class="content">${top}${above}${month}${body}</div></div>${footer}${overlay}<div class="home-ind"></div>`;
+
+  const copy = () => ({
+    available: { title: 'Nueva versión disponible', sub: VERSION, btn: 'Actualizar', x: true },
+    downloading: { title: `Descargando… ${PCT} %`, sub: 'Puedes seguir usando la app', btn: null, x: false },
+    ready: { title: 'Lista para instalar', sub: 'Reinicia para usar la nueva versión', btn: 'Reiniciar', x: false },
+  })[state];
+  const bar = () => (state === 'downloading' ? `<div class="bar"><span style="width:${PCT}%"></span></div>` : '');
+
+  const oldCard = () => {
+    const c = copy();
+    const title = state === 'downloading' ? `Descargando la nueva versión… ${PCT} %` : c.title;
+    return `<div class="old"><div class="t"><b>${title}</b>${state === 'available' ? `<small>${VERSION}</small>` : ''}</div>${c.btn ? `<span class="btn">${c.btn}</span>` : ''}${c.x ? '<span class="x">✕</span>' : ''}</div>`;
+  };
+  const lemonCard = () => {
+    const c = copy();
+    return `<div class="a"><span class="up">${UP()}</span><div class="t"><b>${c.title}</b><small>${c.sub}</small>${bar()}</div>${c.btn ? `<span class="btn">${c.btn}</span>` : ''}${c.x ? '<span class="x">✕</span>' : ''}</div>`;
+  };
+  const sheet = (id) => {
+    const c = copy();
+    const news = state === 'ready' ? '<div class="news">Se descargó mientras usabas la app. La app se cierra un momento y vuelve a abrir actualizada.</div>' : '';
+    const actions = state === 'available'
+      ? `<button class="primary">Actualizar ahora</button><button class="secondary" data-close="${id}">Más tarde</button>`
+      : state === 'ready'
+        ? `<button class="primary">Reiniciar ahora</button><button class="secondary" data-close="${id}">Después</button>`
+        : `<button class="secondary" data-close="${id}">Seguir usando la app</button>`;
+    return `<div class="sheet-bg"><div class="sheet"><div class="grab"></div>
+      <div class="hero"><span class="up">${UP(24)}</span><div class="t"><b>${c.title}</b><small>${state === 'available' ? VERSION : c.sub}</small>${bar()}</div></div>
+      ${news}${actions}</div></div>`;
+  };
+  const pill = (tap = false) => {
+    const t = tap ? ' data-open="cb" role="button"' : '';
+    if (state === 'available') return `<span class="pill"${t}><span class="up">${UP(16)}</span>Actualizar</span>`;
+    if (state === 'downloading') return `<span class="pill"${t}><span class="up">${UP(16)}</span>${PCT} %</span>`;
+    return `<span class="pill ready"${t}><span class="up">${UP(16)}</span>Reiniciar</span>`;
+  };
+  const pillOld = () => {
+    if (state === 'available') return `<span class="pill"><span class="up">${UP(16)}</span>Actualizar</span>`;
+    if (state === 'downloading') return `<span class="pill"><span class="up">${UP(16)}</span>${PCT} %</span>`;
+    return `<span class="pill ready"><span class="up">${UP(16)}</span>Reiniciar</span>`;
+  };
+  const toast = () => {
+    const c = copy();
+    return `<div class="toast"><span class="up">${UP(18)}</span><div class="t"><b>${c.title}</b><small>${c.sub}</small>${bar()}</div>${c.btn ? `<span class="btn">${c.btn}</span>` : ''}${c.x ? '<span class="x">✕</span>' : ''}</div>`;
+  };
+
+  const draw = () => {
+    document.getElementById('now').innerHTML = screen(topbar(), oldCard());
+    document.getElementById('a').innerHTML = screen(topbar(), lemonCard());
+    const b = document.getElementById('b');
+    b.innerHTML = screen(topbar(), closed.b ? `<button class="reopen" data-open="b">Volver a ver la hoja</button>` : '', closed.b ? '' : sheet('b'));
+    document.getElementById('c').innerHTML = screen(topbar(pill()));
+    document.getElementById('cb').innerHTML = screen(topbar(pill(true)), '', closed.cb ? '' : sheet('cb'));
+    document.getElementById('d').innerHTML = screen(topbar(), '', toast());
+    const showAbSheet = state === 'ready' && !closed.ab;
+    document.getElementById('ab').innerHTML = screen(topbar(), lemonCard() + (state === 'ready' && closed.ab ? '' : ''), showAbSheet ? sheet('ab') : '');
+  };
+
+  document.addEventListener('click', (e) => {
+    const close = e.target.closest('[data-close]');
+    if (close) { closed[close.dataset.close] = true; draw(); return; }
+    const open = e.target.closest('[data-open]');
+    if (open) { closed[open.dataset.open] = false; draw(); return; }
+  });
+  document.querySelectorAll('[data-state]').forEach((btn) => btn.addEventListener('click', () => {
+    state = btn.dataset.state;
+    closed.b = false; closed.ab = false; closed.cb = true;
+    document.querySelectorAll('[data-state]').forEach((x) => x.classList.toggle('on', x === btn));
+    draw();
+  }));
+  document.querySelectorAll('[data-theme-set]').forEach((btn) => btn.addEventListener('click', () => {
+    document.documentElement.dataset.theme = btn.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.classList.toggle('on', x === btn));
+  }));
+  draw();
+})();
+</script>
+</body>
+</html>
