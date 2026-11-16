@@ -121,7 +121,7 @@ const thisMonth = (
     registeredOn,
   });
 
-describe('vista Este mes', () => {
+describe('vista Tus gastos', () => {
   it('total y conteo del mes: conteo, orden y efectuado de proyectado', () => {
     const v = thisMonth([netflix, renta, internet, seguro], [metro]);
     expect(v.count).toBe(4);

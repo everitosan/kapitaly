@@ -6,7 +6,7 @@ import { BALANCE_SORT_KEY, DEFAULT_BALANCE_SORT, parseBalanceSort } from '@/doma
 import { useRepositories } from '../repositories';
 
 /**
- * Orden de la lista de "Este mes", guardado en el teléfono para que se conserve entre aperturas.
+ * Orden de la lista de "Tus gastos", guardado en el teléfono para que se conserve entre aperturas.
  * `loaded` es falso hasta leerlo, para no dibujar la lista en un orden y luego en el otro.
  */
 export function useBalanceSort(): {

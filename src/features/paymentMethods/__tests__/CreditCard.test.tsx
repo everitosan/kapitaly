@@ -182,7 +182,7 @@ describe('10.3 · pagar tarjeta e historial', () => {
     expect(await screen.findByText('Sin pagos todavía.')).toBeOnTheScreen();
   });
 
-  it('los pagos no cambian "Este mes" ni "Análisis"', async () => {
+  it('los pagos no cambian "Tus gastos" ni "Análisis"', async () => {
     const { repos, card } = await setupCard();
     await repos.recurringExpenses.create(sampleRecurring(card.id, { anchorDate: '2026-11-25' }));
     await repos.cardPayments.create({

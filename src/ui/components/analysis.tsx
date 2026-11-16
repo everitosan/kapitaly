@@ -12,7 +12,7 @@ const pct = (part: Cents, total: Cents) => (total > 0 ? Math.round((part / total
 
 /* ---------- MonthProgressCard ---------- */
 
-/** Tarjeta de "Este mes": efectuado de proyectado, barra de avance y atajos a Análisis. */
+/** Tarjeta de "Tus gastos": efectuado de proyectado, barra de avance y atajos a Análisis. */
 export function MonthProgressCard({
   monthName,
   doneCents,
@@ -147,7 +147,7 @@ export function AverageTotalCard({
           <Text style={[styles.tipText, { color: theme.colors.bg }]}>
             No es lo que salió de tu cuenta este mes: suma tus fijos, la parte mensual de lo que
             pagas cada varios meses (un seguro anual de $9,600 cuenta $800 cada mes) y tus únicos
-            del mes. Lo cobrado está en &quot;Este mes&quot;.
+            del mes. Lo cobrado está en &quot;Tus gastos&quot;.
           </Text>
           <Pressable accessibilityRole="button" onPress={() => setInfo(false)} hitSlop={8}>
             <Text style={[styles.tipButton, { color: theme.colors.bg }]}>Entendido</Text>

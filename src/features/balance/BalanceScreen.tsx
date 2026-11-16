@@ -77,7 +77,8 @@ export interface BalanceScreenProps {
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 /** Cuánto se muestra el aviso tras posponer. */
 const NOTICE_MS = 3000;
-const METHOD_NOTE = 'Estimado con prorrateo, no es lo cobrado. Lo real del mes está en "Este mes".';
+const METHOD_NOTE =
+  'Estimado con prorrateo, no es lo cobrado. Lo real del mes está en "Tus gastos".';
 
 export function BalanceScreen({
   onAdd,
@@ -379,7 +380,7 @@ export function BalanceScreen({
         <SegmentedControl
           testID="balance-view"
           options={[
-            { value: 'this', label: 'Este mes' },
+            { value: 'this', label: 'Tus gastos' },
             { value: 'avg', label: 'Análisis' },
           ]}
           value={view}

@@ -1,7 +1,7 @@
 import { BALANCE_SORT_KEY, DEFAULT_BALANCE_SORT, parseBalanceSort } from '../uiPreferences';
 
 describe('preferencias de interfaz', () => {
-  it('el orden de Este mes empieza en "Más antiguo"', () => {
+  it('el orden de Tus gastos empieza en "Más antiguo"', () => {
     expect(BALANCE_SORT_KEY).toBe('balance.sort');
     expect(DEFAULT_BALANCE_SORT).toBe('asc');
   });

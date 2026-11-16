@@ -103,14 +103,14 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
       scheme,
       <SegmentedControl
         options={[
-          { value: 'this', label: 'Este mes' },
+          { value: 'this', label: 'Tus gastos' },
           { value: 'avg', label: 'Promedio' },
         ]}
         value="this"
         onChange={onChange}
       />,
     );
-    expect(screen.getByRole('tab', { name: 'Este mes' })).toBeSelected();
+    expect(screen.getByRole('tab', { name: 'Tus gastos' })).toBeSelected();
     await fireEvent.press(screen.getByText('Promedio'));
     expect(onChange).toHaveBeenCalledWith('avg');
   });

@@ -5,7 +5,7 @@ import type { SortDirection } from './balance';
  * Los valores se validan al leer: uno ausente o inválido usa el valor por omisión.
  */
 
-/** Orden de la lista de "Este mes". */
+/** Orden de la lista de "Tus gastos". */
 export const BALANCE_SORT_KEY = 'balance.sort';
 export const DEFAULT_BALANCE_SORT: SortDirection = 'asc';
 

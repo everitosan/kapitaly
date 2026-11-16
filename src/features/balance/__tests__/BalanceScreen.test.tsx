@@ -85,11 +85,11 @@ const rowLabels = () =>
 const openAnalysis = () => fireEvent.press(screen.getByRole('tab', { name: 'Análisis' }));
 
 describe('8.1 · navegación y vistas', () => {
-  it('abre en el mes actual, en "Este mes"', async () => {
+  it('abre en el mes actual, en "Tus gastos"', async () => {
     await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />);
     expect(screen.getByRole('header', { name: 'Noviembre' })).toBeOnTheScreen();
     expect(screen.getByText('2026')).toBeOnTheScreen();
-    expect(screen.getByRole('tab', { name: 'Este mes' })).toBeSelected();
+    expect(screen.getByRole('tab', { name: 'Tus gastos' })).toBeSelected();
   });
 
   it('avanza y retrocede mes por mes, cruzando años', async () => {
@@ -132,7 +132,7 @@ describe('8.1 · navegación y vistas', () => {
   });
 });
 
-describe('8.2 · vista Este mes', () => {
+describe('8.2 · vista Tus gastos', () => {
   it('total y conteo del mes: lista en orden y efectuado de proyectado', async () => {
     const { repos } = await novemberScenario();
     await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });
@@ -292,7 +292,7 @@ describe('8.2 · vista Este mes', () => {
     });
     expect(scrollTo).toHaveBeenLastCalledWith({ y: 800, animated: true });
 
-    await fireEvent.press(screen.getByRole('tab', { name: 'Este mes' }));
+    await fireEvent.press(screen.getByRole('tab', { name: 'Tus gastos' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Por categoría' }));
     await fireEvent(screen.getByTestId('section-category'), 'layout', {
       nativeEvent: { layout: { x: 0, y: 412, width: 360, height: 300 } },
@@ -489,7 +489,7 @@ describe('8.3 · vista Análisis', () => {
   });
 });
 
-describe('8.4 · tocar un gasto de "Este mes" abre su edición', () => {
+describe('8.4 · tocar un gasto de "Tus gastos" abre su edición', () => {
   it('según su tipo y con su id', async () => {
     const { repos, ids } = await novemberScenario();
     const p = props();
@@ -506,7 +506,7 @@ describe('8.4 · tocar un gasto de "Este mes" abre su edición', () => {
 describe('categoría en las filas', () => {
   const id = (name: string) => BUILTIN_CATEGORIES.find((b) => b.name === name)!.id;
 
-  it('"Este mes" muestra la categoría de recurrentes y únicos', async () => {
+  it('"Tus gastos" muestra la categoría de recurrentes y únicos', async () => {
     const repos = createInMemoryRepositories(testDeps());
     await repos.recurringExpenses.create(
       sampleRecurring(CASH_METHOD_ID, { categoryId: id('Suscripciones') }),

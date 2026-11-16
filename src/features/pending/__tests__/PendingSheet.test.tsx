@@ -409,7 +409,7 @@ describe('10.5 · marca "Por confirmar"', () => {
     );
   });
 
-  it('Este mes usa el monto confirmado y Análisis el de la regla', async () => {
+  it('Tus gastos usa el monto confirmado y Análisis el de la regla', async () => {
     const { repos, netflix } = await withNetflix();
     await repos.chargeConfirmations.upsert({
       recurringExpenseId: netflix.id,
