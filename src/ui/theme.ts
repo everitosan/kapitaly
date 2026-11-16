@@ -43,6 +43,8 @@ export interface Theme {
   palette: Record<PaletteColorKey, Gradient>;
   /** Botón principal y opción activa del control segmentado. */
   primary: Gradient;
+  /** Aviso de actualización: amarillo limón, distinto del ámbar de "Análisis". */
+  update: Gradient;
   /** Paleta categórica de gráficas (8 tonos) y el gris de "Otro". */
   chart: { series: readonly string[]; other: string };
   spacing: typeof spacing;
@@ -128,6 +130,7 @@ export const lightTheme: Theme = {
   },
   frequency: lightFrequency,
   totals: { thisMonth: g('#2B4BF2', '#7B3CF0', WHITE), average: g('#FFD45C', '#FF9A3C') },
+  update: g('#FFF27A', '#FFD23F'),
   palette: paletteFrom(
     lightFrequency,
     g('#2B4BF2', '#7B3CF0', WHITE),
@@ -170,6 +173,7 @@ export const darkTheme: Theme = {
   },
   frequency: darkFrequency,
   totals: { thisMonth: g('#3354FF', '#8344F5', WHITE), average: g('#FFD45C', '#FF9A3C') },
+  update: g('#FFEE6B', '#F5C52E'),
   palette: paletteFrom(
     darkFrequency,
     g('#3354FF', '#8344F5', WHITE),

@@ -75,6 +75,25 @@ describe('aviso de actualización', () => {
     expect(f.deps.completeUpdate).toHaveBeenCalled();
   });
 
+  it('bloque limón: barra de avance solo al descargar y el ícono es decorativo', async () => {
+    const f = fakeUpdates(AVAILABLE);
+    await renderWithProviders(<Harness updates={f.deps} />);
+    await screen.findByText('Actualizar');
+    expect(screen.queryByRole('progressbar')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('update-icon')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('update-icon', { includeHiddenElements: true })).toBeTruthy();
+    await act(async () => f.emit({ status: 'downloading', bytesDownloaded: 45, totalBytes: 100 }));
+    expect(
+      screen.getByRole('progressbar', { name: 'Avance de la descarga' }),
+    ).toHaveAccessibilityValue({
+      min: 0,
+      max: 100,
+      now: 45,
+    });
+    await act(async () => f.emit({ status: 'downloaded', bytesDownloaded: 100, totalBytes: 100 }));
+    expect(screen.queryByRole('progressbar')).not.toBeOnTheScreen();
+  });
+
   it('cancelar la confirmación de Google vuelve a ofrecerla', async () => {
     const f = fakeUpdates(AVAILABLE, 'canceled');
     await renderWithProviders(<Harness updates={f.deps} />);

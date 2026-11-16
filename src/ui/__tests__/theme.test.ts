@@ -28,6 +28,11 @@ describe.each(Object.values(themes))('tema $scheme', (theme) => {
     }
   });
 
+  it('el aviso de actualización es limón y cumple AA en ambos extremos', () => {
+    expect(theme.update.text).toBe('#141414');
+    for (const c of both(theme.update)) expect(c).toBeGreaterThanOrEqual(AA_MIN);
+  });
+
   it('el aviso de pendientes cumple AA sobre su tinte', () => {
     const { alertBg, alertInk } = theme.colors;
     expect(contrastRatio(alertInk, alertBg)).toBeGreaterThanOrEqual(AA_MIN);
