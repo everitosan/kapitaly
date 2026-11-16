@@ -14,8 +14,8 @@
 ## 3. Despliegue
 
 - [x] 3.1 Crear `.github/workflows/site.yml` (se ejecuta con push a `release/**` y `main` cuando cambian `site/**` o el workflow; jobs `build` y `deploy`; permisos mínimos; acciones fijadas por SHA; `concurrency: pages`). Verificación: el YAML pasa `actionlint` o, si no está disponible, se revisa a mano contra el diseño.
-- [ ] 3.2 (Usuario) En GitHub, en Settings → Pages, elegir "GitHub Actions" como origen y agregar `release/*` a las ramas permitidas del entorno `github-pages`. Verificación: el entorno muestra la regla.
-- [ ] 3.3 Subir los cambios y comprobar la publicación. Verificación: el workflow termina bien y `https://everitosan.github.io/kapitaly/privacidad/` responde con 200 y la página completa, sin sesión iniciada.
+- [x] 3.2 (Usuario) En GitHub, en Settings → Pages, elegir "GitHub Actions" como origen y agregar `release/*` a las ramas permitidas del entorno `github-pages`. Verificación: el entorno muestra la regla.
+- [x] 3.3 Subir los cambios y comprobar la publicación. Verificación: el workflow termina bien y `https://everitosan.github.io/kapitaly/privacidad/` responde con 200 y la página completa, sin sesión iniciada.
 
 ## 4. App
 
