@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detalle por categoría</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --page: #E6E0D3;
+    --r-xl: 30px; --r-lg: 22px; --r-md: 16px;
+  }
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28; --page: #0A0A09;
+  }
+  body { background: var(--page); color: var(--ink); }
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 120px; }
+
+  .month { display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 4px 22px; }
+  .month .m { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .month .y { font-size: 15px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+  .arrows { display: flex; gap: 8px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-bottom: 18px; }
+  .seg span { height: 42px; border-radius: 999px; font-size: 15px; font-weight: 700; color: var(--muted); display: grid; place-items: center; }
+  .seg span.on { background: linear-gradient(135deg, #2a2a2a, #141414); color: #F4F1EA; }
+  html[data-theme="dark"] .seg span.on { background: linear-gradient(135deg, #FFFFFF, #E4DFD3); color: #141414; }
+
+  .card { background: var(--card); border-radius: var(--r-lg); padding: 18px; margin-bottom: 22px; }
+  .card-h { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .card-h small { font-size: 12px; letter-spacing: 0; text-transform: none; }
+  .card-d { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+  .pie-wrap { display: grid; place-items: center; padding: 6px 0 14px; position: relative; }
+  .pie-wrap svg circle { transition: stroke-width .2s, opacity .2s; cursor: pointer; }
+  .pie-c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; pointer-events: none; }
+  .pie-c small { display: block; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .pie-c b { font-size: 21px; font-weight: 800; letter-spacing: -.02em; }
+  .pie-c em { display: block; font-style: normal; font-size: 12px; font-weight: 800; color: var(--muted); }
+  .leg { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: 12px; width: 100%; text-align: left; font-size: 14.5px; font-weight: 700; }
+  .leg.on { background: var(--bg); }
+  .leg i { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+  .leg .n { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .leg .p { color: var(--muted); font-size: 12.5px; width: 38px; text-align: right; }
+
+  /* Detalle (nuevo): lista mínima de solo lectura */
+  .det { margin: 2px 0 8px 11px; padding: 2px 6px 2px 14px; border-left: 2px solid var(--c); }
+  .det-r { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; font-size: 13.5px; font-weight: 600; }
+  .det-r + .det-r { border-top: 1px solid var(--line); }
+  .det-r .d { width: 78px; flex: none; color: var(--muted); }
+  .det-r .c { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .det-r .a { font-weight: 700; }
+
+  .theme-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-top: 22px; }
+  .theme-toggle button { height: 40px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .theme-toggle button.on { background: var(--ink); color: var(--bg); }
+  .notes { max-width: 860px; margin: 0 auto 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 12px; }
+  .note { background: var(--card); border-radius: 20px; padding: 16px 18px; font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.45; }
+  .note b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">A-1 Duotono · Análisis</div>
+    <h1 class="p-title">Detalle por categoría</h1>
+    <p class="p-desc">Al tocar una categoría en la leyenda o en la dona, además de resaltarla, se abre debajo de su fila la lista de gastos que forman su cifra: fecha, concepto y monto al mes. Es de solo lectura y suma lo mismo que la leyenda.</p>
+    <div class="theme-toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+  </header>
+
+  <div class="notes">
+    <div class="note"><b>Acordeón</b>Una sola categoría abierta. Tocar otra cambia el detalle; tocar la misma lo cierra y quita el resaltado.</div>
+    <div class="note"><b>Qué filas aparecen</b>Lo que forma la cifra: mensuales con su monto, prorrateados con su parte mensual y únicos del mes. Transporte: $100.00 + $500.00 = $600.00.</div>
+    <div class="note"><b>Fechas</b>Mensual: su cobro en el mes. Prorrateado: su próximo cobro, con año si es de otro año ("15 mar 2027"). Sin fecha: "—" al final.</div>
+    <div class="note"><b>Texto de la tarjeta</b>Antes: "Con lo prorrateado: así se reparte tu costo de vida." Ahora explica por qué el seguro anual aparece con $500.00 al mes.</div>
+    <div class="note"><b>Mínimo</b>Sin íconos, marcas ni método de pago. Las filas no responden al toque: para editar están los modales de Fijos, Prorrateados y Únicos.</div>
+  </div>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p1"></div></div><div class="ph-cap">Propuesta · toca una categoría</div></div>
+  </div>
+</div>
+<script>
+(() => {
+  const SB = '<div class="sb"><span>9:41</span><span class="sb-island"></span><span></span></div>';
+  const fmt = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const CATS = [
+    { k: 'hogar', n: 'Hogar', c: '#2B4BF2', items: [['3 nov', 'Focos', 18000], ['20 nov', 'Renta', 150000]] },
+    { k: 'transp', n: 'Transporte', c: '#FF9A3C', items: [['8 nov', 'Recarga metro', 10000], ['15 mar 2027', 'Seguro anual', 50000]] },
+    { k: 'serv', n: 'Servicios', c: '#2BB673', items: [['28 nov', 'Internet', 22500]] },
+    { k: 'subs', n: 'Suscripciones', c: '#B06CFF', items: [['15 nov', 'Netflix', 21900]] },
+  ].map((x) => ({ ...x, v: x.items.reduce((s, i) => s + i[2], 0) }));
+  const total = CATS.reduce((s, x) => s + x.v, 0);
+  let sel = 'transp';
+
+  const donut = () => {
+    const R = 74, C = 2 * Math.PI * R, GAP = 3;
+    let off = 0;
+    const segs = CATS.map((x) => {
+      const len = (x.v / total) * C, on = sel === x.k;
+      const s = `<circle data-k="${x.k}" cx="100" cy="100" r="${R}" fill="none" stroke="${x.c}" stroke-width="${on ? 34 : 26}" opacity="${sel && !on ? .35 : 1}" stroke-dasharray="${Math.max(len - GAP, 1)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 100 100)"/>`;
+      off += len;
+      return s;
+    }).join('');
+    const s = CATS.find((x) => x.k === sel);
+    const center = s
+      ? `<div><small>${s.n}</small><b class="num">${fmt(s.v)}</b><em>${Math.round((s.v / total) * 100)}% al mes</em></div>`
+      : `<div><small>Al mes</small><b class="num">${fmt(total)}</b><em>${CATS.length} categorías</em></div>`;
+    return `<div class="pie-wrap"><svg width="200" height="200" viewBox="0 0 200 200">${segs}</svg><div class="pie-c">${center}</div></div>`;
+  };
+  const detail = (x) => `<div class="det" style="--c:${x.c}">${x.items.map(([d, c, a]) => `<div class="det-r"><span class="d num">${d}</span><span class="c">${c}</span><span class="a num">${fmt(a)}</span></div>`).join('')}</div>`;
+  const legend = () => CATS.map((x) => `<button class="leg ${sel === x.k ? 'on' : ''}" data-k="${x.k}" aria-expanded="${sel === x.k}"><i style="background:${x.c}"></i><span class="n">${x.n}</span><span class="num">${fmt(x.v)}</span><span class="p num">${Math.round((x.v / total) * 100)}%</span></button>${sel === x.k ? detail(x) : ''}`).join('');
+
+  const p1 = document.getElementById('p1');
+  const draw = () => {
+    p1.innerHTML = `${SB}<div data-scroll><div class="content">
+      <div class="month"><div><div class="m">Noviembre</div><div class="y">2026</div></div><div class="arrows"><span class="round">‹</span><span class="round">›</span></div></div>
+      <div class="seg"><span>Tus gastos</span><span class="on">Análisis</span></div>
+      <div class="card"><div class="card-h"><span>Por categoría</span><small>al mes</small></div>
+        <div class="card-d">Incluye la parte proporcional de lo que pagas cada cierto tiempo, como un seguro anual. Así ves cuánto te cuesta tu estilo de vida.</div>
+        ${donut()}${legend()}
+      </div></div></div><div class="home-ind"></div>`;
+  };
+  p1.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-k]');
+    if (!t) return;
+    sel = sel === t.dataset.k ? null : t.dataset.k;
+    draw();
+  });
+  draw();
+
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+})();
+</script>
+</body>
+</html>
