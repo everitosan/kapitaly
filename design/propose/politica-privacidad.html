@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de privacidad</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --page: #E6E0D3;
+    --mint-a: #BFF4DF; --mint-b: #6FD7B5; --blue-a: #C4E6FF; --blue-b: #82B4FF;
+  }
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28; --page: #0A0A09;
+    --mint-a: #A9EDD3; --mint-b: #57C7A2; --blue-a: #AFD9FF; --blue-b: #6C9EF5;
+  }
+  body { background: var(--page); color: var(--ink); }
+
+  .theme-toggle, .width-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-top: 22px; }
+  .theme-toggle button, .width-toggle button { height: 40px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .theme-toggle button.on, .width-toggle button.on { background: var(--ink); color: var(--bg); }
+  .notes { max-width: 860px; margin: 0 auto 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 12px; }
+  .note { background: var(--card); border-radius: 20px; padding: 16px 18px; font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.45; }
+  .note b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+
+  /* ---------- Sitio: navegador simulado ---------- */
+  .browser { margin: 0 auto; width: 100%; max-width: 1040px; border-radius: 18px; overflow: hidden; background: var(--bg); box-shadow: 0 30px 60px -24px rgba(0,0,0,.35); transition: max-width .25s; }
+  .browser.narrow { max-width: 390px; }
+  .bar { height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 14px; background: var(--card); border-bottom: 1px solid var(--line); }
+  .bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line); flex: none; }
+  .url { flex: 1; min-width: 0; height: 28px; border-radius: 999px; background: var(--bg); color: var(--muted); font-size: 13px; font-weight: 600; display: flex; align-items: center; padding: 0 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .site { padding: 28px 16px 64px; }
+  .doc { max-width: 680px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 15px; letter-spacing: -.01em; margin-bottom: 22px; }
+  .brand img { width: 32px; height: 32px; border-radius: 9px; display: block; }
+  .hero { border-radius: 28px; padding: 26px 24px; background: linear-gradient(135deg, var(--mint-a), var(--mint-b)); color: #141414; margin-bottom: 28px; }
+  .hero h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.05; letter-spacing: -.03em; font-weight: 800; }
+  .hero p { margin-top: 10px; font-size: 15px; font-weight: 600; opacity: .78; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-bottom: 30px; }
+  .summary div { background: var(--card); border-radius: 18px; padding: 14px 16px; font-size: 14px; font-weight: 700; line-height: 1.35; }
+  .summary small { display: block; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+  .doc h2 { font-size: 21px; letter-spacing: -.02em; font-weight: 800; margin: 30px 0 8px; }
+  .doc p, .doc li { font-size: 16px; line-height: 1.6; }
+  .doc p + p { margin-top: 10px; }
+  .doc ul { padding-left: 20px; margin-top: 8px; }
+  .doc li + li { margin-top: 4px; }
+  .doc a { color: inherit; font-weight: 700; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .doc .foot { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; font-weight: 600; }
+
+  /* ---------- App: Ajustes ---------- */
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 4px 20px 120px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 24px; font-weight: 600; margin: 4px 0 12px; }
+  .s-h { font-size: 34px; font-weight: 800; letter-spacing: -1px; padding: 0 4px 6px; }
+  .s-d { font-size: 15px; font-weight: 600; color: var(--muted); padding: 0 4px 18px; }
+  .list { background: var(--card); border-radius: 22px; padding: 4px 0; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; width: 100%; text-align: left; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .ic { width: 40px; height: 40px; border-radius: 13px; flex: none; display: grid; place-items: center; font-size: 17px; color: #141414; }
+  .tx { flex: 1; min-width: 0; }
+  .tx b { display: block; font-size: 16px; font-weight: 700; }
+  .tx small { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+  .ct { font-size: 14px; font-weight: 700; color: var(--muted); }
+  .chev { font-size: 20px; color: var(--muted); }
+  .sec { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 22px 4px 10px; }
+  .row.new { outline: 2px dashed var(--mint-b); outline-offset: -4px; border-radius: 18px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">A-1 Duotono · Sitio + Ajustes</div>
+    <h1 class="p-title">Política de privacidad</h1>
+    <p class="p-desc">Página pública para Google Play y acceso desde Ajustes. Texto completo para revisar.</p>
+    <div>
+      <div class="theme-toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+      <div class="width-toggle" role="group" aria-label="Ancho"><button data-w="wide" class="on">Escritorio</button><button data-w="narrow">Teléfono</button></div>
+    </div>
+  </header>
+
+  <div class="notes">
+    <div class="note"><b>Una columna de lectura</b>Unos 680 px de ancho, texto de 16 px y un bloque menta como encabezado. Sin JavaScript en la página real.</div>
+    <div class="note"><b>Resumen arriba</b>Tres tarjetas con lo esencial; el detalle completo va debajo, con un encabezado por sección.</div>
+    <div class="note"><b>URL</b>everitosan.github.io/kapitaly/privacidad/ — la misma que va en Play Console y en la app.</div>
+    <div class="note"><b>Ajustes</b>Nueva sección "Acerca de" debajo de "Beta". La fila abre el navegador; lleva ↗ en lugar de ›.</div>
+  </div>
+
+  <div class="browser" id="browser">
+    <div class="bar"><i></i><i></i><i></i><div class="url">everitosan.github.io/kapitaly/privacidad/</div></div>
+    <div class="site"><article class="doc">
+      <div class="brand"><img src="../../assets/images/icon.png" alt="" width="32" height="32">KPTLY expenses</div>
+      <div class="hero">
+        <h1>Política de privacidad de KPTLY expenses</h1>
+        <p>Última actualización: 16 de noviembre de 2026</p>
+      </div>
+
+      <div class="summary">
+        <div><small>Tus gastos</small>Se quedan en tu teléfono. No hay servidores ni cuentas.</div>
+        <div><small>Rastreo</small>Sin analítica, publicidad ni venta de datos.</div>
+        <div><small>Comentarios</small>Solo si tú nos escribes, y los borramos cuando lo pidas.</div>
+      </div>
+
+      <h2>1. Quién es responsable</h2>
+      <p>KPTLY expenses la desarrolla <b>Everardo Sánchez Hernández</b>, persona física, con domicilio en Ciudad de México, México. Para cualquier tema de privacidad escríbenos a <a href="mailto:eve.san.dev@gmail.com">eve.san.dev@gmail.com</a>.</p>
+
+      <h2>2. Lo que guarda la app en tu teléfono</h2>
+      <p>Los gastos, tarjetas, métodos de pago, categorías y recordatorios que registras se guardan <b>solo en tu dispositivo</b>. La app no tiene servidores, no te pide crear una cuenta y no nos envía esa información.</p>
+
+      <h2>3. Copia de seguridad de Android</h2>
+      <p>Si tienes activada la copia de seguridad de Google en tu teléfono, Android puede guardar los datos de la app en tu cuenta de Google para restaurarlos si cambias de equipo. Esa copia la administra Google según su propia política de privacidad; nosotros no tenemos acceso a ella. Puedes desactivarla en los ajustes de Android.</p>
+
+      <h2>4. Comentarios que nos envías</h2>
+      <p>Si usas "Comentarios", la app abre tu aplicación de correo con un mensaje listo que incluye:</p>
+      <ul>
+        <li>el texto que escribas;</li>
+        <li>las capturas que elijas adjuntar (hasta 3);</li>
+        <li>la versión de la app, el modelo de tu teléfono y la versión de Android.</li>
+      </ul>
+      <p>Antes de enviar ves exactamente qué se incluye, y tú decides si lo mandas. Si lo haces, también recibimos tu dirección de correo. Usamos esta información solo para responderte y mejorar la app, y no la compartimos con nadie.</p>
+      <p>Conservamos esos correos mientras nos sirvan para atenderte, y como máximo <b>24 meses</b> después de nuestro último intercambio. Puedes pedirnos que los borremos antes en cualquier momento.</p>
+
+      <h2>5. Permisos que usa la app</h2>
+      <ul>
+        <li><b>Fotos:</b> solo para adjuntar capturas a tus comentarios. La app no usa la cámara ni el micrófono.</li>
+        <li><b>Notificaciones:</b> para los recordatorios que tú configures. Se generan en tu teléfono.</li>
+      </ul>
+
+      <h2>6. Lo que no hacemos</h2>
+      <p>No usamos analítica, publicidad ni herramientas de rastreo, y no vendemos ni compartimos datos con terceros.</p>
+
+      <h2>7. Actualizaciones de la app</h2>
+      <p>Para avisarte de una versión nueva, la app le pregunta a Google Play si hay una disponible. Esa consulta la hace Google Play según su propia política de privacidad.</p>
+
+      <h2>8. Borrar tus datos y tus derechos</h2>
+      <p>Para borrar lo que guarda la app, desinstálala o borra sus datos desde los ajustes de Android.</p>
+      <p>Para pedirnos que borremos tus correos de comentarios, o para ejercer tus derechos de acceso, rectificación, cancelación u oposición (derechos ARCO), escríbenos a <a href="mailto:eve.san.dev@gmail.com">eve.san.dev@gmail.com</a>. Te respondemos en un plazo máximo de 20 días y, si procede, lo hacemos efectivo en los 15 días siguientes.</p>
+
+      <h2>9. Menores de edad</h2>
+      <p>La app es para personas de 13 años en adelante. Si eres menor de 18, pide permiso a tu madre, padre o tutor antes de enviarnos comentarios.</p>
+
+      <h2>10. Cambios a esta política</h2>
+      <p>Si esta política cambia, actualizaremos la fecha de arriba y lo mencionaremos en las notas de la versión de la app.</p>
+
+      <p class="foot">KPTLY expenses · Everardo Sánchez Hernández · Ciudad de México, México</p>
+    </article></div>
+  </div>
+
+  <section class="section">
+    <h2 class="s-title" style="text-align:center">Ajustes · "Acerca de"</h2>
+    <p class="s-desc" style="text-align:center">La fila nueva va marcada con línea punteada solo en la maqueta.</p>
+    <div class="phones">
+      <div class="ph-wrap"><div class="phone"><div class="screen">
+        <div class="sb"><span>9:41</span><span class="sb-island"></span><span></span></div>
+        <div data-scroll><div class="content">
+          <div class="round">‹</div>
+          <div class="s-h">Ajustes</div>
+          <div class="s-d">Configura cómo registras tus gastos</div>
+          <div class="list">
+            <div class="row"><span class="ic" style="background:linear-gradient(135deg,#2B4BF2,#7B3CF0);color:#fff">▭</span><span class="tx"><b>Métodos de pago</b><small>Administra tus tarjetas, transferencias, apartados en efectivo</small></span><span class="ct">4</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic" style="background:linear-gradient(135deg,#E6F87C,#9EE36A)">•••</span><span class="tx"><b>Categorías</b><small>Clasifica a tu gusto cada pago que registras</small></span><span class="ct">9</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic" style="background:linear-gradient(135deg,#E1D1FF,#A98BFF)">◔</span><span class="tx"><b>Notificaciones</b><small>Configura alertas y recordatorios</small></span><span class="ct">2 activas</span><span class="chev">›</span></div>
+          </div>
+          <div class="sec">Beta</div>
+          <div class="list">
+            <div class="row"><span class="ic" style="background:linear-gradient(135deg,var(--blue-a),var(--blue-b))">✎</span><span class="tx"><b>Comentarios</b><small>¿Tienes alguna mejora en mente? Cuéntame más de eso aquí.</small></span><span class="chev">›</span></div>
+          </div>
+          <div class="sec">Acerca de</div>
+          <div class="list">
+            <div class="row new"><span class="ic" style="background:linear-gradient(135deg,var(--mint-a),var(--mint-b))">🔒︎</span><span class="tx"><b>Política de privacidad</b><small>Cómo cuidamos tus datos</small></span><span class="chev">↗</span></div>
+          </div>
+        </div></div>
+        <div class="home-ind"></div>
+      </div></div><div class="ph-cap">Ajustes con la sección nueva</div></div>
+    </div>
+  </section>
+</div>
+<script>
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+  document.querySelectorAll('[data-w]').forEach((b) => b.addEventListener('click', () => {
+    document.getElementById('browser').classList.toggle('narrow', b.dataset.w === 'narrow');
+    document.querySelectorAll('[data-w]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+</script>
+</body>
+</html>
