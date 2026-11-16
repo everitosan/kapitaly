@@ -19,7 +19,7 @@
 ## 4. Verificación integral
 
 - [x] 4.1 Correr `npm run lint`, `npm run typecheck` y `npm test`, y `npx prettier --check` sobre los archivos cambiados. Verificación: todo pasa.
-- [ ] 4.2 Probar en el teléfono o emulador, en claro y oscuro, con una categoría de varios gastos y un prorrateado. Verificación: el detalle se abre bajo la fila correcta, suma lo mismo que la leyenda, se lee bien en ambos temas y TalkBack lee cada fila completa.
+- [x] 4.2 Probar en el teléfono o emulador, en claro y oscuro, con una categoría de varios gastos y un prorrateado. Verificación: el detalle se abre bajo la fila correcta, suma lo mismo que la leyenda, se lee bien en ambos temas y TalkBack lee cada fila completa.
 
 ## Workflow follow-up
 

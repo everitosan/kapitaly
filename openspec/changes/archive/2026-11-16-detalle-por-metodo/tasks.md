@@ -17,7 +17,7 @@
 ## 4. Verificación integral
 
 - [x] 4.1 Correr `npm run lint`, `npm run typecheck`, `npm test` y `npx prettier --check` sobre los archivos cambiados. Verificación: todo pasa.
-- [ ] 4.2 Probar en el teléfono o emulador, en claro y oscuro: abrir y cerrar métodos, uno con física y digital, y uno con un prorrateado; con una categoría abierta a la vez. Verificación: el detalle se abre bajo la barra correcta, suma lo mismo que el método, se lee bien en ambos temas y TalkBack anuncia la fila como botón expandible y lee cada gasto completo.
+- [x] 4.2 Probar en el teléfono o emulador, en claro y oscuro: abrir y cerrar métodos, uno con física y digital, y uno con un prorrateado; con una categoría abierta a la vez. Verificación: el detalle se abre bajo la barra correcta, suma lo mismo que el método, se lee bien en ambos temas y TalkBack anuncia la fila como botón expandible y lee cada gasto completo.
 
 ## Workflow follow-up
 

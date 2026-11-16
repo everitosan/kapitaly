@@ -43,15 +43,19 @@ La pantalla de balance SHALL abrir mostrando el mes en curso y SHALL permitir av
 - **WHEN** el usuario está en la vista Análisis de noviembre 2026 y avanza al mes siguiente
 - **THEN** se muestra la vista Análisis de diciembre 2026
 
-### Requirement: Alternar entre las vistas Este mes y Análisis
-La pantalla de balance SHALL ofrecer un control de dos opciones, "Este mes" y "Análisis", que cambia la vista sin salir de la pantalla. La vista inicial SHALL ser "Este mes".
+### Requirement: Alternar entre las vistas Tus gastos y Análisis
+La pantalla de balance SHALL ofrecer un control de dos opciones, "Tus gastos" y "Análisis", que cambia la vista sin salir de la pantalla. La vista inicial SHALL ser "Tus gastos".
 
 #### Scenario: Cambio de vista
-- **WHEN** el usuario está en "Este mes" y selecciona "Análisis"
+- **WHEN** el usuario está en "Tus gastos" y selecciona "Análisis"
 - **THEN** la pantalla muestra la vista Análisis del mismo mes
 
-### Requirement: Vista Este mes
-La vista "Este mes" SHALL mostrar una tarjeta con lo efectuado y lo proyectado del mes y, debajo, la lista de cargos: los cobros de gastos recurrentes que caen en el mes seleccionado y los gastos únicos con fecha en ese mes. Cada elemento muestra fecha, nombre o descripción, monto, método de pago, el ícono y nombre de su categoría y una marca si es único. Los gastos eliminados no SHALL incluirse. La vista no SHALL mostrar el desglose por método de pago.
+#### Scenario: Nombre de la vista en otro mes
+- **WHEN** el usuario retrocede de noviembre 2026 a octubre 2026
+- **THEN** el control sigue mostrando las opciones "Tus gastos" y "Análisis"
+
+### Requirement: Vista Tus gastos
+La vista "Tus gastos" SHALL mostrar una tarjeta con lo efectuado y lo proyectado del mes y, debajo, la lista de cargos: los cobros de gastos recurrentes que caen en el mes seleccionado y los gastos únicos con fecha en ese mes. Cada elemento muestra fecha, nombre o descripción, monto, método de pago, el ícono y nombre de su categoría y una marca si es único. Los gastos eliminados no SHALL incluirse. La vista no SHALL mostrar el desglose por método de pago.
 
 #### Scenario: Total y conteo del mes
 - **WHEN** hoy es 11/11/2026 y en noviembre 2026 caen Netflix ($219.00, día 15), Renta ($1,500.00, día 20) e Internet bimestral ($450.00, día 28), hay un gasto único "Recarga metro" ($100.00, día 8) y existe un seguro anual de $6,000.00 que se cobra en marzo
@@ -63,22 +67,22 @@ La vista "Este mes" SHALL mostrar una tarjeta con lo efectuado y lo proyectado d
 
 #### Scenario: Categoría en la fila
 - **WHEN** Netflix tiene la categoría "Suscripciones" y se cobra en noviembre 2026
-- **THEN** su fila en "Este mes" muestra el ícono y el nombre "Suscripciones"
+- **THEN** su fila en "Tus gastos" muestra el ícono y el nombre "Suscripciones"
 
 #### Scenario: Categoría borrada
 - **WHEN** "Smart Fit" tenía la categoría personalizada "Gimnasio" y esta se borró
 - **THEN** su fila muestra "Otro"
 
 #### Scenario: Sin desglose por método
-- **WHEN** el usuario abre "Este mes"
+- **WHEN** el usuario abre "Tus gastos"
 - **THEN** no aparece la tarjeta "Por método"
 
 ### Requirement: Marca de cobros por confirmar
-En la vista "Este mes", cada cobro recurrente que esté por confirmar SHALL mostrar la marca "Por confirmar". Las cifras de "Este mes" SHALL usar el monto confirmado según se define en "Efectuado y proyectado del mes"; las de "Análisis" SHALL seguir calculándose con el monto de la regla, confirmados o no.
+En la vista "Tus gastos", cada cobro recurrente que esté por confirmar SHALL mostrar la marca "Por confirmar". Las cifras de "Tus gastos" SHALL usar el monto confirmado según se define en "Efectuado y proyectado del mes"; las de "Análisis" SHALL seguir calculándose con el monto de la regla, confirmados o no.
 
 #### Scenario: Marca en un cobro vencido
 - **WHEN** hoy es 16/11/2026 y el cobro de Netflix del 15/11/2026 no se ha confirmado
-- **THEN** la fila de Netflix en "Este mes" muestra "Por confirmar"
+- **THEN** la fila de Netflix en "Tus gastos" muestra "Por confirmar"
 
 #### Scenario: Sin marca tras confirmar
 - **WHEN** el usuario confirma el cobro de Netflix del 15/11/2026
@@ -97,7 +101,7 @@ La vista "Análisis" SHALL mostrar el costo mensual promedio repartido por méto
 
 #### Scenario: Aclaración visible
 - **WHEN** el usuario ve "Por método" en Análisis
-- **THEN** la sección indica que es un estimado con prorrateo y que lo cobrado está en "Este mes"
+- **THEN** la sección indica que es un estimado con prorrateo y que lo cobrado está en "Tus gastos"
 
 #### Scenario: El desglose suma física y digital
 - **WHEN** en noviembre 2026 hay $219.00 con "BBVA Azul" digital y $238.50 con "BBVA Azul" física
@@ -160,7 +164,7 @@ Para cada gasto con intervalo mayor a un mes, la lista de Prorrateados SHALL mos
 - **THEN** la pista indica que no hay cobros próximos
 
 ### Requirement: Efectuado y proyectado del mes
-La tarjeta de "Este mes" SHALL mostrar lo efectuado y "de <proyectado> proyectados". Efectuado suma los únicos del mes y los cobros recurrentes cobrados: confirmados como cobrados, con el monto confirmado, o anteriores al día en que se registró el gasto, con el monto de la regla. Proyectado suma lo efectuado y los cobros por confirmar o futuros con el monto de la regla; los marcados como no cobrados no cuentan.
+La tarjeta de "Tus gastos" SHALL mostrar lo efectuado y "de <proyectado> proyectados". Efectuado suma los únicos del mes y los cobros recurrentes cobrados: confirmados como cobrados, con el monto confirmado, o anteriores al día en que se registró el gasto, con el monto de la regla. Proyectado suma lo efectuado y los cobros por confirmar o futuros con el monto de la regla; los marcados como no cobrados no cuentan.
 
 #### Scenario: Efectuado y proyectado
 - **WHEN** hoy es 21/11/2026, en noviembre hay "Recarga metro" ($100.00, día 8), Netflix ($219.00, día 15) confirmado como cobrado con $239.00, Renta ($1,500.00, día 20) sin confirmar e Internet ($450.00, día 28)
@@ -179,25 +183,25 @@ La tarjeta de "Este mes" SHALL mostrar lo efectuado y "de <proyectado> proyectad
 - **THEN** la tarjeta muestra $0.00 efectuado y el proyectado suma todos los cobros de diciembre
 
 ### Requirement: Barra de avance del mes
-La tarjeta de "Este mes" SHALL mostrar una barra que reparte lo proyectado en tres partes: lo efectuado, lo por confirmar y lo que falta por cobrar, con los montos de las dos últimas.
+La tarjeta de "Tus gastos" SHALL mostrar una barra que reparte lo proyectado en tres partes: lo efectuado, lo por confirmar y lo que falta por cobrar, con los montos de las dos últimas.
 
 #### Scenario: Partes de la barra
 - **WHEN** lo efectuado es $339.00, Renta ($1,500.00) está por confirmar e Internet ($450.00) aún no llega
 - **THEN** la barra muestra $1,500.00 por confirmar y $450.00 por cobrar
 
-### Requirement: Atajos de Este mes a Análisis
-La tarjeta de "Este mes" SHALL tener los botones "Por categoría" y "Por método". Cada uno SHALL cambiar a la vista "Análisis" del mismo mes y desplazarla hasta esa sección.
+### Requirement: Atajos de Tus gastos a Análisis
+La tarjeta de "Tus gastos" SHALL tener los botones "Por categoría" y "Por método". Cada uno SHALL cambiar a la vista "Análisis" del mismo mes y desplazarla hasta esa sección.
 
 #### Scenario: Ir a Por categoría
-- **WHEN** el usuario toca "Por categoría" en "Este mes" de noviembre 2026
+- **WHEN** el usuario toca "Por categoría" en "Tus gastos" de noviembre 2026
 - **THEN** se muestra "Análisis" de noviembre 2026 con la sección "Por categoría" a la vista
 
 #### Scenario: Ir a Por método
-- **WHEN** el usuario toca "Por método" en "Este mes"
+- **WHEN** el usuario toca "Por método" en "Tus gastos"
 - **THEN** se muestra "Análisis" con la sección "Por método" a la vista
 
-### Requirement: Buscar en la lista de Este mes
-Arriba de la lista de "Este mes" SHALL haber un buscador que filtra los cargos cuyo nombre o descripción, categoría o método de pago contenga el texto, sin distinguir mayúsculas ni acentos. Con texto SHALL indicar cuántos cargos coinciden y, si ninguno, un mensaje. La búsqueda no SHALL cambiar las cifras de la tarjeta.
+### Requirement: Buscar en la lista de Tus gastos
+Arriba de la lista de "Tus gastos" SHALL haber un buscador que filtra los cargos cuyo nombre o descripción, categoría o método de pago contenga el texto, sin distinguir mayúsculas ni acentos. Con texto SHALL indicar cuántos cargos coinciden y, si ninguno, un mensaje. La búsqueda no SHALL cambiar las cifras de la tarjeta.
 
 #### Scenario: Filtrar por nombre
 - **WHEN** el usuario escribe "netf" en el buscador
@@ -215,8 +219,8 @@ Arriba de la lista de "Este mes" SHALL haber un buscador que filtra los cargos c
 - **WHEN** el usuario borra el texto del buscador
 - **THEN** la lista vuelve a mostrar todos los cargos del mes
 
-### Requirement: Orden de la lista de Este mes
-La lista de "Este mes" SHALL ordenarse por fecha de cobro de la más antigua a la más reciente; en la misma fecha, por la hora en que se registró el gasto y luego por nombre. Un botón SHALL invertir el orden y mostrar el orden vigente. El orden elegido SHALL conservarse al cerrar y volver a abrir la app; sin uno elegido, SHALL ser de la más antigua a la más reciente.
+### Requirement: Orden de la lista de Tus gastos
+La lista de "Tus gastos" SHALL ordenarse por fecha de cobro de la más antigua a la más reciente; en la misma fecha, por la hora en que se registró el gasto y luego por nombre. Un botón SHALL invertir el orden y mostrar el orden vigente. El orden elegido SHALL conservarse al cerrar y volver a abrir la app; sin uno elegido, SHALL ser de la más antigua a la más reciente.
 
 #### Scenario: Mismo día
 - **WHEN** el 11/11/2026 hay dos gastos únicos, "Tacos" registrado a las 14:20 y "Súper" registrado a las 18:47
@@ -228,14 +232,14 @@ La lista de "Este mes" SHALL ordenarse por fecha de cobro de la más antigua a l
 
 #### Scenario: Orden conservado al volver a abrir la app
 - **WHEN** el usuario cambia el orden a "Más reciente", cierra la app y la vuelve a abrir
-- **THEN** la lista de "Este mes" muestra primero el cargo más reciente y el botón indica "Más reciente"
+- **THEN** la lista de "Tus gastos" muestra primero el cargo más reciente y el botón indica "Más reciente"
 
 #### Scenario: Sin orden elegido
 - **WHEN** el usuario abre la app por primera vez
 - **THEN** la lista muestra primero el cargo más antiguo y el botón indica "Más antiguo"
 
 ### Requirement: Estado de cada cobro en la lista
-En la lista de "Este mes", un cobro recurrente cuya fecha es posterior a hoy y no tiene confirmación SHALL verse tenue con la marca "Por cobrar". Un cobro marcado como no cobrado SHALL verse tenue, sin color y tachado, con la marca "No se cobró". Un cobro confirmado con otro monto SHALL mostrar el monto confirmado y el esperado.
+En la lista de "Tus gastos", un cobro recurrente cuya fecha es posterior a hoy y no tiene confirmación SHALL verse tenue con la marca "Por cobrar". Un cobro marcado como no cobrado SHALL verse tenue, sin color y tachado, con la marca "No se cobró". Un cobro confirmado con otro monto SHALL mostrar el monto confirmado y el esperado.
 
 #### Scenario: Cobro futuro
 - **WHEN** hoy es 21/11/2026 e Internet se cobra el 28/11/2026
@@ -250,11 +254,11 @@ En la lista de "Este mes", un cobro recurrente cuya fecha es posterior a hoy y n
 - **THEN** su fila muestra $239.00 y "esperado $219.00"
 
 ### Requirement: Aclaración del costo mensual promedio
-Junto al título "Costo mensual promedio" SHALL haber un botón de información que muestra una explicación: es el costo de vida mensual (fijos, la parte mensual de lo que se paga cada varios meses y los únicos del mes), no lo cobrado este mes, que está en "Este mes".
+Junto al título "Costo mensual promedio" SHALL haber un botón de información que muestra una explicación: es el costo de vida mensual (fijos, la parte mensual de lo que se paga cada varios meses y los únicos del mes), no lo cobrado este mes, que está en "Tus gastos".
 
 #### Scenario: Ver la aclaración
 - **WHEN** el usuario toca el botón de información del costo mensual promedio
-- **THEN** aparece la explicación y se cierra al tocar "Entendido"
+- **THEN** aparece la explicación, que remite a "Tus gastos" para ver lo cobrado, y se cierra al tocar "Entendido"
 
 ### Requirement: Listas de Fijos, Prorrateados y Únicos
 Los subtotales Fijos, Prorrateados y Únicos de Análisis SHALL poder tocarse. Cada uno SHALL abrir un modal con su total, un buscador arriba y la lista de sus gastos: recurrentes mensuales vigentes, recurrentes vigentes de intervalo mayor a un mes con su costo mensual, o únicos del mes. El buscador SHALL filtrar por nombre, categoría o método, sin distinguir mayúsculas ni acentos.
@@ -285,3 +289,105 @@ La vista "Análisis" SHALL mostrar una gráfica de dona con el costo mensual pro
 #### Scenario: Sin gastos
 - **WHEN** el mes no tiene gastos vigentes ni únicos
 - **THEN** la sección indica que no hay gastos para analizar
+
+### Requirement: Aclaración de Por categoría
+Debajo del título "Por categoría", cuando hay gastos para analizar, SHALL mostrarse el texto "Incluye la parte proporcional de lo que pagas cada cierto tiempo, como un seguro anual. Así ves cuánto te cuesta tu estilo de vida."
+
+#### Scenario: Texto de la tarjeta
+- **WHEN** el usuario abre "Análisis" de un mes con gastos
+- **THEN** la tarjeta "Por categoría" muestra "Incluye la parte proporcional de lo que pagas cada cierto tiempo, como un seguro anual. Así ves cuánto te cuesta tu estilo de vida."
+
+#### Scenario: Mes sin gastos
+- **WHEN** el mes no tiene gastos vigentes ni únicos
+- **THEN** la tarjeta solo indica que no hay gastos para analizar
+
+### Requirement: Detalle de la categoría activa
+Al activar una categoría en "Por categoría", SHALL abrirse justo debajo de su fila en la leyenda una lista de solo lectura con fecha, concepto y monto de cada gasto que forma su cifra: recurrentes vigentes de esa categoría con su costo mensual y únicos del mes. La suma SHALL ser igual al monto de la leyenda. Solo SHALL haber un detalle abierto; tocar la categoría activa SHALL cerrarlo.
+
+#### Scenario: Abrir el detalle
+- **WHEN** hoy es 11/11/2026, en noviembre 2026 "Transporte" tiene el gasto único "Recarga metro" ($100.00, 08/11/2026) y el Seguro anual ($6,000.00, fecha de cobro 15/03/2026), y el usuario toca "Transporte" en la leyenda
+- **THEN** debajo de la fila de Transporte aparece "8 nov · Recarga metro · $100.00" y "15 mar 2027 · Seguro anual · $500.00", que suman los $600.00 de la leyenda
+
+#### Scenario: Activar desde la dona
+- **WHEN** el usuario toca el segmento de "Hogar" en la dona
+- **THEN** la dona resalta Hogar y el detalle se abre debajo de la fila de Hogar en la leyenda
+
+#### Scenario: Cambiar de categoría
+- **WHEN** el detalle de "Transporte" está abierto y el usuario toca "Hogar"
+- **THEN** se cierra el detalle de Transporte y se abre el de Hogar
+
+#### Scenario: Cerrar el detalle
+- **WHEN** el detalle de "Transporte" está abierto y el usuario toca otra vez "Transporte"
+- **THEN** el detalle se cierra y la dona deja de resaltar la categoría
+
+#### Scenario: Solo lectura
+- **WHEN** el usuario toca la fila "Seguro anual" del detalle
+- **THEN** no se abre la edición ni cambia la pantalla
+
+### Requirement: Fechas y orden del detalle de categoría
+En el detalle, un gasto mensual SHALL mostrar la fecha de su cobro en el mes, uno de intervalo mayor a un mes la de su próximo cobro (la misma de la lista de Prorrateados) y un único su fecha. La lista SHALL ordenarse por fecha, de la más antigua a la más reciente; en la misma fecha, por nombre. Una fecha de otro año que el mes consultado SHALL mostrar el año. Un gasto sin fecha SHALL mostrar un guion e ir al final.
+
+#### Scenario: Orden por fecha
+- **WHEN** en noviembre 2026 "Hogar" tiene Renta mensual (día 20) y el gasto único "Focos" (03/11/2026)
+- **THEN** el detalle muestra primero "3 nov · Focos" y después "20 nov · Renta"
+
+#### Scenario: Próximo cobro de otro año
+- **WHEN** hoy es 11/11/2026 y el Seguro anual tiene fecha de cobro 15/03/2026
+- **THEN** su fila del detalle muestra "15 mar 2027"
+
+#### Scenario: Mensual sin cobro en el mes
+- **WHEN** un gasto mensual con día 15 tiene fecha de fin 10/11/2026 y se consulta noviembre 2026
+- **THEN** su fila muestra un guion en la fecha y va al final del detalle
+
+#### Scenario: Sin cobros próximos
+- **WHEN** un gasto semestral de la categoría ya no tiene cobros a partir de la fecha de referencia
+- **THEN** su fila muestra un guion en la fecha y va al final del detalle
+
+### Requirement: Detalle de categoría al cambiar de mes
+Al cambiar de mes, el detalle SHALL seguir abierto si la categoría activa tiene gastos en el mes nuevo, mostrando los de ese mes; si no, la selección y el detalle SHALL cerrarse.
+
+#### Scenario: La categoría existe en el mes nuevo
+- **WHEN** el detalle de "Hogar" está abierto en noviembre 2026 y el usuario avanza a diciembre 2026, donde Hogar tiene gastos
+- **THEN** el detalle de Hogar sigue abierto con los gastos de diciembre
+
+#### Scenario: La categoría no existe en el mes nuevo
+- **WHEN** el detalle de "Transporte" está abierto en noviembre 2026 y en diciembre 2026 no hay gastos de Transporte
+- **THEN** en diciembre ninguna categoría aparece activa y no hay detalle abierto
+
+### Requirement: Detalle del método activo
+Cada fila de "Por método" SHALL poder tocarse. Al tocarla SHALL abrirse debajo de ella una lista de solo lectura con fecha, concepto y monto de cada gasto que forma su cifra, con las mismas filas, fechas y orden que "Fechas y orden del detalle de categoría"; su suma SHALL ser igual al monto del método. Solo SHALL haber un método abierto; tocarlo otra vez SHALL cerrarlo.
+
+#### Scenario: Abrir el detalle de un método
+- **WHEN** hoy es 11/11/2026, en noviembre 2026 Netflix ($219.00 mensual, día 15) y el Seguro anual ($6,000.00, fecha de cobro 15/03/2026) se pagan con "BBVA Azul", y el usuario toca "BBVA Azul" en "Por método"
+- **THEN** debajo de BBVA Azul aparece "15 nov · Netflix · $219.00" y "15 mar 2027 · Seguro anual · $500.00", que suman los $719.00 del método
+
+#### Scenario: Física y digital juntas
+- **WHEN** en noviembre 2026 hay $219.00 con "BBVA Azul" digital y $238.50 con "BBVA Azul" física y el usuario toca "BBVA Azul"
+- **THEN** el detalle muestra los dos gastos en la misma lista, sin indicar la variante, y suman $457.50
+
+#### Scenario: Cambiar de método
+- **WHEN** el detalle de "BBVA Azul" está abierto y el usuario toca "Nu Débito"
+- **THEN** se cierra el detalle de BBVA Azul y se abre el de Nu Débito
+
+#### Scenario: Cerrar el detalle de un método
+- **WHEN** el detalle de "BBVA Azul" está abierto y el usuario toca otra vez "BBVA Azul"
+- **THEN** el detalle se cierra
+
+#### Scenario: Independiente de la categoría
+- **WHEN** el detalle de "Transporte" está abierto en "Por categoría" y el usuario toca "BBVA Azul" en "Por método"
+- **THEN** los dos detalles quedan abiertos
+
+#### Scenario: Detalle de método de solo lectura
+- **WHEN** el usuario toca la fila "Netflix" del detalle de BBVA Azul
+- **THEN** no se abre la edición ni cambia la pantalla
+
+### Requirement: Detalle de método al cambiar de mes
+Al cambiar de mes, el detalle SHALL seguir abierto si el método activo tiene gastos en el mes nuevo, mostrando los de ese mes; si no, la selección y el detalle SHALL cerrarse.
+
+#### Scenario: El método existe en el mes nuevo
+- **WHEN** el detalle de "Nu Débito" está abierto en noviembre 2026 y en diciembre 2026 Nu Débito tiene gastos
+- **THEN** en diciembre el detalle de Nu Débito sigue abierto con los gastos de diciembre
+
+#### Scenario: El método no existe en el mes nuevo
+- **WHEN** el detalle de "Efectivo" está abierto en noviembre 2026 y en diciembre 2026 no hay gastos con Efectivo
+- **THEN** en diciembre no hay ningún método abierto, y al volver a noviembre Efectivo sigue cerrado

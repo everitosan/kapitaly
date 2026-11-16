@@ -18,7 +18,7 @@ La barra superior del balance SHALL mostrar un botón de pendientes con una camp
 
 #### Scenario: Sin aviso en la lista
 - **WHEN** hay pendientes y el usuario ve el balance
-- **THEN** no aparece ningún aviso de pendientes entre el selector "Este mes | Análisis" y la tarjeta del mes
+- **THEN** no aparece ningún aviso de pendientes entre el selector "Tus gastos | Análisis" y la tarjeta del mes
 
 ### Requirement: Contraste de la campana
 El número y el ícono de la campana activa SHALL tener un contraste de al menos 4.5:1 con su fondo, en tema claro y en tema oscuro.

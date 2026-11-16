@@ -14,7 +14,7 @@
 
 - [x] 3.1 Revisar que no quede el nombre viejo en `src/`. Verificación: `grep -rn "Este mes" src` no devuelve nada, y `grep -rni "este mes" src` solo devuelve "No hay cargos este mes", "No hay gastos para analizar este mes.", "No se cobró este mes" y "No es lo que salió de tu cuenta este mes".
 - [x] 3.2 Correr `npm run lint`, `npm run typecheck`, `npm run format:check` y `npm test`. Verificación: lint, typecheck y test terminan sin errores; `prettier --check` pasa en los archivos cambiados (`format:check` global ya reportaba 40 archivos antes de este cambio).
-- [ ] 3.3 Probar en el teléfono o emulador. Verificación: el selector dice `Tus gastos | Análisis` en el mes actual y al cambiar a otro mes; la nota de "Por método" y la "i" del costo mensual promedio remiten a "Tus gastos"; el orden de la lista elegido antes del cambio se conserva.
+- [x] 3.3 Probar en el teléfono o emulador. Verificación: el selector dice `Tus gastos | Análisis` en el mes actual y al cambiar a otro mes; la nota de "Por método" y la "i" del costo mensual promedio remiten a "Tus gastos"; el orden de la lista elegido antes del cambio se conserva.
 
 ## Workflow follow-up
 
