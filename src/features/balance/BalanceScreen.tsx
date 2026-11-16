@@ -102,6 +102,7 @@ export function BalanceScreen({
   const [query, setQuery] = useState('');
   const { sort, loaded: sortLoaded, toggle: toggleSort } = useBalanceSort();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [list, setList] = useState<AverageListKind | null>(null);
   const editAfterClose = useRef<{ kind: 'recurring' | 'oneOff'; id: string } | null>(null);
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -225,6 +226,13 @@ export function BalanceScreen({
     !average.byCategory.some((e) => e.category.id === selectedCategory)
   ) {
     setSelectedCategory(null);
+  }
+  // Lo mismo para el método abierto en "Por método" (independiente de la categoría).
+  if (
+    selectedMethod !== null &&
+    !average.byMethod.some((e) => e.paymentMethodId === selectedMethod)
+  ) {
+    setSelectedMethod(null);
   }
 
   let body;
@@ -359,6 +367,9 @@ export function BalanceScreen({
               totalCents={average.totalCents}
               caption="al mes"
               note={METHOD_NOTE}
+              year={year}
+              selectedId={selectedMethod}
+              onSelect={setSelectedMethod}
             />
           ) : null}
         </View>

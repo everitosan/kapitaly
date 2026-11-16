@@ -434,8 +434,8 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
       <MethodBreakdownCard
         totalCents={300000}
         entries={[
-          { paymentMethodId: 'bbva', method: bbva, amountCents: 200000 },
-          { paymentMethodId: 'old', method: old, amountCents: 100000 },
+          { paymentMethodId: 'bbva', method: bbva, amountCents: 200000, items: [] },
+          { paymentMethodId: 'old', method: old, amountCents: 100000, items: [] },
         ]}
       />,
     );
@@ -451,11 +451,113 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
         totalCents={200000}
         caption="al mes"
         note="Estimado con prorrateo, no es lo cobrado."
-        entries={[{ paymentMethodId: 'bbva', method: bbva, amountCents: 200000 }]}
+        entries={[{ paymentMethodId: 'bbva', method: bbva, amountCents: 200000, items: [] }]}
       />,
     );
     expect(screen.getByText('al mes')).toBeTruthy();
     expect(screen.getByText('Estimado con prorrateo, no es lo cobrado.')).toBeTruthy();
+    // Sin onSelect las filas no son botones.
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  const METHOD_ENTRIES = [
+    {
+      paymentMethodId: 'bbva',
+      method: bbva,
+      amountCents: 71900,
+      items: [
+        {
+          key: 'recurring:netflix',
+          kind: 'monthly' as const,
+          label: 'Netflix',
+          date: '2026-11-15',
+          amountCents: 21900,
+        },
+        {
+          key: 'recurring:seguro',
+          kind: 'prorated' as const,
+          label: 'Seguro anual',
+          date: '2027-03-15',
+          amountCents: 50000,
+        },
+      ],
+    },
+    {
+      paymentMethodId: 'old',
+      method: old,
+      amountCents: 10000,
+      items: [
+        {
+          key: 'oneOff:metro',
+          kind: 'oneOff' as const,
+          label: 'Recarga metro',
+          date: '2026-11-08',
+          amountCents: 10000,
+        },
+      ],
+    },
+  ];
+
+  it('MethodBreakdownCard: sin método activo no hay detalle', async () => {
+    await renderIn(
+      scheme,
+      <MethodBreakdownCard
+        totalCents={81900}
+        entries={METHOD_ENTRIES}
+        year={2026}
+        selectedId={null}
+        onSelect={jest.fn()}
+      />,
+    );
+    expect(screen.queryByTestId('method-detail')).toBeNull();
+    expect(screen.getByRole('button', { name: 'BBVA Azul ••4521, $719.00' })).not.toBeExpanded();
+  });
+
+  it('MethodBreakdownCard: el detalle va debajo de su fila, en orden y de solo lectura', async () => {
+    const onSelect = jest.fn();
+    await renderIn(
+      scheme,
+      <MethodBreakdownCard
+        totalCents={81900}
+        entries={METHOD_ENTRIES}
+        year={2026}
+        selectedId="bbva"
+        onSelect={onSelect}
+      />,
+    );
+    const row = screen.getByRole('button', { name: 'BBVA Azul ••4521, $719.00' });
+    expect(row).toBeSelected();
+    expect(row).toBeExpanded();
+    expect(
+      within(screen.getByTestId('method-detail'))
+        .getAllByText(/./)
+        .map((t) => t.props.children),
+    ).toEqual(['15 nov', 'Netflix', '$219.00', '15 mar 2027', 'Seguro anual', '$500.00']);
+    expect(
+      screen.getByLabelText('Seguro anual, $500.00 al mes, próximo cobro 15 de marzo de 2027'),
+    ).toBeTruthy();
+    const ids: string[] = [];
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (!node || typeof node !== 'object') return;
+      const n = node as { props?: { testID?: string }; children?: unknown };
+      const id = n.props?.testID;
+      if (id === 'method-detail' || (id?.startsWith('method-') && !id.startsWith('method-detail')))
+        ids.push(id);
+      walk(n.children);
+    };
+    walk(screen.toJSON());
+    expect(ids.filter((id) => id !== 'method-breakdown')).toEqual([
+      'method-bbva',
+      'method-detail',
+      'method-old',
+    ]);
+    await fireEvent.press(screen.getByTestId('method-detail-recurring:seguro'));
+    expect(onSelect).not.toHaveBeenCalled();
+    await fireEvent.press(row);
+    expect(onSelect).toHaveBeenLastCalledWith(null);
+    await fireEvent.press(screen.getByRole('button', { name: /^Banamex Clásica/ }));
+    expect(onSelect).toHaveBeenLastCalledWith('old');
   });
 
   it('InstitutionBadge muestra el monograma', async () => {

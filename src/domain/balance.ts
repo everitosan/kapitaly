@@ -47,6 +47,8 @@ export interface MethodBreakdownEntry {
   /** `null` si el método no se encuentra (se muestra como "Método desconocido"). */
   method: PaymentMethod | null;
   amountCents: Cents;
+  /** Por fecha (sin fecha al final) y nombre. Suma = `amountCents`. */
+  items: BreakdownDetailItem[];
 }
 
 export interface ThisMonthView {
@@ -168,21 +170,26 @@ export function buildThisMonthView({
   };
 }
 
-/** Suma por método de pago, de mayor a menor; solo montos > 0. */
+/** Suma por método de pago (con sus gastos), de mayor a menor; solo montos > 0. */
 function methodBreakdown(
-  amounts: readonly { paymentMethodId: string; amountCents: Cents }[],
+  parts: readonly { paymentMethodId: string; cents: Cents; detail: BreakdownDetailItem }[],
   methods: readonly PaymentMethod[],
 ): MethodBreakdownEntry[] {
-  const byMethod = new Map<string, Cents>();
-  for (const a of amounts)
-    byMethod.set(a.paymentMethodId, (byMethod.get(a.paymentMethodId) ?? 0) + a.amountCents);
+  const byMethod = new Map<string, { amountCents: Cents; items: BreakdownDetailItem[] }>();
+  for (const p of parts) {
+    const entry = byMethod.get(p.paymentMethodId) ?? { amountCents: 0, items: [] };
+    entry.amountCents += p.cents;
+    entry.items.push(p.detail);
+    byMethod.set(p.paymentMethodId, entry);
+  }
   const methodById = new Map(methods.map((m) => [m.id, m]));
   return [...byMethod.entries()]
-    .filter(([, amount]) => amount > 0)
-    .map(([paymentMethodId, amountCents]) => ({
+    .filter(([, e]) => e.amountCents > 0)
+    .map(([paymentMethodId, e]) => ({
       paymentMethodId,
       method: methodById.get(paymentMethodId) ?? null,
-      amountCents,
+      amountCents: e.amountCents,
+      items: sortDetailItems(e.items),
     }))
     .sort(
       (a, b) =>
@@ -203,8 +210,8 @@ export interface AverageItem {
   nextCharge?: CivilDate | null;
 }
 
-/** Un gasto que forma la cifra de una categoría en Análisis. */
-export interface CategoryDetailItem {
+/** Un gasto que forma la cifra de una categoría o de un método en Análisis. */
+export interface BreakdownDetailItem {
   /** Único dentro de la categoría: `recurring:<id>` o `oneOff:<id>`. */
   key: string;
   /** Mensual, de intervalo mayor (prorrateado) o único. */
@@ -223,7 +230,7 @@ export interface CategoryBreakdownEntry {
   category: CategoryView;
   amountCents: Cents;
   /** Por fecha (sin fecha al final) y nombre. Suma = `amountCents`. */
-  items: CategoryDetailItem[];
+  items: BreakdownDetailItem[];
 }
 
 export interface AverageView {
@@ -242,7 +249,7 @@ export interface AverageView {
 }
 
 /** Por fecha ascendente (sin fecha al final) y, en la misma fecha, por nombre. */
-function sortDetailItems(items: CategoryDetailItem[]): CategoryDetailItem[] {
+function sortDetailItems(items: BreakdownDetailItem[]): BreakdownDetailItem[] {
   return [...items].sort((a, b) => {
     if (a.date !== b.date) {
       if (a.date === null) return 1;
@@ -356,9 +363,6 @@ export function buildAverageView(
     totalCents: fixedCents + proratedCents + oneOffCents,
     referenceDate,
     byCategory,
-    byMethod: methodBreakdown(
-      parts.map((p) => ({ paymentMethodId: p.paymentMethodId, amountCents: p.cents })),
-      lookups.methods,
-    ),
+    byMethod: methodBreakdown(parts, lookups.methods),
   };
 }

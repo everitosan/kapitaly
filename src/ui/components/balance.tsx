@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
@@ -16,6 +17,7 @@ import { methodGradient } from '../methodColor';
 import type { Gradient } from '../theme';
 import { useTheme } from '../ThemeProvider';
 import { MoneyText, Pill } from './basics';
+import { BreakdownDetail } from './breakdownDetail';
 import { DuotoneBlock } from './DuotoneBlock';
 
 /* ---------- SegmentedControl ---------- */
@@ -553,6 +555,9 @@ export function MethodBreakdownCard({
   totalCents,
   caption,
   note,
+  year,
+  selectedId = null,
+  onSelect,
 }: {
   entries: MethodBreakdownEntry[];
   totalCents: Cents;
@@ -560,6 +565,12 @@ export function MethodBreakdownCard({
   caption?: string;
   /** Aclaración bajo el encabezado. */
   note?: string;
+  /** Año del mes consultado, para las fechas del detalle. Requerido con `onSelect`. */
+  year?: number;
+  /** Método con su detalle abierto. */
+  selectedId?: string | null;
+  /** Con él, cada fila se puede tocar y abre o cierra su detalle. */
+  onSelect?: (id: string | null) => void;
 }) {
   const theme = useTheme();
   const { colors, radii } = theme;
@@ -578,12 +589,14 @@ export function MethodBreakdownCard({
       {entries.map((e) => {
         const g = methodGradient(e.method, theme);
         const pct = totalCents > 0 ? (e.amountCents / totalCents) * 100 : 0;
-        return (
-          <View key={e.paymentMethodId} style={styles.bdItem}>
+        const name = e.method ? methodLabel(e.method) : 'Método desconocido';
+        const on = selectedId === e.paymentMethodId;
+        const content = (
+          <>
             <View style={styles.bdTop}>
               <InstitutionBadge method={e.method} size={24} />
               <Text style={[styles.bdName, { color: colors.ink }]} numberOfLines={1}>
-                {e.method ? methodLabel(e.method) : 'Método desconocido'}
+                {name}
                 {e.method?.archivedAt ? (
                   <Text style={{ color: colors.muted, fontSize: 12 }}>{'  archivado'}</Text>
                 ) : null}
@@ -592,14 +605,48 @@ export function MethodBreakdownCard({
                 {formatMXN(e.amountCents)}
               </Text>
             </View>
-            <View style={[styles.bdBar, { backgroundColor: colors.bg }]}>
+            <View style={[styles.bdBar, { backgroundColor: on ? colors.card : colors.bg }]}>
               <DuotoneBlock
                 gradient={g}
                 radius={999}
                 style={{ width: `${pct}%`, height: '100%' }}
               />
             </View>
-          </View>
+          </>
+        );
+        if (!onSelect) {
+          return (
+            <View key={e.paymentMethodId} style={styles.bdItem}>
+              {content}
+            </View>
+          );
+        }
+        return (
+          <Fragment key={e.paymentMethodId}>
+            <Pressable
+              testID={`method-${e.paymentMethodId}`}
+              accessibilityRole="button"
+              accessibilityLabel={`${name}, ${formatMXN(e.amountCents)}`}
+              accessibilityState={{ selected: on, expanded: on }}
+              onPress={() => onSelect(on ? null : e.paymentMethodId)}
+              style={[
+                styles.bdItem,
+                styles.bdItemTappable,
+                on ? { backgroundColor: colors.bg } : null,
+              ]}
+            >
+              {content}
+            </Pressable>
+            {on && e.items.length > 0 && year !== undefined ? (
+              <BreakdownDetail
+                items={e.items}
+                year={year}
+                color={g.from}
+                testID="method-detail"
+                rowTestIDPrefix="method-detail"
+              />
+            ) : null}
+          </Fragment>
         );
       })}
     </View>
@@ -738,6 +785,7 @@ const styles = StyleSheet.create({
   bdHeadText: { fontSize: 13, fontWeight: '700', letterSpacing: 1 },
   bdNote: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   bdItem: { paddingVertical: 10 },
+  bdItemTappable: { paddingHorizontal: 8, marginHorizontal: -8, borderRadius: 12 },
   bdTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   bdName: { flex: 1, fontSize: 15, fontWeight: '700' },
   bdAmount: { fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] },

@@ -391,8 +391,62 @@ describe('repartos de Análisis', () => {
       { methods: [...methods, archived], categories: CATEGORIES },
     );
     expect(v.byMethod).toEqual([
-      { paymentMethodId: 'old', method: archived, amountCents: 40000 },
-      { paymentMethodId: 'ghost', method: null, amountCents: 500 },
+      {
+        paymentMethodId: 'old',
+        method: archived,
+        amountCents: 40000,
+        items: [
+          {
+            key: 'recurring:Servicio',
+            kind: 'prorated',
+            label: 'Servicio',
+            date: '2027-05-10',
+            amountCents: 40000,
+          },
+        ],
+      },
+      {
+        paymentMethodId: 'ghost',
+        method: null,
+        amountCents: 500,
+        items: [
+          { key: 'oneOff:X', kind: 'oneOff', label: 'X', date: '2026-11-01', amountCents: 500 },
+        ],
+      },
+    ]);
+  });
+
+  it('detalle por método: lo que forma su cifra, por fecha', () => {
+    const v = buildAverageView(
+      [netflix, renta, internet, { ...seguro, name: 'Seguro anual' }],
+      [metro],
+      2026,
+      11,
+      today,
+      lookups,
+    );
+    const bbva = v.byMethod.find((b) => b.paymentMethodId === 'bbva')!;
+    expect(bbva.items.map((i) => [i.date, i.label, i.amountCents])).toEqual([
+      ['2026-11-15', 'Netflix', 21900],
+      ['2027-03-15', 'Seguro anual', 50000],
+    ]);
+    expect(bbva.items.reduce((s, i) => s + i.amountCents, 0)).toBe(bbva.amountCents);
+    for (const b of v.byMethod)
+      expect(b.items.reduce((s, i) => s + i.amountCents, 0)).toBe(b.amountCents);
+  });
+
+  it('detalle por método: física y digital en la misma lista', () => {
+    const v = buildAverageView(
+      [rec('Netflix', 21900, '2026-01-15', 'bbva', 1, 'month', { cardVariant: 'digital' })],
+      [one('Farmacia', 23850, '2026-11-09', 'bbva', { cardVariant: 'physical' })],
+      2026,
+      11,
+      today,
+      lookups,
+    );
+    expect(v.byMethod[0].items.map((i) => [i.label, i.amountCents])).toEqual([
+      ['Farmacia', 23850],
+      ['Netflix', 21900],
     ]);
   });
 

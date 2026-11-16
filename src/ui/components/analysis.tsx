@@ -2,12 +2,12 @@ import { Fragment, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
-import type { CategoryDetailItem } from '@/domain/balance';
+import type { BreakdownDetailItem } from '@/domain/balance';
 import { formatMXN, type Cents } from '@/domain/money';
 
-import { formatDetailDate, formatLongDate } from '../format';
 import { useTheme } from '../ThemeProvider';
 import { MoneyText } from './basics';
+import { BreakdownDetail } from './breakdownDetail';
 import { DuotoneBlock } from './DuotoneBlock';
 
 const pct = (part: Cents, total: Cents) => (total > 0 ? Math.round((part / total) * 100) : 0);
@@ -182,60 +182,7 @@ export interface DonutEntry {
   amountCents: Cents;
   color: string;
   /** Gastos que forman la cifra, ya ordenados; se muestran al activar la categoría. */
-  items: CategoryDetailItem[];
-}
-
-function detailLabel(item: CategoryDetailItem): string {
-  const amount = formatMXN(item.amountCents);
-  if (item.kind === 'prorated') {
-    return item.date === null
-      ? `${item.label}, ${amount} al mes, sin cobros próximos`
-      : `${item.label}, ${amount} al mes, próximo cobro ${formatLongDate(item.date)}`;
-  }
-  return item.date === null
-    ? `${item.label}, ${amount}, sin cobro en el mes`
-    : `${item.label}, ${amount}, ${formatLongDate(item.date)}`;
-}
-
-/** Detalle de solo lectura de una categoría: fecha, concepto y monto. */
-function CategoryDetail({
-  items,
-  year,
-  color,
-}: {
-  items: CategoryDetailItem[];
-  year: number;
-  color: string;
-}) {
-  const { colors } = useTheme();
-  return (
-    <View testID="category-detail" style={[styles.detail, { borderLeftColor: color }]}>
-      {items.map((item, i) => (
-        <View
-          key={item.key}
-          testID={`detail-${item.key}`}
-          accessible
-          accessibilityLabel={detailLabel(item)}
-          style={[
-            styles.detailRow,
-            i > 0
-              ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }
-              : null,
-          ]}
-        >
-          <Text style={[styles.detailDate, { color: colors.muted }]}>
-            {formatDetailDate(item.date, year)}
-          </Text>
-          <Text style={[styles.detailLabel, { color: colors.ink }]} numberOfLines={1}>
-            {item.label}
-          </Text>
-          <Text style={[styles.detailAmount, { color: colors.ink }]}>
-            {formatMXN(item.amountCents)}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
+  items: BreakdownDetailItem[];
 }
 
 const SIZE = 200;
@@ -338,7 +285,7 @@ export function CategoryDonut({
               </Text>
             </Pressable>
             {on && e.items.length > 0 ? (
-              <CategoryDetail items={e.items} year={year} color={e.color} />
+              <BreakdownDetail items={e.items} year={year} color={e.color} />
             ) : null}
           </Fragment>
         );
@@ -424,16 +371,4 @@ const styles = StyleSheet.create({
   legName: { flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: '700' },
   legAmount: { fontSize: 14.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
   legPct: { width: 40, textAlign: 'right', fontSize: 12.5, fontWeight: '700' },
-  detail: {
-    marginTop: 2,
-    marginBottom: 8,
-    marginLeft: 11,
-    paddingLeft: 14,
-    paddingRight: 6,
-    borderLeftWidth: 2,
-  },
-  detailRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10, paddingVertical: 7 },
-  detailDate: { width: 84, fontSize: 13.5, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  detailLabel: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: '600' },
-  detailAmount: { fontSize: 13.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
 });

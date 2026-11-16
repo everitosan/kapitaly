@@ -610,6 +610,88 @@ describe('detalle por categoría', () => {
   });
 });
 
+describe('detalle por método', () => {
+  async function scenario() {
+    const { repos } = await novemberScenario();
+    await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });
+    await screen.findByTestId('month-progress');
+    await openAnalysis();
+    await screen.findByTestId('method-breakdown');
+  }
+  const methodRow = (name: string) =>
+    within(screen.getByTestId('method-breakdown')).getByRole('button', {
+      name: new RegExp(`^${name}`),
+    });
+  const detailText = () =>
+    within(screen.getByTestId('method-detail'))
+      .getAllByText(/./)
+      .map((t) => t.props.children);
+
+  it('abre el detalle con lo que forma la cifra y se cierra al tocar otra vez', async () => {
+    await scenario();
+    expect(screen.queryByTestId('method-detail')).toBeNull();
+    const bbva = methodRow('BBVA Azul');
+    await fireEvent.press(bbva);
+    expect(bbva).toBeExpanded();
+    expect(detailText()).toEqual([
+      '15 nov',
+      'Netflix',
+      '$219.00',
+      '15 mar 2027',
+      'Seguro',
+      '$500.00',
+    ]);
+    await fireEvent.press(bbva);
+    expect(screen.queryByTestId('method-detail')).toBeNull();
+  });
+
+  it('cambia de método', async () => {
+    await scenario();
+    await fireEvent.press(methodRow('BBVA Azul'));
+    await fireEvent.press(methodRow('Nu Débito'));
+    expect(screen.getAllByTestId('method-detail')).toHaveLength(1);
+    expect(methodRow('BBVA Azul')).not.toBeExpanded();
+    expect(detailText()).toEqual(['20 nov', 'Renta', '$1,500.00', '28 nov', 'Internet', '$225.00']);
+  });
+
+  it('es independiente de la categoría abierta', async () => {
+    await scenario();
+    const section = screen.getByTestId('section-category');
+    await fireEvent.press(within(section).getByRole('button', { name: /^Otro, / }));
+    await fireEvent.press(methodRow('BBVA Azul'));
+    expect(screen.getByTestId('category-detail')).toBeOnTheScreen();
+    expect(screen.getByTestId('method-detail')).toBeOnTheScreen();
+  });
+
+  it('sigue abierto en un mes donde el método tiene gastos', async () => {
+    await scenario();
+    await fireEvent.press(methodRow('Nu Débito'));
+    await fireEvent.press(screen.getByLabelText('Mes siguiente'));
+    await waitFor(() =>
+      expect(detailText()).toEqual([
+        '20 dic',
+        'Renta',
+        '$1,500.00',
+        '28 ene 2027',
+        'Internet',
+        '$225.00',
+      ]),
+    );
+  });
+
+  it('se cierra en un mes sin el método y no reaparece al volver', async () => {
+    await scenario();
+    await fireEvent.press(methodRow('Efectivo'));
+    expect(detailText()).toEqual(['8 nov', 'Recarga metro', '$100.00']);
+    await fireEvent.press(screen.getByLabelText('Mes siguiente'));
+    await waitFor(() => expect(screen.queryByTestId('method-detail')).toBeNull());
+    await fireEvent.press(screen.getByLabelText('Mes anterior'));
+    await waitFor(() => expect(methodRow('Efectivo')).toBeOnTheScreen());
+    expect(screen.queryByTestId('method-detail')).toBeNull();
+    expect(methodRow('Efectivo')).not.toBeSelected();
+  });
+});
+
 describe('8.4 · tocar un gasto de "Tus gastos" abre su edición', () => {
   it('según su tipo y con su id', async () => {
     const { repos, ids } = await novemberScenario();
