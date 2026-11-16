@@ -8,6 +8,8 @@ import { BUILTIN_CATEGORIES } from '@/domain/category';
 import { renderWithProviders } from '../../testUtils';
 import { SettingsScreen } from '../SettingsScreen';
 
+jest.mock('expo-web-browser', () => ({ openBrowserAsync: jest.fn(() => Promise.resolve()) }));
+
 jest.mock('../../../../modules/kapitaly-shortcuts', () => ({
   isPinSupported: jest.fn(() => false),
   requestPinNewExpense: jest.fn(() => false),
@@ -37,6 +39,9 @@ describe('Ajustes', () => {
       'Comentarios',
     ]);
     expect(screen.getByText('Beta')).toBeOnTheScreen();
+    expect(screen.getAllByRole('link').map((b) => b.props.accessibilityLabel)).toEqual([
+      'Política de privacidad',
+    ]);
     // Los recordatorios solo viven dentro de "Notificaciones".
     expect(screen.queryByText(/^recordatorios$/i)).toBeNull();
     expect(screen.getByText('Configura alertas y recordatorios')).toBeOnTheScreen();
@@ -81,6 +86,26 @@ describe('Comentarios en Ajustes', () => {
     await renderWithProviders(<SettingsScreen {...p} />);
     await fireEvent.press(await screen.findByRole('button', { name: 'Comentarios' }));
     expect(p.onOpenFeedback).toHaveBeenCalled();
+  });
+});
+
+describe('Política de privacidad en Ajustes', () => {
+  const browser = jest.requireMock('expo-web-browser') as { openBrowserAsync: jest.Mock };
+
+  it('aparece en "Acerca de" como enlace que abre el navegador', async () => {
+    await renderWithProviders(<SettingsScreen {...props()} />);
+    expect(await screen.findByText('Acerca de')).toBeOnTheScreen();
+    const row = screen.getByRole('link', { name: 'Política de privacidad' });
+    expect(row.props.accessibilityHint).toBe('Abre el navegador');
+    expect(within(row).getByText('↗')).toBeOnTheScreen();
+  });
+
+  it('abre la URL publicada de la política', async () => {
+    await renderWithProviders(<SettingsScreen {...props()} />);
+    await fireEvent.press(await screen.findByRole('link', { name: 'Política de privacidad' }));
+    expect(browser.openBrowserAsync).toHaveBeenCalledWith(
+      'https://everitosan.github.io/kapitaly/privacidad/',
+    );
   });
 });
 

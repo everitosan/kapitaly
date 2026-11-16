@@ -71,7 +71,8 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/design/",
-      "/openspec/"
+      "/openspec/",
+      "/site/"
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"

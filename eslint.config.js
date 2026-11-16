@@ -7,7 +7,7 @@ module.exports = defineConfig([
   expoConfig,
   prettierConfig,
   {
-    ignores: ['dist/*', 'design/*', 'openspec/*', '.expo/*'],
+    ignores: ['dist/*', 'design/*', 'openspec/*', '.expo/*', 'site/*'],
   },
   {
     // El dominio es TypeScript puro: sin React, Expo ni dependencias de datos o UI.

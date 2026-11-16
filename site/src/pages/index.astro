@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<Base
+  title="KPTLY expenses"
+  description="KPTLY expenses: registra tus gastos y conoce cuánto te cuesta tu estilo de vida."
+>
+  <header class="hero">
+    <h1>KPTLY expenses</h1>
+    <p>Registra tus gastos y conoce cuánto te cuesta tu estilo de vida. Todo se queda en tu teléfono.</p>
+  </header>
+  <p><a href={`${base}privacidad/`}>Política de privacidad</a></p>
+</Base>

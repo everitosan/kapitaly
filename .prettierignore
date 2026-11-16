@@ -1,5 +1,6 @@
 design/
 openspec/
+site/
 .expo/
 node_modules/
 package-lock.json

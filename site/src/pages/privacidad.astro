@@ -1,0 +1,103 @@
+---
+import Base from '../layouts/Base.astro';
+
+// Cambiar junto con el texto. La spec privacy-policy pide avisar el cambio en las notas de la versión.
+const LAST_UPDATED = '16 de noviembre de 2026';
+const CONTACT = 'eve.san.dev@gmail.com';
+---
+
+<Base
+  title="Política de privacidad de KPTLY expenses"
+  description="Cómo KPTLY expenses trata tus datos: todo se queda en tu teléfono, sin cuentas, analítica ni rastreo."
+>
+  <header class="hero">
+    <h1>Política de privacidad de KPTLY expenses</h1>
+    <p>Última actualización: {LAST_UPDATED}</p>
+  </header>
+
+  <section class="summary" aria-label="Resumen">
+    <div><small>Tus gastos</small>Se quedan en tu teléfono. No hay servidores ni cuentas.</div>
+    <div><small>Rastreo</small>Sin analítica, publicidad ni venta de datos.</div>
+    <div><small>Comentarios</small>Solo si tú nos escribes, y los borramos cuando lo pidas.</div>
+  </section>
+
+  <h2>1. Quién es responsable</h2>
+  <p>
+    KPTLY expenses la desarrolla <b>Everardo Sánchez Hernández</b>, persona física, con domicilio en
+    Ciudad de México, México. Para cualquier tema de privacidad escríbenos a
+    <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+  </p>
+
+  <h2>2. Lo que guarda la app en tu teléfono</h2>
+  <p>
+    Los gastos, tarjetas, métodos de pago, categorías y recordatorios que registras se guardan
+    <b>solo en tu dispositivo</b>. La app no tiene servidores, no te pide crear una cuenta y no nos
+    envía esa información.
+  </p>
+
+  <h2>3. Copia de seguridad de Android</h2>
+  <p>
+    Si tienes activada la copia de seguridad de Google en tu teléfono, Android puede guardar los
+    datos de la app en tu cuenta de Google para restaurarlos si cambias de equipo. Esa copia la
+    administra Google según su propia política de privacidad; nosotros no tenemos acceso a ella.
+    Puedes desactivarla en los ajustes de Android.
+  </p>
+
+  <h2>4. Comentarios que nos envías</h2>
+  <p>Si usas "Comentarios", la app abre tu aplicación de correo con un mensaje listo que incluye:</p>
+  <ul>
+    <li>el texto que escribas;</li>
+    <li>las capturas que elijas adjuntar (hasta 3);</li>
+    <li>la versión de la app, el modelo de tu teléfono y la versión de Android.</li>
+  </ul>
+  <p>
+    Antes de enviar ves exactamente qué se incluye, y tú decides si lo mandas. Si lo haces, también
+    recibimos tu dirección de correo. Usamos esta información solo para responderte y mejorar la
+    app, y no la compartimos con nadie.
+  </p>
+  <p>
+    Conservamos esos correos mientras nos sirvan para atenderte, y como máximo <b>24 meses</b>
+    después de nuestro último intercambio. Puedes pedirnos que los borremos antes en cualquier momento.
+  </p>
+
+  <h2>5. Permisos que usa la app</h2>
+  <ul>
+    <li>
+      <b>Fotos:</b> solo para adjuntar capturas a tus comentarios. La app no usa la cámara ni el micrófono.
+    </li>
+    <li><b>Notificaciones:</b> para los recordatorios que tú configures. Se generan en tu teléfono.</li>
+  </ul>
+
+  <h2>6. Lo que no hacemos</h2>
+  <p>
+    No usamos analítica, publicidad ni herramientas de rastreo, y no vendemos ni compartimos datos con
+    terceros.
+  </p>
+
+  <h2>7. Actualizaciones de la app</h2>
+  <p>
+    Para avisarte de una versión nueva, la app le pregunta a Google Play si hay una disponible. Esa
+    consulta la hace Google Play según su propia política de privacidad.
+  </p>
+
+  <h2>8. Borrar tus datos y tus derechos</h2>
+  <p>Para borrar lo que guarda la app, desinstálala o borra sus datos desde los ajustes de Android.</p>
+  <p>
+    Para pedirnos que borremos tus correos de comentarios, o para ejercer tus derechos de acceso,
+    rectificación, cancelación u oposición (derechos ARCO), escríbenos a
+    <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. Te respondemos en un plazo máximo de 20 días y, si
+    procede, lo hacemos efectivo en los 15 días siguientes.
+  </p>
+
+  <h2>9. Menores de edad</h2>
+  <p>
+    La app es para personas de 13 años en adelante. Si eres menor de 18, pide permiso a tu madre,
+    padre o tutor antes de enviarnos comentarios.
+  </p>
+
+  <h2>10. Cambios a esta política</h2>
+  <p>
+    Si esta política cambia, actualizaremos la fecha de arriba y lo mencionaremos en las notas de la
+    versión de la app.
+  </p>
+</Base>

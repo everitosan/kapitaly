@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import * as WebBrowser from 'expo-web-browser';
 
 import { isSelectableCategory } from '@/domain/category';
 import { isActiveMethod } from '@/domain/paymentMethod';
@@ -16,6 +17,7 @@ import { useTheme } from '@/ui/ThemeProvider';
 
 import { isPinSupported, requestPinNewExpense } from '../../../modules/kapitaly-shortcuts';
 import { useCategories, usePaymentMethods, useReminderSettings } from '../repositories';
+import { PRIVACY_POLICY_URL } from './links';
 
 function ChatIcon({ color }: { color: string }) {
   return (
@@ -31,6 +33,24 @@ function ChatIcon({ color }: { color: string }) {
     </Svg>
   );
 }
+
+function LockIcon({ color }: { color: string }) {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M6.5 10.5h11a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19v-7a1.5 1.5 0 0 1 1.5-1.5zM8 10.5V8a4 4 0 0 1 8 0v2.5"
+        stroke={color}
+        strokeWidth={2.1}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+const openPrivacyPolicy = () => {
+  void WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL);
+};
 
 const addShortcut = () => {
   if (!requestPinNewExpense())
@@ -59,6 +79,7 @@ function SettingsRow({
   icon,
   onPress,
   accessibilityLabel,
+  external = false,
 }: {
   label: string;
   detail: string;
@@ -70,11 +91,14 @@ function SettingsRow({
   gradient?: Gradient;
   icon: React.ReactNode;
   onPress: () => void;
+  /** Abre una página web: se anuncia como enlace y lleva ↗ en lugar de ›. */
+  external?: boolean;
 }) {
   const { colors } = useTheme();
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={external ? 'link' : 'button'}
+      accessibilityHint={external ? 'Abre el navegador' : undefined}
       accessibilityLabel={
         accessibilityLabel ?? (count === undefined ? label : `${label}, ${count}`)
       }
@@ -95,7 +119,7 @@ function SettingsRow({
       {count === undefined ? null : (
         <Text style={[styles.count, { color: colors.muted }]}>{count}</Text>
       )}
-      <Text style={[styles.chev, { color: colors.muted }]}>›</Text>
+      <Text style={[styles.chev, { color: colors.muted }]}>{external ? '↗' : '›'}</Text>
     </Pressable>
   );
 }
@@ -181,6 +205,17 @@ export function SettingsScreen({
           gradient={theme.frequency.bimonthly}
           icon={<ChatIcon color={colors.onBlock} />}
           onPress={onOpenFeedback}
+        />
+      </View>
+      <SectionLabel style={styles.section}>Acerca de</SectionLabel>
+      <View style={[styles.list, { backgroundColor: colors.card }]}>
+        <SettingsRow
+          label="Política de privacidad"
+          detail="Cómo cuidamos tus datos"
+          gradient={theme.frequency.custom}
+          icon={<LockIcon color={colors.onBlock} />}
+          onPress={openPrivacyPolicy}
+          external
         />
       </View>
     </ScreenLayout>
