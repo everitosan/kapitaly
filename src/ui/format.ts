@@ -36,3 +36,17 @@ export function formatShortDate(date: CivilDate): string {
   const { year, month, day } = parseCivilDate(date);
   return `${day} ${MONTH_SHORT[month - 1]} ${year}`;
 }
+
+/** Fecha del detalle por categoría: `8 nov`, `15 mar 2027` si es de otro año que `year`, `—` sin fecha. */
+export function formatDetailDate(date: CivilDate | null, year: number): string {
+  if (date === null) return '—';
+  const d = parseCivilDate(date);
+  const base = `${d.day} ${MONTH_SHORT[d.month - 1]}`;
+  return d.year === year ? base : `${base} ${d.year}`;
+}
+
+/** Fecha para el lector de pantalla: `15 de marzo de 2027`. */
+export function formatLongDate(date: CivilDate): string {
+  const { year, month, day } = parseCivilDate(date);
+  return `${day} de ${MONTH_NAMES[month - 1]} de ${year}`;
+}

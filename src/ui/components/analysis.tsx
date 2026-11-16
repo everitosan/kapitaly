@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
+import type { CategoryDetailItem } from '@/domain/balance';
 import { formatMXN, type Cents } from '@/domain/money';
 
+import { formatDetailDate, formatLongDate } from '../format';
 import { useTheme } from '../ThemeProvider';
 import { MoneyText } from './basics';
 import { DuotoneBlock } from './DuotoneBlock';
@@ -179,6 +181,61 @@ export interface DonutEntry {
   name: string;
   amountCents: Cents;
   color: string;
+  /** Gastos que forman la cifra, ya ordenados; se muestran al activar la categoría. */
+  items: CategoryDetailItem[];
+}
+
+function detailLabel(item: CategoryDetailItem): string {
+  const amount = formatMXN(item.amountCents);
+  if (item.kind === 'prorated') {
+    return item.date === null
+      ? `${item.label}, ${amount} al mes, sin cobros próximos`
+      : `${item.label}, ${amount} al mes, próximo cobro ${formatLongDate(item.date)}`;
+  }
+  return item.date === null
+    ? `${item.label}, ${amount}, sin cobro en el mes`
+    : `${item.label}, ${amount}, ${formatLongDate(item.date)}`;
+}
+
+/** Detalle de solo lectura de una categoría: fecha, concepto y monto. */
+function CategoryDetail({
+  items,
+  year,
+  color,
+}: {
+  items: CategoryDetailItem[];
+  year: number;
+  color: string;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View testID="category-detail" style={[styles.detail, { borderLeftColor: color }]}>
+      {items.map((item, i) => (
+        <View
+          key={item.key}
+          testID={`detail-${item.key}`}
+          accessible
+          accessibilityLabel={detailLabel(item)}
+          style={[
+            styles.detailRow,
+            i > 0
+              ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }
+              : null,
+          ]}
+        >
+          <Text style={[styles.detailDate, { color: colors.muted }]}>
+            {formatDetailDate(item.date, year)}
+          </Text>
+          <Text style={[styles.detailLabel, { color: colors.ink }]} numberOfLines={1}>
+            {item.label}
+          </Text>
+          <Text style={[styles.detailAmount, { color: colors.ink }]}>
+            {formatMXN(item.amountCents)}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
 const SIZE = 200;
@@ -186,15 +243,21 @@ const R = 74;
 const C = 2 * Math.PI * R;
 const GAP = 3;
 
-/** Dona del costo mensual por categoría con leyenda seleccionable. */
+/**
+ * Dona del costo mensual por categoría con leyenda seleccionable. La categoría activa abre su
+ * detalle justo debajo de su fila en la leyenda.
+ */
 export function CategoryDonut({
   entries,
   totalCents,
+  year,
   selectedId,
   onSelect,
 }: {
   entries: DonutEntry[];
   totalCents: Cents;
+  /** Año del mes consultado: las fechas de otro año muestran el año. */
+  year: number;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
 }) {
@@ -254,26 +317,30 @@ export function CategoryDonut({
       {entries.map((e) => {
         const on = selectedId === e.id;
         return (
-          <Pressable
-            key={e.id}
-            testID={`legend-${e.id}`}
-            accessibilityRole="button"
-            accessibilityLabel={`${e.name}, ${formatMXN(e.amountCents)}, ${pct(e.amountCents, totalCents)} %`}
-            accessibilityState={{ selected: on }}
-            onPress={() => toggle(e.id)}
-            style={[styles.leg, on ? { backgroundColor: colors.bg } : null]}
-          >
-            <View style={[styles.legSwatch, { backgroundColor: e.color }]} />
-            <Text style={[styles.legName, { color: colors.ink }]} numberOfLines={1}>
-              {e.name}
-            </Text>
-            <Text style={[styles.legAmount, { color: colors.ink }]}>
-              {formatMXN(e.amountCents)}
-            </Text>
-            <Text style={[styles.legPct, { color: colors.muted }]}>
-              {`${pct(e.amountCents, totalCents)}%`}
-            </Text>
-          </Pressable>
+          <Fragment key={e.id}>
+            <Pressable
+              testID={`legend-${e.id}`}
+              accessibilityRole="button"
+              accessibilityLabel={`${e.name}, ${formatMXN(e.amountCents)}, ${pct(e.amountCents, totalCents)} %`}
+              accessibilityState={{ selected: on, expanded: on }}
+              onPress={() => toggle(e.id)}
+              style={[styles.leg, on ? { backgroundColor: colors.bg } : null]}
+            >
+              <View style={[styles.legSwatch, { backgroundColor: e.color }]} />
+              <Text style={[styles.legName, { color: colors.ink }]} numberOfLines={1}>
+                {e.name}
+              </Text>
+              <Text style={[styles.legAmount, { color: colors.ink }]}>
+                {formatMXN(e.amountCents)}
+              </Text>
+              <Text style={[styles.legPct, { color: colors.muted }]}>
+                {`${pct(e.amountCents, totalCents)}%`}
+              </Text>
+            </Pressable>
+            {on && e.items.length > 0 ? (
+              <CategoryDetail items={e.items} year={year} color={e.color} />
+            ) : null}
+          </Fragment>
         );
       })}
     </View>
@@ -357,4 +424,16 @@ const styles = StyleSheet.create({
   legName: { flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: '700' },
   legAmount: { fontSize: 14.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
   legPct: { width: 40, textAlign: 'right', fontSize: 12.5, fontWeight: '700' },
+  detail: {
+    marginTop: 2,
+    marginBottom: 8,
+    marginLeft: 11,
+    paddingLeft: 14,
+    paddingRight: 6,
+    borderLeftWidth: 2,
+  },
+  detailRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10, paddingVertical: 7 },
+  detailDate: { width: 84, fontSize: 13.5, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  detailLabel: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: '600' },
+  detailAmount: { fontSize: 13.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
 });

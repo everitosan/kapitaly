@@ -218,6 +218,14 @@ export function BalanceScreen({
     methods: methods.data,
     categories: categories.data,
   });
+  // Si la categoría activa no tiene gastos en el mes mostrado, se cierra su detalle (y no se
+  // vuelve a abrir sola al regresar a un mes donde sí existe). Se ajusta durante el render.
+  if (
+    selectedCategory !== null &&
+    !average.byCategory.some((e) => e.category.id === selectedCategory)
+  ) {
+    setSelectedCategory(null);
+  }
 
   let body;
   if (view === 'this') {
@@ -318,7 +326,8 @@ export function BalanceScreen({
           {average.byCategory.length > 0 ? (
             <>
               <Text style={[styles.cardNote, { color: theme.colors.muted }]}>
-                Con lo prorrateado: así se reparte tu costo de vida.
+                Incluye la parte proporcional de lo que pagas cada cierto tiempo, como un seguro
+                anual. Así ves cuánto te cuesta tu estilo de vida.
               </Text>
               <CategoryDonut
                 entries={average.byCategory.map((e) => ({
@@ -326,8 +335,10 @@ export function BalanceScreen({
                   name: e.category.name,
                   amountCents: e.amountCents,
                   color: color(e.category.id),
+                  items: e.items,
                 }))}
                 totalCents={average.totalCents}
+                year={year}
                 selectedId={selectedCategory}
                 onSelect={setSelectedCategory}
               />

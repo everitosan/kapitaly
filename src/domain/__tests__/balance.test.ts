@@ -429,7 +429,100 @@ describe('repartos de Análisis', () => {
       lookups,
     );
     expect(v.byCategory).toEqual([
-      { category: expect.objectContaining({ id: OTHER_CATEGORY_ID }), amountCents: 31900 },
+      {
+        category: expect.objectContaining({ id: OTHER_CATEGORY_ID }),
+        amountCents: 31900,
+        items: [
+          {
+            key: 'oneOff:Recarga metro',
+            kind: 'oneOff',
+            label: 'Recarga metro',
+            date: '2026-11-08',
+            amountCents: 10000,
+          },
+          {
+            key: 'recurring:Netflix',
+            kind: 'monthly',
+            label: 'Netflix',
+            date: '2026-11-15',
+            amountCents: 21900,
+          },
+        ],
+      },
     ]);
+  });
+});
+
+describe('detalle por categoría', () => {
+  const today = '2026-11-11';
+  const lookups = { methods, categories: CATEGORIES };
+  const cat = (name: string) => CATEGORIES.find((c) => c.name === name)!.id;
+  const detail = (v: ReturnType<typeof buildAverageView>, name: string) =>
+    v.byCategory
+      .find((c) => c.category.name === name)!
+      .items.map((i) => [i.date, i.label, i.amountCents]);
+
+  it('lo que forma la cifra: único del mes y la parte mensual del prorrateado', () => {
+    const v = buildAverageView(
+      [{ ...seguro, categoryId: cat('Transporte') }],
+      [{ ...metro, categoryId: cat('Transporte') }],
+      2026,
+      11,
+      today,
+      lookups,
+    );
+    expect(detail(v, 'Transporte')).toEqual([
+      ['2026-11-08', 'Recarga metro', 10000],
+      ['2027-03-15', 'Seguro', 50000],
+    ]);
+    const entry = v.byCategory[0];
+    expect(entry.items.reduce((s, i) => s + i.amountCents, 0)).toBe(entry.amountCents);
+  });
+
+  it('ordena por fecha y, en la misma fecha, por nombre', () => {
+    const v = buildAverageView(
+      [
+        { ...renta, categoryId: cat('Hogar') },
+        rec('Agua', 30000, '2026-01-20', 'nu', 1, 'month', { categoryId: cat('Hogar') }),
+      ],
+      [one('Focos', 18000, '2026-11-03', 'cash', { categoryId: cat('Hogar') })],
+      2026,
+      11,
+      today,
+      lookups,
+    );
+    expect(detail(v, 'Hogar')).toEqual([
+      ['2026-11-03', 'Focos', 18000],
+      ['2026-11-20', 'Agua', 30000],
+      ['2026-11-20', 'Renta', 150000],
+    ]);
+  });
+
+  it('un mensual sin cobro en el mes va sin fecha y al final', () => {
+    const ended = rec('Gym', 50000, '2026-01-15', 'nu', 1, 'month', {
+      categoryId: cat('Salud'),
+      endDate: '2026-11-10',
+    });
+    const v = buildAverageView(
+      [ended],
+      [one('Farmacia', 9000, '2026-11-25', 'cash', { categoryId: cat('Salud') })],
+      2026,
+      11,
+      today,
+      lookups,
+    );
+    expect(detail(v, 'Salud')).toEqual([
+      ['2026-11-25', 'Farmacia', 9000],
+      [null, 'Gym', 50000],
+    ]);
+  });
+
+  it('un prorrateado sin cobros próximos va sin fecha', () => {
+    const r = rec('Curso', 120000, '2026-01-01', 'nu', 6, 'month', {
+      categoryId: cat('Entretenimiento'),
+      endDate: '2026-06-30',
+    });
+    const v = buildAverageView([r], [], 2026, 6, today, lookups);
+    expect(detail(v, 'Entretenimiento')).toEqual([[null, 'Curso', 20000]]);
   });
 });

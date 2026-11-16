@@ -75,6 +75,45 @@ const renderIn = (scheme: ColorSchemeName, ui: ReactElement) =>
 
 describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => {
   const theme = themes[scheme];
+  const DONUT_ENTRIES = [
+    {
+      id: 'hogar',
+      name: 'Hogar',
+      amountCents: 150000,
+      color: theme.chart.series[0],
+      items: [
+        {
+          key: 'recurring:renta',
+          kind: 'monthly' as const,
+          label: 'Renta',
+          date: '2026-11-20',
+          amountCents: 150000,
+        },
+      ],
+    },
+    {
+      id: 'otro',
+      name: 'Otro',
+      amountCents: 50000,
+      color: theme.chart.other,
+      items: [
+        {
+          key: 'oneOff:metro',
+          kind: 'oneOff' as const,
+          label: 'Recarga metro',
+          date: '2026-11-08',
+          amountCents: 10000,
+        },
+        {
+          key: 'recurring:seguro',
+          kind: 'prorated' as const,
+          label: 'Seguro anual',
+          date: '2027-03-15',
+          amountCents: 40000,
+        },
+      ],
+    },
+  ];
 
   it('MoneyText separa centavos', async () => {
     await renderIn(scheme, <MoneyText cents={785650} />);
@@ -278,21 +317,76 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
     await renderIn(
       scheme,
       <CategoryDonut
-        entries={[
-          { id: 'hogar', name: 'Hogar', amountCents: 150000, color: theme.chart.series[0] },
-          { id: 'otro', name: 'Otro', amountCents: 50000, color: theme.chart.other },
-        ]}
+        entries={DONUT_ENTRIES}
         totalCents={200000}
+        year={2026}
         selectedId="hogar"
         onSelect={onSelect}
       />,
     );
     const hogar = screen.getByRole('button', { name: 'Hogar, $1,500.00, 75 %' });
     expect(hogar).toBeSelected();
+    expect(hogar).toBeExpanded();
     await fireEvent.press(hogar);
     expect(onSelect).toHaveBeenLastCalledWith(null);
     await fireEvent.press(screen.getByRole('button', { name: 'Otro, $500.00, 25 %' }));
     expect(onSelect).toHaveBeenLastCalledWith('otro');
+  });
+
+  it('CategoryDonut: sin categoría activa no hay detalle', async () => {
+    await renderIn(
+      scheme,
+      <CategoryDonut
+        entries={DONUT_ENTRIES}
+        totalCents={200000}
+        year={2026}
+        selectedId={null}
+        onSelect={jest.fn()}
+      />,
+    );
+    expect(screen.queryByTestId('category-detail')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Hogar, $1,500.00, 75 %' })).not.toBeExpanded();
+  });
+
+  it('CategoryDonut: el detalle va debajo de su fila, en orden y de solo lectura', async () => {
+    const onSelect = jest.fn();
+    await renderIn(
+      scheme,
+      <CategoryDonut
+        entries={DONUT_ENTRIES}
+        totalCents={200000}
+        year={2026}
+        selectedId="otro"
+        onSelect={onSelect}
+      />,
+    );
+    const detail = within(screen.getByTestId('category-detail'));
+    expect(detail.getAllByText(/./).map((t) => t.props.children)).toEqual([
+      '8 nov',
+      'Recarga metro',
+      '$100.00',
+      '15 mar 2027',
+      'Seguro anual',
+      '$400.00',
+    ]);
+    expect(
+      screen.getByLabelText('Seguro anual, $400.00 al mes, próximo cobro 15 de marzo de 2027'),
+    ).toBeTruthy();
+    expect(screen.getByLabelText('Recarga metro, $100.00, 8 de noviembre de 2026')).toBeTruthy();
+    // El detalle sigue justo a la fila de su categoría y no responde al toque.
+    const ids: string[] = [];
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (!node || typeof node !== 'object') return;
+      const n = node as { props?: { testID?: string }; children?: unknown };
+      const id = n.props?.testID;
+      if (id && (id.startsWith('legend-') || id === 'category-detail')) ids.push(id);
+      walk(n.children);
+    };
+    walk(screen.toJSON());
+    expect(ids).toEqual(['legend-hogar', 'legend-otro', 'category-detail']);
+    await fireEvent.press(screen.getByTestId('detail-recurring:seguro'));
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
   it('ExpenseRow: recurrente, único y promedio con pista, todos con método', async () => {

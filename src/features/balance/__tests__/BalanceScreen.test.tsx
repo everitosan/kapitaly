@@ -489,6 +489,127 @@ describe('8.3 · vista Análisis', () => {
   });
 });
 
+describe('detalle por categoría', () => {
+  const cat = (name: string) => BUILTIN_CATEGORIES.find((c) => c.name === name)!.id;
+
+  async function scenario() {
+    const repos = createInMemoryRepositories(testDeps());
+    const add = (over: Parameters<typeof sampleRecurring>[1]) =>
+      repos.recurringExpenses.create(sampleRecurring(CASH_METHOD_ID, over));
+    const once = (over: Parameters<typeof sampleOneOff>[1]) =>
+      repos.oneOffExpenses.create(sampleOneOff(CASH_METHOD_ID, over));
+    await add({
+      name: 'Renta',
+      amountCents: 150000,
+      anchorDate: '2026-01-20',
+      categoryId: cat('Hogar'),
+    });
+    await once({
+      description: 'Focos',
+      amountCents: 18000,
+      date: '2026-11-03',
+      categoryId: cat('Hogar'),
+    });
+    await add({
+      name: 'Seguro anual',
+      amountCents: 600000,
+      intervalUnit: 'year',
+      anchorDate: '2026-03-15',
+      categoryId: cat('Transporte'),
+    });
+    await once({
+      description: 'Recarga metro',
+      amountCents: 10000,
+      date: '2026-11-08',
+      categoryId: cat('Transporte'),
+    });
+    await once({
+      description: 'Tacos',
+      amountCents: 25000,
+      date: '2026-11-10',
+      categoryId: cat('Comida'),
+    });
+    await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });
+    await screen.findByTestId('month-progress');
+    await openAnalysis();
+    const section = screen.getByTestId('section-category');
+    await waitFor(() =>
+      expect(
+        within(section).getByRole('button', { name: /^Transporte, \$600\.00/ }),
+      ).toBeOnTheScreen(),
+    );
+    return section;
+  }
+
+  const legendRow = (section: ReturnType<typeof screen.getByTestId>, name: string) =>
+    within(section).getByRole('button', { name: new RegExp(`^${name}, `) });
+  const detailText = () =>
+    within(screen.getByTestId('category-detail'))
+      .getAllByText(/./)
+      .map((t) => t.props.children);
+
+  it('muestra el texto de la tarjeta', async () => {
+    await scenario();
+    expect(
+      screen.getByText(
+        'Incluye la parte proporcional de lo que pagas cada cierto tiempo, como un seguro anual. Así ves cuánto te cuesta tu estilo de vida.',
+      ),
+    ).toBeOnTheScreen();
+  });
+
+  it('abre desde la leyenda con lo que forma la cifra, y se cierra al tocar otra vez', async () => {
+    const section = await scenario();
+    expect(screen.queryByTestId('category-detail')).toBeNull();
+    const transporte = legendRow(section, 'Transporte');
+    await fireEvent.press(transporte);
+    expect(transporte).toBeExpanded();
+    expect(detailText()).toEqual([
+      '8 nov',
+      'Recarga metro',
+      '$100.00',
+      '15 mar 2027',
+      'Seguro anual',
+      '$500.00',
+    ]);
+    await fireEvent.press(transporte);
+    expect(screen.queryByTestId('category-detail')).toBeNull();
+  });
+
+  it('abre desde la dona y cambia de categoría', async () => {
+    const section = await scenario();
+    await fireEvent.press(
+      within(section).getByTestId(`donut-${cat('Hogar')}`, { includeHiddenElements: true }),
+    );
+    expect(legendRow(section, 'Hogar')).toBeExpanded();
+    expect(detailText()).toEqual(['3 nov', 'Focos', '$180.00', '20 nov', 'Renta', '$1,500.00']);
+    await fireEvent.press(legendRow(section, 'Transporte'));
+    expect(screen.getAllByTestId('category-detail')).toHaveLength(1);
+    expect(legendRow(section, 'Hogar')).not.toBeExpanded();
+    expect(detailText()).toContain('Recarga metro');
+  });
+
+  it('sigue abierto en un mes donde la categoría tiene gastos', async () => {
+    const section = await scenario();
+    await fireEvent.press(legendRow(section, 'Hogar'));
+    await fireEvent.press(screen.getByLabelText('Mes siguiente'));
+    await waitFor(() => expect(detailText()).toEqual(['20 dic', 'Renta', '$1,500.00']));
+  });
+
+  it('se cierra en un mes sin la categoría y no reaparece al volver', async () => {
+    const section = await scenario();
+    await fireEvent.press(legendRow(section, 'Comida'));
+    expect(detailText()).toEqual(['10 nov', 'Tacos', '$250.00']);
+    await fireEvent.press(screen.getByLabelText('Mes siguiente'));
+    await waitFor(() => expect(screen.queryByTestId('category-detail')).toBeNull());
+    await fireEvent.press(screen.getByLabelText('Mes anterior'));
+    await waitFor(() =>
+      expect(legendRow(screen.getByTestId('section-category'), 'Comida')).toBeOnTheScreen(),
+    );
+    expect(screen.queryByTestId('category-detail')).toBeNull();
+    expect(legendRow(screen.getByTestId('section-category'), 'Comida')).not.toBeSelected();
+  });
+});
+
 describe('8.4 · tocar un gasto de "Tus gastos" abre su edición', () => {
   it('según su tipo y con su id', async () => {
     const { repos, ids } = await novemberScenario();

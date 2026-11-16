@@ -203,9 +203,27 @@ export interface AverageItem {
   nextCharge?: CivilDate | null;
 }
 
+/** Un gasto que forma la cifra de una categoría en Análisis. */
+export interface CategoryDetailItem {
+  /** Único dentro de la categoría: `recurring:<id>` o `oneOff:<id>`. */
+  key: string;
+  /** Mensual, de intervalo mayor (prorrateado) o único. */
+  kind: 'monthly' | 'prorated' | 'oneOff';
+  label: string;
+  /**
+   * Mensual: su cobro en el mes. Intervalo mayor: su próximo cobro desde la fecha de referencia.
+   * Único: su fecha. `null` si no hay cobro que mostrar.
+   */
+  date: CivilDate | null;
+  /** Costo mensual proporcional (recurrentes) o monto real (únicos). */
+  amountCents: Cents;
+}
+
 export interface CategoryBreakdownEntry {
   category: CategoryView;
   amountCents: Cents;
+  /** Por fecha (sin fecha al final) y nombre. Suma = `amountCents`. */
+  items: CategoryDetailItem[];
 }
 
 export interface AverageView {
@@ -221,6 +239,19 @@ export interface AverageView {
   byCategory: CategoryBreakdownEntry[];
   /** Costo mensual por método (físico y digital juntos, archivados incluidos). Suma = total. */
   byMethod: MethodBreakdownEntry[];
+}
+
+/** Por fecha ascendente (sin fecha al final) y, en la misma fecha, por nombre. */
+function sortDetailItems(items: CategoryDetailItem[]): CategoryDetailItem[] {
+  return [...items].sort((a, b) => {
+    if (a.date !== b.date) {
+      if (a.date === null) return 1;
+      if (b.date === null) return -1;
+      const byDate = compareCivilDates(a.date, b.date);
+      if (byDate !== 0) return byDate;
+    }
+    return a.label.localeCompare(b.label, 'es');
+  });
 }
 
 /** Un gasto es vigente en un mes si su ancla ≤ último día del mes y su fin (si existe) ≥ primer día. */
@@ -276,22 +307,41 @@ export function buildAverageView(
       categoryId: i.expense.categoryId,
       paymentMethodId: i.expense.paymentMethodId,
       cents: i.monthlyCents,
+      detail: {
+        key: `recurring:${i.expense.id}`,
+        kind: i.monthsPerInterval === 1 ? ('monthly' as const) : ('prorated' as const),
+        label: i.expense.name,
+        date:
+          i.monthsPerInterval === 1
+            ? occurrenceInMonth(i.expense, year, month)
+            : (i.nextCharge ?? null),
+        amountCents: i.monthlyCents,
+      },
     })),
     ...single.map((c) => ({
       categoryId: c.categoryId,
       paymentMethodId: c.paymentMethodId,
       cents: c.amountCents,
+      detail: {
+        key: `oneOff:${c.id}`,
+        kind: 'oneOff' as const,
+        label: c.label,
+        date: c.date,
+        amountCents: c.amountCents,
+      },
     })),
   ];
   const categoryTotals = new Map<string, CategoryBreakdownEntry>();
   for (const p of parts) {
     const category = resolveCategory(p.categoryId, lookups.categories);
-    const entry = categoryTotals.get(category.id) ?? { category, amountCents: 0 };
+    const entry = categoryTotals.get(category.id) ?? { category, amountCents: 0, items: [] };
     entry.amountCents += p.cents;
+    entry.items.push(p.detail);
     categoryTotals.set(category.id, entry);
   }
   const byCategory = [...categoryTotals.values()]
     .filter((e) => e.amountCents > 0)
+    .map((e) => ({ ...e, items: sortDetailItems(e.items) }))
     .sort(
       (a, b) =>
         b.amountCents - a.amountCents || a.category.name.localeCompare(b.category.name, 'es'),
