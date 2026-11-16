@@ -8,4 +8,9 @@ export default defineConfig({
   base: '/kapitaly',
   output: 'static',
   trailingSlash: 'always',
+  vite: {
+    // Fija el tsconfig del sitio. Sin esto, Vite también lee el tsconfig.json de la app
+    // (extiende expo/tsconfig.base) y falla en CI, donde solo se instalan las dependencias de site/.
+    tsconfig: './tsconfig.json',
+  },
 });
