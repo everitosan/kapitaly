@@ -104,6 +104,27 @@ const skipped = (id: string, occurrenceDate: string): Confirmation => ({
   deletedAt: null,
 });
 
+/** `buildAverageView` con los argumentos de las pruebas anteriores; sin confirmaciones por omisión. */
+const average = (
+  recurring: RecurringExpense[],
+  oneOffs: OneOffExpense[],
+  year: number,
+  month: number,
+  today: string,
+  lookups: { methods: PaymentMethod[]; categories: Category[] },
+  confirmations: Confirmation[] = [],
+) =>
+  buildAverageView({
+    recurring,
+    oneOffs,
+    confirmations,
+    year,
+    month,
+    today,
+    registeredOn,
+    lookups,
+  });
+
 // Los gastos de los escenarios se registran el 1 nov 2026: los cobros de noviembre se preguntan.
 const nov = { createdAt: '2026-11-01T12:00:00Z' };
 const thisMonth = (
@@ -261,14 +282,7 @@ describe('vista Promedio', () => {
   const lookups = { methods, categories: CATEGORIES };
 
   it('proporcionales, únicos y subtotales', () => {
-    const v = buildAverageView(
-      [netflix, renta, internet, seguro],
-      [metro],
-      2026,
-      11,
-      today,
-      lookups,
-    );
+    const v = average([netflix, renta, internet, seguro], [metro], 2026, 11, today, lookups);
     const monthly = Object.fromEntries(v.items.map((i) => [i.expense.name, i.monthlyCents]));
     expect(monthly).toEqual({ Netflix: 21900, Renta: 150000, Internet: 22500, Seguro: 50000 });
     expect(v.oneOffs.map((o) => [o.label, o.amountCents])).toEqual([['Recarga metro', 10000]]);
@@ -281,7 +295,7 @@ describe('vista Promedio', () => {
   });
 
   it('redondeo al centavo y total con los valores mostrados', () => {
-    const v = buildAverageView(
+    const v = average(
       [rec('Trimestral', 100000, '2026-02-01', 'bbva', 3)],
       [],
       2026,
@@ -295,50 +309,46 @@ describe('vista Promedio', () => {
 
   it('gasto aún no vigente', () => {
     expect(
-      buildAverageView([rec('Futuro', 1000, '2026-12-10', 'bbva')], [], 2026, 11, today, lookups)
-        .items,
+      average([rec('Futuro', 1000, '2026-12-10', 'bbva')], [], 2026, 11, today, lookups).items,
     ).toEqual([]);
   });
 
   it('gasto vigente con fecha de fin dentro del mes', () => {
     const r = rec('Termina', 1000, '2026-01-01', 'bbva', 1, 'month', { endDate: '2026-11-05' });
-    expect(buildAverageView([r], [], 2026, 11, today, lookups).items).toHaveLength(1);
-    expect(buildAverageView([r], [], 2026, 12, today, lookups).items).toHaveLength(0);
+    expect(average([r], [], 2026, 11, today, lookups).items).toHaveLength(1);
+    expect(average([r], [], 2026, 12, today, lookups).items).toHaveLength(0);
   });
 
   it('gastos únicos de otro mes no aparecen', () => {
     expect(
-      buildAverageView([], [one('Cine', 18000, '2026-10-30', 'bbva')], 2026, 11, today, lookups)
-        .oneOffs,
+      average([], [one('Cine', 18000, '2026-10-30', 'bbva')], 2026, 11, today, lookups).oneOffs,
     ).toEqual([]);
   });
 
   describe('pista del cobro real', () => {
     it('gasto anual visto en noviembre 2026', () => {
-      const v = buildAverageView([seguro], [], 2026, 11, today, lookups);
+      const v = average([seguro], [], 2026, 11, today, lookups);
       expect(v.items[0].nextCharge).toBe('2027-03-15');
     });
 
     it('referencia en un mes futuro', () => {
-      const v = buildAverageView([internet], [], 2027, 1, today, lookups);
+      const v = average([internet], [], 2027, 1, today, lookups);
       expect(v.referenceDate).toBe('2027-01-01');
       expect(v.items[0].nextCharge).toBe('2027-01-28');
     });
 
     it('referencia en un mes pasado usa hoy', () => {
-      expect(buildAverageView([internet], [], 2026, 10, today, lookups).referenceDate).toBe(
-        '2026-11-11',
-      );
+      expect(average([internet], [], 2026, 10, today, lookups).referenceDate).toBe('2026-11-11');
     });
 
     it('los mensuales no llevan pista', () => {
-      const v = buildAverageView([netflix], [], 2026, 11, today, lookups);
+      const v = average([netflix], [], 2026, 11, today, lookups);
       expect(v.items[0]).not.toHaveProperty('nextCharge');
     });
 
     it('sin cobros próximos', () => {
       const r = rec('Semestral', 1000, '2026-01-01', 'bbva', 6, 'month', { endDate: '2026-06-30' });
-      const v = buildAverageView([r], [], 2026, 6, today, lookups);
+      const v = average([r], [], 2026, 6, today, lookups);
       expect(v.items[0].nextCharge).toBeNull();
     });
   });
@@ -350,14 +360,7 @@ describe('repartos de Análisis', () => {
   const cat = (name: string) => CATEGORIES.find((c) => c.name === name)!.id;
 
   it('costo mensual por método con prorrateo, igual al total', () => {
-    const v = buildAverageView(
-      [netflix, renta, internet, seguro],
-      [metro],
-      2026,
-      11,
-      today,
-      lookups,
-    );
+    const v = average([netflix, renta, internet, seguro], [metro], 2026, 11, today, lookups);
     expect(v.byMethod.map((b) => [b.method?.name, b.amountCents])).toEqual([
       ['Nu Débito', 172500],
       ['BBVA Azul', 71900],
@@ -367,7 +370,7 @@ describe('repartos de Análisis', () => {
   });
 
   it('suma física y digital en una sola línea por método', () => {
-    const v = buildAverageView(
+    const v = average(
       [rec('Netflix', 21900, '2026-01-15', 'bbva', 1, 'month', { cardVariant: 'digital' })],
       [one('Farmacia', 23850, '2026-11-09', 'bbva', { cardVariant: 'physical' })],
       2026,
@@ -382,7 +385,7 @@ describe('repartos de Análisis', () => {
 
   it('incluye métodos archivados y desconocidos', () => {
     const archived = method('old', 'Banamex Clásica', { archivedAt: '2026-10-01T00:00:00Z' });
-    const v = buildAverageView(
+    const v = average(
       [rec('Servicio', 240000, '2026-05-10', 'old', 6)],
       [one('X', 500, '2026-11-01', 'ghost')],
       2026,
@@ -402,6 +405,7 @@ describe('repartos de Análisis', () => {
             label: 'Servicio',
             date: '2027-05-10',
             amountCents: 40000,
+            status: 'prorated',
           },
         ],
       },
@@ -410,14 +414,21 @@ describe('repartos de Análisis', () => {
         method: null,
         amountCents: 500,
         items: [
-          { key: 'oneOff:X', kind: 'oneOff', label: 'X', date: '2026-11-01', amountCents: 500 },
+          {
+            key: 'oneOff:X',
+            kind: 'oneOff',
+            label: 'X',
+            date: '2026-11-01',
+            amountCents: 500,
+            status: 'none',
+          },
         ],
       },
     ]);
   });
 
   it('detalle por método: lo que forma su cifra, por fecha', () => {
-    const v = buildAverageView(
+    const v = average(
       [netflix, renta, internet, { ...seguro, name: 'Seguro anual' }],
       [metro],
       2026,
@@ -436,7 +447,7 @@ describe('repartos de Análisis', () => {
   });
 
   it('detalle por método: física y digital en la misma lista', () => {
-    const v = buildAverageView(
+    const v = average(
       [rec('Netflix', 21900, '2026-01-15', 'bbva', 1, 'month', { cardVariant: 'digital' })],
       [one('Farmacia', 23850, '2026-11-09', 'bbva', { cardVariant: 'physical' })],
       2026,
@@ -451,7 +462,7 @@ describe('repartos de Análisis', () => {
   });
 
   it('reparto por categoría, de mayor a menor, igual al total', () => {
-    const v = buildAverageView(
+    const v = average(
       [
         { ...renta, categoryId: cat('Hogar') },
         { ...seguro, categoryId: cat('Transporte') },
@@ -474,14 +485,7 @@ describe('repartos de Análisis', () => {
   });
 
   it('una categoría borrada suma en "Otro"', () => {
-    const v = buildAverageView(
-      [{ ...netflix, categoryId: 'borrada' }],
-      [metro],
-      2026,
-      11,
-      today,
-      lookups,
-    );
+    const v = average([{ ...netflix, categoryId: 'borrada' }], [metro], 2026, 11, today, lookups);
     expect(v.byCategory).toEqual([
       {
         category: expect.objectContaining({ id: OTHER_CATEGORY_ID }),
@@ -493,6 +497,7 @@ describe('repartos de Análisis', () => {
             label: 'Recarga metro',
             date: '2026-11-08',
             amountCents: 10000,
+            status: 'none',
           },
           {
             key: 'recurring:Netflix',
@@ -500,6 +505,7 @@ describe('repartos de Análisis', () => {
             label: 'Netflix',
             date: '2026-11-15',
             amountCents: 21900,
+            status: 'future',
           },
         ],
       },
@@ -511,13 +517,13 @@ describe('detalle por categoría', () => {
   const today = '2026-11-11';
   const lookups = { methods, categories: CATEGORIES };
   const cat = (name: string) => CATEGORIES.find((c) => c.name === name)!.id;
-  const detail = (v: ReturnType<typeof buildAverageView>, name: string) =>
+  const detail = (v: ReturnType<typeof average>, name: string) =>
     v.byCategory
       .find((c) => c.category.name === name)!
       .items.map((i) => [i.date, i.label, i.amountCents]);
 
   it('lo que forma la cifra: único del mes y la parte mensual del prorrateado', () => {
-    const v = buildAverageView(
+    const v = average(
       [{ ...seguro, categoryId: cat('Transporte') }],
       [{ ...metro, categoryId: cat('Transporte') }],
       2026,
@@ -534,7 +540,7 @@ describe('detalle por categoría', () => {
   });
 
   it('ordena por fecha y, en la misma fecha, por nombre', () => {
-    const v = buildAverageView(
+    const v = average(
       [
         { ...renta, categoryId: cat('Hogar') },
         rec('Agua', 30000, '2026-01-20', 'nu', 1, 'month', { categoryId: cat('Hogar') }),
@@ -557,7 +563,7 @@ describe('detalle por categoría', () => {
       categoryId: cat('Salud'),
       endDate: '2026-11-10',
     });
-    const v = buildAverageView(
+    const v = average(
       [ended],
       [one('Farmacia', 9000, '2026-11-25', 'cash', { categoryId: cat('Salud') })],
       2026,
@@ -576,7 +582,83 @@ describe('detalle por categoría', () => {
       categoryId: cat('Entretenimiento'),
       endDate: '2026-06-30',
     });
-    const v = buildAverageView([r], [], 2026, 6, today, lookups);
+    const v = average([r], [], 2026, 6, today, lookups);
     expect(detail(v, 'Entretenimiento')).toEqual([[null, 'Curso', 20000]]);
+  });
+});
+
+describe('estado en el detalle', () => {
+  const lookups = { methods, categories: CATEGORIES };
+  const hogar = CATEGORIES.find((c) => c.name === 'Hogar')!.id;
+  const inHogar = (r: RecurringExpense) => ({ ...r, ...nov, categoryId: hogar });
+  const states = (v: ReturnType<typeof average>) =>
+    v.byCategory
+      .find((c) => c.category.id === hogar)!
+      .items.map((i) => [i.label, i.amountCents, i.status]);
+
+  // Hoy 21/11/2026: Agua (día 10) confirmada, Luz (día 18) sin confirmar, Internet (día 28).
+  const agua = inHogar(rec('Agua', 32000, '2026-01-10', 'nu'));
+  const luz = inHogar(rec('Luz', 64000, '2026-01-18', 'nu'));
+  const net = inHogar(rec('Internet', 45000, '2026-01-28', 'bbva'));
+  const seguroHogar = inHogar(rec('Seguro de hogar', 300000, '2026-03-15', 'bbva', 1, 'year'));
+  const focos = one('Focos', 8500, '2026-11-03', 'cash', { categoryId: hogar });
+
+  it('marca cada fila sin cambiar montos ni orden', () => {
+    const v = average([agua, luz, net, seguroHogar], [focos], 2026, 11, '2026-11-21', lookups, [
+      charged('Agua', '2026-11-10', 32000),
+    ]);
+    expect(states(v)).toEqual([
+      ['Focos', 8500, 'none'],
+      ['Agua', 32000, 'none'],
+      ['Luz', 64000, 'pending'],
+      ['Internet', 45000, 'future'],
+      ['Seguro de hogar', 25000, 'prorated'],
+    ]);
+  });
+
+  it('un cobro no realizado sigue sumando', () => {
+    const r = inHogar(renta);
+    const v = average([r], [], 2026, 11, '2026-11-21', lookups, [skipped('Renta', '2026-11-20')]);
+    expect(states(v)).toEqual([['Renta', 150000, 'skipped']]);
+    expect(v.byCategory[0].amountCents).toBe(150000);
+  });
+
+  it('confirmado con otro monto: sin marca y con el monto de la regla', () => {
+    const r = inHogar(netflix);
+    const v = average([r], [], 2026, 11, '2026-11-21', lookups, [
+      charged('Netflix', '2026-11-15', 23900),
+    ]);
+    expect(states(v)).toEqual([['Netflix', 21900, 'none']]);
+  });
+
+  it('en un mes futuro todos los mensuales están por cobrar', () => {
+    const v = average([agua, luz, net], [], 2026, 12, '2026-11-21', lookups);
+    expect(states(v).map(([, , st]) => st)).toEqual(['future', 'future', 'future']);
+  });
+
+  it('un prorrateado es prorrateo aunque se cobre en el mes', () => {
+    const r = inHogar(rec('Seguro anual', 600000, '2026-11-15', 'bbva', 1, 'year'));
+    const v = average([r], [], 2026, 11, '2026-11-21', lookups);
+    expect(states(v)).toEqual([['Seguro anual', 50000, 'prorated']]);
+  });
+
+  it('un cobro anterior al registro del gasto no lleva marca', () => {
+    const r = {
+      ...inHogar(rec('Gym', 50000, '2026-01-01', 'nu')),
+      createdAt: '2026-11-10T12:00:00Z',
+    };
+    const v = average([r], [], 2026, 11, '2026-11-21', lookups);
+    expect(states(v)).toEqual([['Gym', 50000, 'none']]);
+  });
+
+  it('un mensual sin cobro en el mes no lleva marca', () => {
+    const r = { ...inHogar(rec('Gym', 50000, '2026-01-25', 'nu')), endDate: '2026-11-10' };
+    const v = average([r], [], 2026, 11, '2026-11-21', lookups);
+    expect(states(v)).toEqual([['Gym', 50000, 'none']]);
+  });
+
+  it('el detalle por método tiene el mismo estado', () => {
+    const v = average([net], [], 2026, 11, '2026-11-21', lookups);
+    expect(v.byMethod.find((m) => m.paymentMethodId === 'bbva')!.items[0].status).toBe('future');
   });
 });

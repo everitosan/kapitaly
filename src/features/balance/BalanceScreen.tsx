@@ -215,9 +215,15 @@ export function BalanceScreen({
       />
     );
 
-  const average = buildAverageView(recurring.data, oneOffs.data, year, month, today, {
-    methods: methods.data,
-    categories: categories.data,
+  const average = buildAverageView({
+    recurring: recurring.data,
+    oneOffs: oneOffs.data,
+    confirmations: confirmations.data,
+    year,
+    month,
+    today,
+    registeredOn: registeredOnLocal,
+    lookups: { methods: methods.data, categories: categories.data },
   });
   // Si la categoría activa no tiene gastos en el mes mostrado, se cierra su detalle (y no se
   // vuelve a abrir sola al regresar a un mes donde sí existe). Se ajusta durante el render.

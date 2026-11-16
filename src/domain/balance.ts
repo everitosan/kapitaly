@@ -210,6 +210,13 @@ export interface AverageItem {
   nextCharge?: CivilDate | null;
 }
 
+/**
+ * Estado de una fila del detalle de Análisis en el mes consultado. `none`: sin marca (únicos,
+ * mensuales cobrados o sin cobro en el mes). `prorated`: parte mensual de un gasto de intervalo
+ * mayor, aunque su cobro caiga en el mes. Los demás, como en "Tus gastos" (`chargeStatus`).
+ */
+export type DetailStatus = 'none' | 'pending' | 'future' | 'skipped' | 'prorated';
+
 /** Un gasto que forma la cifra de una categoría o de un método en Análisis. */
 export interface BreakdownDetailItem {
   /** Único dentro de la categoría: `recurring:<id>` o `oneOff:<id>`. */
@@ -224,6 +231,8 @@ export interface BreakdownDetailItem {
   date: CivilDate | null;
   /** Costo mensual proporcional (recurrentes) o monto real (únicos). */
   amountCents: Cents;
+  /** Solo marca la fila: no cambia montos, suma ni orden. */
+  status: DetailStatus;
 }
 
 export interface CategoryBreakdownEntry {
@@ -271,14 +280,33 @@ export function isActiveInMonth(expense: RecurringExpense, year: number, month: 
   );
 }
 
-export function buildAverageView(
-  recurring: readonly RecurringExpense[],
-  oneOffs: readonly OneOffExpense[],
-  year: number,
-  month: number,
-  today: CivilDate,
-  lookups: { methods: readonly PaymentMethod[]; categories: readonly Category[] },
-): AverageView {
+export interface AverageInput extends ThisMonthInput {
+  lookups: { methods: readonly PaymentMethod[]; categories: readonly Category[] };
+}
+
+export function buildAverageView({
+  recurring,
+  oneOffs,
+  confirmations,
+  year,
+  month,
+  today,
+  registeredOn,
+  lookups,
+}: AverageInput): AverageView {
+  const answered = indexConfirmations(confirmations);
+  /** Las confirmaciones solo deciden la marca: las cifras usan el monto de la regla. */
+  const monthlyStatus = (expense: RecurringExpense, date: CivilDate | null): DetailStatus => {
+    if (date === null) return 'none';
+    const st = chargeStatus(
+      expense,
+      date,
+      answered.get(confirmationKey(expense.id, date)),
+      today,
+      registeredOn,
+    ).status;
+    return st === 'charged' ? 'none' : st;
+  };
   const first = firstDayOfMonth(year, month);
   const referenceDate = compareCivilDates(today, first) > 0 ? today : first;
 
@@ -308,22 +336,35 @@ export function buildAverageView(
   );
   const oneOffCents = sumCents(single.map((c) => c.amountCents));
 
+  const detailOfRecurring = (i: AverageItem): BreakdownDetailItem => {
+    if (i.monthsPerInterval > 1) {
+      return {
+        key: `recurring:${i.expense.id}`,
+        kind: 'prorated',
+        label: i.expense.name,
+        date: i.nextCharge ?? null,
+        amountCents: i.monthlyCents,
+        status: 'prorated',
+      };
+    }
+    const date = occurrenceInMonth(i.expense, year, month);
+    return {
+      key: `recurring:${i.expense.id}`,
+      kind: 'monthly',
+      label: i.expense.name,
+      date,
+      amountCents: i.monthlyCents,
+      status: monthlyStatus(i.expense, date),
+    };
+  };
+
   // Mismos montos que el total: proporcionales de los recurrentes y únicos del mes.
   const parts = [
     ...items.map((i) => ({
       categoryId: i.expense.categoryId,
       paymentMethodId: i.expense.paymentMethodId,
       cents: i.monthlyCents,
-      detail: {
-        key: `recurring:${i.expense.id}`,
-        kind: i.monthsPerInterval === 1 ? ('monthly' as const) : ('prorated' as const),
-        label: i.expense.name,
-        date:
-          i.monthsPerInterval === 1
-            ? occurrenceInMonth(i.expense, year, month)
-            : (i.nextCharge ?? null),
-        amountCents: i.monthlyCents,
-      },
+      detail: detailOfRecurring(i),
     })),
     ...single.map((c) => ({
       categoryId: c.categoryId,
@@ -335,6 +376,7 @@ export function buildAverageView(
         label: c.label,
         date: c.date,
         amountCents: c.amountCents,
+        status: 'none' as const,
       },
     })),
   ];

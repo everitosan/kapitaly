@@ -569,6 +569,7 @@ describe('detalle por categoría', () => {
       '$100.00',
       '15 mar 2027',
       'Seguro anual',
+      'PRORRATEO',
       '$500.00',
     ]);
     await fireEvent.press(transporte);
@@ -581,7 +582,15 @@ describe('detalle por categoría', () => {
       within(section).getByTestId(`donut-${cat('Hogar')}`, { includeHiddenElements: true }),
     );
     expect(legendRow(section, 'Hogar')).toBeExpanded();
-    expect(detailText()).toEqual(['3 nov', 'Focos', '$180.00', '20 nov', 'Renta', '$1,500.00']);
+    expect(detailText()).toEqual([
+      '3 nov',
+      'Focos',
+      '$180.00',
+      '20 nov',
+      'Renta',
+      'POR COBRAR',
+      '$1,500.00',
+    ]);
     await fireEvent.press(legendRow(section, 'Transporte'));
     expect(screen.getAllByTestId('category-detail')).toHaveLength(1);
     expect(legendRow(section, 'Hogar')).not.toBeExpanded();
@@ -592,7 +601,9 @@ describe('detalle por categoría', () => {
     const section = await scenario();
     await fireEvent.press(legendRow(section, 'Hogar'));
     await fireEvent.press(screen.getByLabelText('Mes siguiente'));
-    await waitFor(() => expect(detailText()).toEqual(['20 dic', 'Renta', '$1,500.00']));
+    await waitFor(() =>
+      expect(detailText()).toEqual(['20 dic', 'Renta', 'POR COBRAR', '$1,500.00']),
+    );
   });
 
   it('se cierra en un mes sin la categoría y no reaparece al volver', async () => {
@@ -636,9 +647,11 @@ describe('detalle por método', () => {
     expect(detailText()).toEqual([
       '15 nov',
       'Netflix',
+      'POR COBRAR',
       '$219.00',
       '15 mar 2027',
       'Seguro',
+      'PRORRATEO',
       '$500.00',
     ]);
     await fireEvent.press(bbva);
@@ -651,7 +664,16 @@ describe('detalle por método', () => {
     await fireEvent.press(methodRow('Nu Débito'));
     expect(screen.getAllByTestId('method-detail')).toHaveLength(1);
     expect(methodRow('BBVA Azul')).not.toBeExpanded();
-    expect(detailText()).toEqual(['20 nov', 'Renta', '$1,500.00', '28 nov', 'Internet', '$225.00']);
+    expect(detailText()).toEqual([
+      '20 nov',
+      'Renta',
+      'POR COBRAR',
+      '$1,500.00',
+      '28 nov',
+      'Internet',
+      'PRORRATEO',
+      '$225.00',
+    ]);
   });
 
   it('es independiente de la categoría abierta', async () => {
@@ -671,9 +693,11 @@ describe('detalle por método', () => {
       expect(detailText()).toEqual([
         '20 dic',
         'Renta',
+        'POR COBRAR',
         '$1,500.00',
         '28 ene 2027',
         'Internet',
+        'PRORRATEO',
         '$225.00',
       ]),
     );
@@ -744,5 +768,44 @@ describe('categoría en las filas', () => {
     await renderWithProviders(<BalanceScreen {...props()} today={TODAY} />, { repos });
     expect(await screen.findByTestId(`category-pill-${OTHER_CATEGORY_ID}`)).toBeOnTheScreen();
     expect(screen.queryByText('Gimnasio')).toBeNull();
+  });
+});
+
+describe('estado de cobros en el detalle', () => {
+  it('marca lo vencido y lo futuro en el detalle por categoría y por método', async () => {
+    const { repos, ids } = await novemberScenario();
+    const nu = (await repos.paymentMethods.list()).find((m) => m.name === 'Nu Débito')!;
+    const bbva = (await repos.paymentMethods.list()).find((m) => m.name === 'BBVA Azul')!;
+    await repos.recurringExpenses.create(
+      sampleRecurring(nu.id, { name: 'Agua', amountCents: 32000, anchorDate: '2026-01-28' }),
+    );
+    await repos.chargeConfirmations.upsert({
+      recurringExpenseId: ids.netflix,
+      occurrenceDate: '2026-11-15',
+      status: 'charged',
+      amountCents: 21900,
+      paymentMethodId: bbva.id,
+    });
+    await renderWithProviders(<BalanceScreen {...props()} today="2026-11-21" />, { repos });
+    await screen.findByTestId('month-progress');
+    await openAnalysis();
+    const breakdown = await screen.findByTestId('method-breakdown');
+    await fireEvent.press(within(breakdown).getByRole('button', { name: /^Nu Débito/ }));
+    const method = within(screen.getByTestId('method-detail'));
+    expect(
+      within(screen.getByTestId(`method-detail-recurring:${ids.renta}`)).getByText('POR CONFIRMAR'),
+    ).toBeOnTheScreen();
+    expect(
+      method.getByLabelText(/^Agua, \$320\.00, 28 de noviembre de 2026, por cobrar$/),
+    ).toBeOnTheScreen();
+
+    const section = screen.getByTestId('section-category');
+    await fireEvent.press(within(section).getByRole('button', { name: /^Otro, / }));
+    const category = within(screen.getByTestId('category-detail'));
+    expect(
+      category.getByLabelText(/^Netflix, \$219\.00, 15 de noviembre de 2026$/),
+    ).toBeOnTheScreen();
+    expect(category.getByLabelText(/^Renta, .*, por confirmar$/)).toBeOnTheScreen();
+    expect(category.getByLabelText(/^Agua, .*, por cobrar$/)).toBeOnTheScreen();
   });
 });

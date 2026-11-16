@@ -1,21 +1,37 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { BreakdownDetailItem } from '@/domain/balance';
+import type { BreakdownDetailItem, DetailStatus } from '@/domain/balance';
 import { formatMXN } from '@/domain/money';
 
 import { formatDetailDate, formatLongDate } from '../format';
 import { useTheme } from '../ThemeProvider';
 
+/** Marca de cada estado, con el mismo lenguaje de "Tus gastos". `none` no lleva marca. */
+const MARK: Record<
+  Exclude<DetailStatus, 'none'>,
+  { text: string; spoken: string; solid: boolean }
+> = {
+  pending: { text: 'POR CONFIRMAR', spoken: 'por confirmar', solid: true },
+  future: { text: 'POR COBRAR', spoken: 'por cobrar', solid: false },
+  skipped: { text: 'NO SE COBRÓ', spoken: 'no se cobró', solid: false },
+  prorated: { text: 'PRORRATEO', spoken: 'prorrateo', solid: false },
+};
+
+/** Tenues: lo que aún no sale o no salió este mes. "Por confirmar" se ve normal: hay que atenderlo. */
+const isFaded = (status: DetailStatus) =>
+  status === 'future' || status === 'skipped' || status === 'prorated';
+
 function detailLabel(item: BreakdownDetailItem): string {
   const amount = formatMXN(item.amountCents);
-  if (item.kind === 'prorated') {
-    return item.date === null
-      ? `${item.label}, ${amount} al mes, sin cobros próximos`
-      : `${item.label}, ${amount} al mes, próximo cobro ${formatLongDate(item.date)}`;
-  }
-  return item.date === null
-    ? `${item.label}, ${amount}, sin cobro en el mes`
-    : `${item.label}, ${amount}, ${formatLongDate(item.date)}`;
+  const base =
+    item.kind === 'prorated'
+      ? item.date === null
+        ? `${item.label}, ${amount} al mes, sin cobros próximos`
+        : `${item.label}, ${amount} al mes, próximo cobro ${formatLongDate(item.date)}`
+      : item.date === null
+        ? `${item.label}, ${amount}, sin cobro en el mes`
+        : `${item.label}, ${amount}, ${formatLongDate(item.date)}`;
+  return item.status === 'none' ? base : `${base}, ${MARK[item.status].spoken}`;
 }
 
 /**
@@ -54,17 +70,49 @@ export function BreakdownDetail({
               : null,
           ]}
         >
-          <Text style={[styles.detailDate, { color: colors.muted }]}>
-            {formatDetailDate(item.date, year)}
-          </Text>
-          <Text style={[styles.detailLabel, { color: colors.ink }]} numberOfLines={1}>
-            {item.label}
-          </Text>
-          <Text style={[styles.detailAmount, { color: colors.ink }]}>
-            {formatMXN(item.amountCents)}
-          </Text>
+          <View style={[styles.detailRowInner, isFaded(item.status) ? styles.faded : null]}>
+            <Text style={[styles.detailDate, { color: colors.muted }]}>
+              {formatDetailDate(item.date, year)}
+            </Text>
+            <View style={styles.detailMid}>
+              <Text style={[styles.detailLabel, { color: colors.ink }]} numberOfLines={1}>
+                {item.label}
+              </Text>
+              {item.status === 'none' ? null : (
+                <StatusMark status={item.status} ink={colors.ink} bg={colors.bg} />
+              )}
+            </View>
+            <Text style={[styles.detailAmount, { color: colors.ink }]}>
+              {formatMXN(item.amountCents)}
+            </Text>
+          </View>
         </View>
       ))}
+    </View>
+  );
+}
+
+function StatusMark({
+  status,
+  ink,
+  bg,
+}: {
+  status: Exclude<DetailStatus, 'none'>;
+  ink: string;
+  bg: string;
+}) {
+  const mark = MARK[status];
+  return (
+    <View
+      testID={`detail-mark-${status}`}
+      style={[
+        styles.mark,
+        mark.solid
+          ? { backgroundColor: ink }
+          : { borderWidth: 1, borderStyle: 'dashed', borderColor: ink },
+      ]}
+    >
+      <Text style={[styles.markText, { color: mark.solid ? bg : ink }]}>{mark.text}</Text>
     </View>
   );
 }
@@ -78,8 +126,13 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     borderLeftWidth: 2,
   },
-  detailRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10, paddingVertical: 7 },
+  detailRow: { paddingVertical: 7 },
+  detailRowInner: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+  faded: { opacity: 0.42 },
+  detailMid: { flex: 1, minWidth: 0, alignItems: 'flex-start' },
+  mark: { marginTop: 4, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999 },
+  markText: { fontSize: 9.5, fontWeight: '800', letterSpacing: 0.6 },
   detailDate: { width: 84, fontSize: 13.5, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  detailLabel: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: '600' },
+  detailLabel: { alignSelf: 'stretch', fontSize: 13.5, fontWeight: '600' },
   detailAmount: { fontSize: 13.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
 });

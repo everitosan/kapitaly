@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
+import { StyleSheet } from 'react-native';
 
 import { INSTITUTION_CATALOG } from '@/data/institutions/catalog';
+import type { BreakdownDetailItem } from '@/domain/balance';
 import { institutionsFor } from '@/domain/institution';
 import { CASH_METHOD_ID, NO_CARD_DATA, type PaymentMethod } from '@/domain/paymentMethod';
 
@@ -25,6 +27,7 @@ import {
   SegmentedControl,
 } from '../balance';
 import { AverageTotalCard, CategoryDonut, MonthProgressCard } from '../analysis';
+import { BreakdownDetail } from '../breakdownDetail';
 import {
   AmountBlock,
   DateField,
@@ -75,6 +78,46 @@ const renderIn = (scheme: ColorSchemeName, ui: ReactElement) =>
 
 describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => {
   const theme = themes[scheme];
+  it('BreakdownDetail: marca el estado de cada fila', async () => {
+    const item = (label: string, status: BreakdownDetailItem['status'], date = '2026-11-28') => ({
+      key: `recurring:${label}`,
+      kind: status === 'prorated' ? ('prorated' as const) : ('monthly' as const),
+      label,
+      date,
+      amountCents: 45000,
+      status,
+    });
+    await renderIn(
+      scheme,
+      <BreakdownDetail
+        year={2026}
+        color="#E8892B"
+        items={[
+          { ...item('Focos', 'none', '2026-11-03'), key: 'oneOff:Focos', kind: 'oneOff' as const },
+          item('Agua', 'none', '2026-11-10'),
+          item('Luz', 'pending', '2026-11-18'),
+          item('Renta', 'skipped', '2026-11-20'),
+          item('Internet', 'future'),
+          item('Seguro de hogar', 'prorated', '2027-03-15'),
+        ]}
+      />,
+    );
+    const row = (label: string) => within(screen.getByTestId(`detail-recurring:${label}`));
+    expect(row('Luz').getByText('POR CONFIRMAR')).toBeTruthy();
+    expect(row('Renta').getByText('NO SE COBRÓ')).toBeTruthy();
+    expect(row('Internet').getByText('POR COBRAR')).toBeTruthy();
+    expect(row('Seguro de hogar').getByText('PRORRATEO')).toBeTruthy();
+    expect(
+      within(screen.getByTestId('detail-oneOff:Focos')).queryByText(/^[A-ZÁÉÍÓÚ ]+$/),
+    ).toBeNull();
+    expect(row('Agua').queryByText(/^[A-ZÁÉÍÓÚ ]+$/)).toBeNull();
+    expect(
+      screen.getByLabelText('Internet, $450.00, 28 de noviembre de 2026, por cobrar'),
+    ).toBeTruthy();
+    const renta = row('Renta').getByText('Renta');
+    expect(StyleSheet.flatten(renta.props.style).textDecorationLine).toBeUndefined();
+  });
+
   const DONUT_ENTRIES = [
     {
       id: 'hogar',
@@ -88,6 +131,7 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
           label: 'Renta',
           date: '2026-11-20',
           amountCents: 150000,
+          status: 'none' as const,
         },
       ],
     },
@@ -103,6 +147,7 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
           label: 'Recarga metro',
           date: '2026-11-08',
           amountCents: 10000,
+          status: 'none' as const,
         },
         {
           key: 'recurring:seguro',
@@ -110,6 +155,7 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
           label: 'Seguro anual',
           date: '2027-03-15',
           amountCents: 40000,
+          status: 'prorated' as const,
         },
       ],
     },
@@ -367,10 +413,13 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
       '$100.00',
       '15 mar 2027',
       'Seguro anual',
+      'PRORRATEO',
       '$400.00',
     ]);
     expect(
-      screen.getByLabelText('Seguro anual, $400.00 al mes, próximo cobro 15 de marzo de 2027'),
+      screen.getByLabelText(
+        'Seguro anual, $400.00 al mes, próximo cobro 15 de marzo de 2027, prorrateo',
+      ),
     ).toBeTruthy();
     expect(screen.getByLabelText('Recarga metro, $100.00, 8 de noviembre de 2026')).toBeTruthy();
     // El detalle sigue justo a la fila de su categoría y no responde al toque.
@@ -472,6 +521,7 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
           label: 'Netflix',
           date: '2026-11-15',
           amountCents: 21900,
+          status: 'none' as const,
         },
         {
           key: 'recurring:seguro',
@@ -479,6 +529,7 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
           label: 'Seguro anual',
           date: '2027-03-15',
           amountCents: 50000,
+          status: 'prorated' as const,
         },
       ],
     },
@@ -493,6 +544,7 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
           label: 'Recarga metro',
           date: '2026-11-08',
           amountCents: 10000,
+          status: 'none' as const,
         },
       ],
     },
@@ -532,9 +584,19 @@ describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => 
       within(screen.getByTestId('method-detail'))
         .getAllByText(/./)
         .map((t) => t.props.children),
-    ).toEqual(['15 nov', 'Netflix', '$219.00', '15 mar 2027', 'Seguro anual', '$500.00']);
+    ).toEqual([
+      '15 nov',
+      'Netflix',
+      '$219.00',
+      '15 mar 2027',
+      'Seguro anual',
+      'PRORRATEO',
+      '$500.00',
+    ]);
     expect(
-      screen.getByLabelText('Seguro anual, $500.00 al mes, próximo cobro 15 de marzo de 2027'),
+      screen.getByLabelText(
+        'Seguro anual, $500.00 al mes, próximo cobro 15 de marzo de 2027, prorrateo',
+      ),
     ).toBeTruthy();
     const ids: string[] = [];
     const walk = (node: unknown): void => {
