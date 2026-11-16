@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detalle por método</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  :root {
+    --bg: #F4F1EA; --ink: #141414; --muted: #6E695F; --card: #FFFFFF; --line: #E4DFD3; --page: #E6E0D3;
+    --r-xl: 30px; --r-lg: 22px; --r-md: 16px;
+  }
+  html[data-theme="dark"] {
+    --bg: #121110; --ink: #F4F1EA; --muted: #9C968A; --card: #1E1D1A; --line: #2E2C28; --page: #0A0A09;
+  }
+  body { background: var(--page); color: var(--ink); }
+  .screen { background: var(--bg); color: var(--ink); }
+  .content { padding: 6px 20px 120px; }
+
+  .month { display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 4px 22px; }
+  .month .m { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .month .y { font-size: 15px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+  .arrows { display: flex; gap: 8px; }
+  .round { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-bottom: 18px; }
+  .seg span { height: 42px; border-radius: 999px; font-size: 15px; font-weight: 700; color: var(--muted); display: grid; place-items: center; }
+  .seg span.on { background: linear-gradient(135deg, #2a2a2a, #141414); color: #F4F1EA; }
+  html[data-theme="dark"] .seg span.on { background: linear-gradient(135deg, #FFFFFF, #E4DFD3); color: #141414; }
+
+  .card { background: var(--card); border-radius: var(--r-lg); padding: 18px; margin-bottom: 22px; }
+  .card-h { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .card-h small { font-size: 12px; letter-spacing: 0; text-transform: none; }
+  .card-d { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+  .pie-wrap { display: grid; place-items: center; padding: 6px 0 14px; position: relative; }
+  .pie-wrap svg circle { transition: stroke-width .2s, opacity .2s; cursor: pointer; }
+  .pie-c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; pointer-events: none; }
+  .pie-c small { display: block; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .pie-c b { font-size: 21px; font-weight: 800; letter-spacing: -.02em; }
+  .pie-c em { display: block; font-style: normal; font-size: 12px; font-weight: 800; color: var(--muted); }
+  .leg { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: 12px; width: 100%; text-align: left; font-size: 14.5px; font-weight: 700; }
+  .leg.on { background: var(--bg); }
+  .leg i { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+  .leg .n { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .leg .p { color: var(--muted); font-size: 12.5px; width: 38px; text-align: right; }
+
+  /* Detalle (nuevo): lista mínima de solo lectura */
+  .det { margin: 2px 0 8px 11px; padding: 2px 6px 2px 14px; border-left: 2px solid var(--c); }
+  .det-r { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; font-size: 13.5px; font-weight: 600; }
+  .det-r + .det-r { border-top: 1px solid var(--line); }
+  .det-r .d { width: 78px; flex: none; color: var(--muted); }
+  .det-r .c { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .det-r .a { font-weight: 700; }
+
+  .theme-toggle { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--card); border-radius: 999px; padding: 5px; margin-top: 22px; }
+  .theme-toggle button { height: 40px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; color: var(--muted); }
+  .theme-toggle button.on { background: var(--ink); color: var(--bg); }
+  .notes { max-width: 860px; margin: 0 auto 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 12px; }
+  .note { background: var(--card); border-radius: 20px; padding: 16px 18px; font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.45; }
+  .note b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+
+  /* Por método */
+  .bd-it { display: block; width: 100%; text-align: left; padding: 10px 8px; border-radius: 12px; }
+  .bd-it.on { background: var(--bg); }
+  .bd-top { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; }
+  .bd-top .bdg { width: 24px; height: 24px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff; font-size: 9px; font-weight: 800; }
+  .bd-top .n { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bd-bar { height: 6px; border-radius: 999px; background: var(--bg); margin: 8px 0 0 34px; overflow: hidden; }
+  .bd-it.on .bd-bar { background: var(--card); }
+  .bd-bar span { display: block; height: 100%; border-radius: 999px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="p-head">
+    <a class="p-back" href="index.html">‹ Todas las propuestas</a>
+    <div class="p-kicker">A-1 Duotono · Análisis</div>
+    <h1 class="p-title">Detalle por método</h1>
+    <p class="p-desc">El mismo acordeón de "Por categoría" llega a "Por método": al tocar un método se abre debajo de su barra la lista de los gastos que forman su cifra. Es de solo lectura, suma lo mismo que el método y no depende de la categoría abierta.</p>
+    <div class="theme-toggle" role="group" aria-label="Tema"><button data-theme-set="light" class="on">☀︎ Claro</button><button data-theme-set="dark">☾ Oscuro</button></div>
+  </header>
+
+  <div class="notes">
+    <div class="note"><b>Fila tocable</b>Toda la fila del método (badge, nombre, monto y barra) abre y cierra su detalle. Abierta lleva el fondo de fila activa, como la leyenda de categorías.</div>
+    <div class="note"><b>Mismas reglas</b>Mensuales con su cobro del mes, prorrateados con su parte mensual y su próximo cobro, únicos del mes. Por fecha; año solo si es otro.</div>
+    <div class="note"><b>Física y digital</b>Se juntan, igual que en el monto: BBVA Azul lista todos sus gastos sin decir con qué variante se pagaron.</div>
+    <div class="note"><b>Independiente</b>Abrir un método no cierra la categoría abierta, y al revés. Cada tarjeta tiene su propio acordeón.</div>
+  </div>
+
+  <div class="phones">
+    <div class="ph-wrap"><div class="phone"><div class="screen" id="p1"></div></div><div class="ph-cap">Propuesta · toca un método</div></div>
+  </div>
+</div>
+<script>
+(() => {
+  const SB = '<div class="sb"><span>9:41</span><span class="sb-island"></span><span></span></div>';
+  const fmt = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const METHODS = [
+    { k: 'nu', n: 'Nu Débito ••8830', b: 'NU', g: ['#9A3BE0', '#6A1BB0'], items: [['20 nov', 'Renta', 150000], ['28 nov', 'Internet', 22500]] },
+    { k: 'bbva', n: 'BBVA Azul ••4521', b: 'BBVA', g: ['#1F6BFF', '#0B3FB8'], items: [['15 nov', 'Netflix', 21900], ['15 mar 2027', 'Seguro anual', 50000]] },
+    { k: 'cash', n: 'Efectivo', b: '$', g: ['#3C8D5A', '#2A6A42'], items: [['8 nov', 'Recarga metro', 10000]] },
+  ].map((x) => ({ ...x, v: x.items.reduce((s, i) => s + i[2], 0) }));
+  const total = METHODS.reduce((s, x) => s + x.v, 0);
+  let sel = 'bbva';
+
+  const detail = (x) => `<div class="det" style="--c:${x.g[0]}">${x.items.map(([d, c, a]) => `<div class="det-r"><span class="d num">${d}</span><span class="c">${c}</span><span class="a num">${fmt(a)}</span></div>`).join('')}</div>`;
+  const rows = () => METHODS.map((x) => `
+    <button class="bd-it ${sel === x.k ? 'on' : ''}" data-k="${x.k}" aria-expanded="${sel === x.k}">
+      <div class="bd-top"><span class="bdg" style="background:linear-gradient(135deg,${x.g[0]},${x.g[1]})">${x.b}</span><span class="n">${x.n}</span><span class="num">${fmt(x.v)}</span></div>
+      <div class="bd-bar"><span style="width:${(x.v / total) * 100}%;background:linear-gradient(135deg,${x.g[0]},${x.g[1]})"></span></div>
+    </button>${sel === x.k ? detail(x) : ''}`).join('');
+
+  const p1 = document.getElementById('p1');
+  const draw = () => {
+    p1.innerHTML = `${SB}<div data-scroll><div class="content">
+      <div class="month"><div><div class="m">Noviembre</div><div class="y">2026</div></div><div class="arrows"><span class="round">‹</span><span class="round">›</span></div></div>
+      <div class="seg"><span>Tus gastos</span><span class="on">Análisis</span></div>
+      <div class="card"><div class="card-h"><span>Por método</span><small>al mes</small></div>
+        <div class="card-d">Estimado con prorrateo, no es lo cobrado. Lo real del mes está en "Tus gastos".</div>
+        ${rows()}
+      </div></div></div><div class="home-ind"></div>`;
+  };
+  p1.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-k]');
+    if (!t) return;
+    sel = sel === t.dataset.k ? null : t.dataset.k;
+    draw();
+  });
+  draw();
+
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+})();
+</script>
+</body>
+</html>
