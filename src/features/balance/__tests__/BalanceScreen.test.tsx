@@ -809,3 +809,54 @@ describe('estado de cobros en el detalle', () => {
     expect(category.getByLabelText(/^Agua, .*, por cobrar$/)).toBeOnTheScreen();
   });
 });
+
+describe('gasto del día a día', () => {
+  async function analysis(repos?: Awaited<ReturnType<typeof novemberScenario>>['repos']) {
+    const r = repos ?? (await novemberScenario()).repos;
+    const view = await renderWithProviders(<BalanceScreen {...props()} today="2026-11-21" />, {
+      repos: r,
+    });
+    await screen.findByTestId('month-progress');
+    await openAnalysis();
+    await screen.findByTestId('section-daily');
+    return { repos: r, view };
+  }
+  const barsLabel = () => screen.getByTestId('daily-bars').props.accessibilityLabel as string;
+
+  it('es la última sección de Análisis y abre con hoy elegido', async () => {
+    await analysis();
+    const tree = JSON.stringify(screen.toJSON());
+    expect(tree.indexOf('"section-method"')).toBeLessThan(tree.indexOf('"section-daily"'));
+    expect(barsLabel()).toBe('21 de noviembre, sin registros');
+    await fireEvent.press(screen.getByLabelText('Día anterior'));
+    expect(barsLabel()).toBe('20 de noviembre, sin registros');
+  });
+
+  it('en un mes pasado no hay día elegido y en uno futuro no se muestra', async () => {
+    await analysis();
+    await fireEvent.press(screen.getByLabelText('Mes anterior'));
+    // Octubre no tiene únicos (y es anterior al primer uso): la tarjeta invita a registrar.
+    await waitFor(() => expect(screen.getByText(/Aún no hay gastos únicos/)).toBeOnTheScreen());
+    expect(screen.queryByTestId('daily-day')).toBeNull();
+    await fireEvent.press(screen.getByLabelText('Mes siguiente'));
+    await fireEvent.press(screen.getByLabelText('Mes siguiente'));
+    await waitFor(() => expect(screen.queryByTestId('section-daily')).toBeNull());
+  });
+
+  it('incluir domiciliados suma la Renta y se recuerda', async () => {
+    const { repos, view } = await analysis();
+    await fireEvent.press(screen.getByLabelText('Día anterior'));
+    expect(barsLabel()).toBe('20 de noviembre, sin registros');
+    await fireEvent(screen.getByLabelText('Incluir domiciliados'), 'valueChange', true);
+    await waitFor(() =>
+      expect(barsLabel()).toBe('20 de noviembre, $1,500.00, $1,500.00 domiciliado'),
+    );
+    await waitFor(async () =>
+      expect(await repos.uiPreferences.get('daily.includeRecurring')).toBe('1'),
+    );
+    view.unmount();
+
+    await analysis(repos);
+    expect(screen.getByLabelText('Incluir domiciliados').props.value).toBe(true);
+  });
+});

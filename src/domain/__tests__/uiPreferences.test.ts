@@ -1,4 +1,10 @@
-import { BALANCE_SORT_KEY, DEFAULT_BALANCE_SORT, parseBalanceSort } from '../uiPreferences';
+import {
+  BALANCE_SORT_KEY,
+  DAILY_INCLUDE_RECURRING_KEY,
+  DEFAULT_BALANCE_SORT,
+  parseBalanceSort,
+  parseIncludeRecurring,
+} from '../uiPreferences';
 
 describe('preferencias de interfaz', () => {
   it('el orden de Tus gastos empieza en "Más antiguo"', () => {
@@ -14,5 +20,15 @@ describe('preferencias de interfaz', () => {
     ['DESC', 'asc'],
   ])('lee %p como %p', (value, expected) => {
     expect(parseBalanceSort(value)).toBe(expected);
+  });
+
+  it.each([
+    ['1', true],
+    ['0', false],
+    [null, false],
+    ['true', false],
+  ])('"Incluir domiciliados" lee %p como %p', (value, expected) => {
+    expect(DAILY_INCLUDE_RECURRING_KEY).toBe('daily.includeRecurring');
+    expect(parseIncludeRecurring(value)).toBe(expected);
   });
 });

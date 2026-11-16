@@ -95,3 +95,8 @@ export function formatMXNParts(cents: Cents): [string, string] {
   const dot = text.lastIndexOf('.');
   return [text.slice(0, dot), text.slice(dot)];
 }
+
+/** Monto redondeado a pesos, sin centavos: `$2,734`. */
+export function formatMXNWhole(cents: Cents): string {
+  return formatMXNParts(divideRoundHalfUp(cents, 100) * 100)[0];
+}

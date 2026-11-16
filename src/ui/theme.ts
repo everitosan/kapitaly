@@ -46,7 +46,8 @@ export interface Theme {
   /** Aviso de actualización: amarillo limón, distinto del ámbar de "Análisis". */
   update: Gradient;
   /** Paleta categórica de gráficas (8 tonos) y el gris de "Otro". */
-  chart: { series: readonly string[]; other: string };
+  /** `recurring`: domiciliados apilados en el gasto por día. */
+  chart: { series: readonly string[]; other: string; recurring: string };
   spacing: typeof spacing;
   radii: typeof radii;
   type: typeof type;
@@ -150,6 +151,7 @@ export const lightTheme: Theme = {
       '#2B4BF2',
     ],
     other: '#B8B2A6',
+    recurring: '#CBC4B6',
   },
   spacing,
   radii,
@@ -193,6 +195,7 @@ export const darkTheme: Theme = {
       '#5A78FF',
     ],
     other: '#6E695F',
+    recurring: '#57534B',
   },
   spacing,
   radii,

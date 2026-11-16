@@ -82,7 +82,7 @@ export function sortCharges(
 }
 
 /** Gastos únicos vigentes con fecha en el mes, como cargos cobrados. */
-function oneOffCharges(
+export function oneOffCharges(
   oneOffs: readonly OneOffExpense[],
   year: number,
   month: number,

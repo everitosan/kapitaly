@@ -1,9 +1,12 @@
+import * as Haptics from 'expo-haptics';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { INSTITUTION_CATALOG } from '@/data/institutions/catalog';
 import type { BreakdownDetailItem } from '@/domain/balance';
+import { OTHER_CATEGORY_ID } from '@/domain/category';
+import { buildDailySpending } from '@/domain/dailySpending';
 import { institutionsFor } from '@/domain/institution';
 import { CASH_METHOD_ID, NO_CARD_DATA, type PaymentMethod } from '@/domain/paymentMethod';
 
@@ -28,6 +31,7 @@ import {
 } from '../balance';
 import { AverageTotalCard, CategoryDonut, MonthProgressCard } from '../analysis';
 import { BreakdownDetail } from '../breakdownDetail';
+import { DailySpendingCard } from '../dailySpending';
 import {
   AmountBlock,
   DateField,
@@ -76,8 +80,216 @@ const old: PaymentMethod = {
 const renderIn = (scheme: ColorSchemeName, ui: ReactElement) =>
   render(<ThemeProvider scheme={scheme}>{ui}</ThemeProvider>);
 
+/** Noviembre 2026 con hoy 21: únicos los días 3, 7, 8, 10 y 15; Netflix confirmado con $239 el 15. */
+const dailyMeta = { updatedAt: '2026-10-01T00:00:00Z', deletedAt: null };
+const dailyOne = (description: string, amountCents: number, date: string, n: number) => ({
+  ...dailyMeta,
+  createdAt: `${date}T12:00:0${n}Z`,
+  id: `${description}`,
+  description,
+  amountCents,
+  date,
+  paymentMethodId: 'cash',
+  cardVariant: null,
+  categoryId: OTHER_CATEGORY_ID,
+  addsToCardBalance: true,
+});
+const dailyRec = (name: string, amountCents: number, anchorDate: string) => ({
+  ...dailyMeta,
+  createdAt: '2026-10-01T12:00:00Z',
+  id: name,
+  name,
+  amountCents,
+  intervalUnit: 'month' as const,
+  intervalCount: 1,
+  anchorDate,
+  endDate: null,
+  paymentMethodId: 'bbva',
+  cardVariant: null,
+  categoryId: OTHER_CATEGORY_ID,
+});
+const dailyView = (includeRecurring: boolean, oneOffs = true) =>
+  buildDailySpending({
+    oneOffs: oneOffs
+      ? [
+          dailyOne('Café', 4500, '2026-11-03', 1),
+          dailyOne('Súper', 35000, '2026-11-07', 1),
+          dailyOne('Uber', 7000, '2026-11-07', 2),
+          dailyOne('Recarga metro', 10000, '2026-11-08', 1),
+          dailyOne('Tacos', 25000, '2026-11-10', 1),
+          dailyOne('Cine', 18000, '2026-11-15', 1),
+        ]
+      : [],
+    recurring: [
+      dailyRec('Netflix', 21900, '2026-01-15'),
+      dailyRec('Internet', 45000, '2026-01-28'),
+    ],
+    confirmations: [
+      {
+        recurringExpenseId: 'Netflix',
+        occurrenceDate: '2026-11-15',
+        status: 'charged',
+        amountCents: 23900,
+        deletedAt: null,
+      },
+    ],
+    year: 2026,
+    month: 11,
+    today: '2026-11-21',
+    registeredOn: (iso) => iso.slice(0, 10),
+    includeRecurring,
+    firstUseDate: '2026-10-01',
+  });
+
 describe.each(['light', 'dark'] as const)('componentes en tema %s', (scheme) => {
   const theme = themes[scheme];
+  describe('DailySpendingCard', () => {
+    const card = (
+      props: Partial<Parameters<typeof DailySpendingCard>[0]> & { includeRecurring?: boolean } = {},
+    ) => {
+      const includeRecurring = props.includeRecurring ?? false;
+      return (
+        <DailySpendingCard
+          view={dailyView(includeRecurring)}
+          monthName="noviembre"
+          selected="2026-11-07"
+          today="2026-11-21"
+          includeRecurring={includeRecurring}
+          onToggleRecurring={jest.fn()}
+          onSelectDay={jest.fn()}
+          {...props}
+        />
+      );
+    };
+
+    it('cifras, nota y lista del día elegido', async () => {
+      await renderIn(scheme, card());
+      expect(screen.getByText('GASTO DEL DÍA A DÍA')).toBeTruthy();
+      expect(screen.getByText('Solo gastos únicos: lo que decides cada día')).toBeTruthy();
+      expect(screen.getByText('$995')).toBeTruthy();
+      expect(screen.getByText('~$47')).toBeTruthy();
+      expect(screen.getByText('15')).toBeTruthy();
+      expect(screen.getByText('días sin registros')).toBeTruthy();
+      expect(screen.queryByTestId('daily-legend')).toBeNull();
+      const day = within(screen.getByTestId('daily-day'));
+      expect(day.getByText('Sábado 7 nov')).toBeTruthy();
+      expect(day.getByText('$420.00')).toBeTruthy();
+      expect(day.getByLabelText('Súper, $350.00')).toBeTruthy();
+      expect(day.getByLabelText('Uber, $70.00')).toBeTruthy();
+    });
+
+    it('la gráfica es un elemento ajustable con el día elegido', async () => {
+      const onSelectDay = jest.fn();
+      await renderIn(scheme, card({ onSelectDay }));
+      const bars = screen.getByTestId('daily-bars');
+      expect(bars.props.accessibilityRole).toBe('adjustable');
+      expect(bars.props.accessibilityLabel).toBe('7 de noviembre, $420.00');
+      await fireEvent(bars, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
+      expect(onSelectDay).toHaveBeenLastCalledWith('2026-11-08');
+      await fireEvent(bars, 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
+      expect(onSelectDay).toHaveBeenLastCalledWith('2026-11-06');
+      expect(screen.getByTestId('daily-tip')).toBeTruthy();
+      expect(within(screen.getByTestId('daily-tip')).getByText('$420.00')).toBeTruthy();
+    });
+
+    it('tocar y deslizar eligen el día bajo el dedo y vibran al cambiar', async () => {
+      const onSelectDay = jest.fn();
+      (Haptics.selectionAsync as jest.Mock).mockClear();
+      await renderIn(scheme, card({ onSelectDay }));
+      const bars = screen.getByTestId('daily-bars');
+      await fireEvent(bars, 'layout', { nativeEvent: { layout: { width: 300, height: 150 } } });
+      // 30 días en 300 px: 10 px por día.
+      await fireEvent(bars, 'responderGrant', { nativeEvent: { locationX: 45 } });
+      expect(onSelectDay).toHaveBeenLastCalledWith('2026-11-05');
+      await fireEvent(bars, 'responderMove', { nativeEvent: { locationX: 48 } });
+      await fireEvent(bars, 'responderMove', { nativeEvent: { locationX: 55 } });
+      await fireEvent(bars, 'responderMove', { nativeEvent: { locationX: 65 } });
+      expect(onSelectDay.mock.calls.map(([d]) => d)).toEqual([
+        '2026-11-05',
+        '2026-11-06',
+        '2026-11-07',
+      ]);
+      expect(Haptics.selectionAsync).toHaveBeenCalledTimes(3);
+    });
+
+    it('flechas para ir de un día a otro, deshabilitadas en los extremos', async () => {
+      const onSelectDay = jest.fn();
+      const { rerender } = await renderIn(scheme, card({ onSelectDay }));
+      await fireEvent.press(screen.getByLabelText('Día siguiente'));
+      expect(onSelectDay).toHaveBeenLastCalledWith('2026-11-08');
+      await fireEvent.press(screen.getByLabelText('Día anterior'));
+      expect(onSelectDay).toHaveBeenLastCalledWith('2026-11-06');
+      await rerender(
+        <ThemeProvider scheme={scheme}>
+          {card({ onSelectDay, selected: '2026-11-30' })}
+        </ThemeProvider>,
+      );
+      expect(screen.getByLabelText('Día siguiente')).toBeDisabled();
+      await rerender(
+        <ThemeProvider scheme={scheme}>
+          {card({ onSelectDay, selected: '2026-11-01' })}
+        </ThemeProvider>,
+      );
+      expect(screen.getByLabelText('Día anterior')).toBeDisabled();
+    });
+
+    it('un día sin gastos', async () => {
+      await renderIn(scheme, card({ selected: '2026-11-12' }));
+      expect(screen.getByText('Jueves 12 nov')).toBeTruthy();
+      expect(screen.getByText('Sin registros este día')).toBeTruthy();
+      expect(screen.getByTestId('daily-bars').props.accessibilityLabel).toBe(
+        '12 de noviembre, sin registros',
+      );
+    });
+
+    it('con domiciliados: leyenda, marcas y etiqueta de la gráfica', async () => {
+      const onToggleRecurring = jest.fn();
+      const { rerender } = await renderIn(
+        scheme,
+        card({ includeRecurring: true, selected: '2026-11-15', onToggleRecurring }),
+      );
+      expect(screen.getByText('Gastos únicos y domiciliados')).toBeTruthy();
+      expect(screen.getByTestId('daily-legend')).toBeTruthy();
+      const day = within(screen.getByTestId('daily-day'));
+      const rows = day.getAllByLabelText(/, \$/).map((r) => r.props.accessibilityLabel);
+      expect(rows).toEqual(['Cine, $180.00', 'Netflix, $239.00, domiciliado']);
+      expect(day.getByText('DOMICILIADO')).toBeTruthy();
+      expect(screen.getByTestId('daily-bars').props.accessibilityLabel).toBe(
+        '15 de noviembre, $419.00, $239.00 domiciliado',
+      );
+      const toggle = screen.getByLabelText('Incluir domiciliados');
+      expect(toggle.props.value).toBe(true);
+      await fireEvent(toggle, 'valueChange', false);
+      expect(onToggleRecurring).toHaveBeenCalledWith(false);
+      await rerender(
+        <ThemeProvider scheme={scheme}>
+          {card({ includeRecurring: true, selected: '2026-11-28' })}
+        </ThemeProvider>,
+      );
+      expect(screen.getByText('POR COBRAR')).toBeTruthy();
+    });
+
+    it('singular, todos los días y mes sin gastos', async () => {
+      const one = { ...dailyView(false), daysWithoutRecords: 1 };
+      const { rerender } = await renderIn(scheme, card({ view: one }));
+      expect(screen.getByText('día sin registros')).toBeTruthy();
+      await rerender(
+        <ThemeProvider scheme={scheme}>
+          {card({ view: { ...one, daysWithoutRecords: 0 } })}
+        </ThemeProvider>,
+      );
+      expect(screen.getByText('Registraste todos los días')).toBeTruthy();
+      await rerender(
+        <ThemeProvider scheme={scheme}>
+          {card({ view: dailyView(false, false), selected: null })}
+        </ThemeProvider>,
+      );
+      expect(screen.getByText('$0')).toBeTruthy();
+      expect(screen.getByText(/Aún no hay gastos únicos este mes/)).toBeTruthy();
+      expect(screen.queryByTestId('daily-bars')).toBeNull();
+    });
+  });
+
   it('BreakdownDetail: marca el estado de cada fila', async () => {
     const item = (label: string, status: BreakdownDetailItem['status'], date = '2026-11-28') => ({
       key: `recurring:${label}`,

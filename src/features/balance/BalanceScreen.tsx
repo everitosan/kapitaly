@@ -8,6 +8,7 @@ import {
   type MonthCharge,
 } from '@/domain/balance';
 import { resolveCategory } from '@/domain/category';
+import { buildDailySpending } from '@/domain/dailySpending';
 import { SHEET_SNOOZE_KEY } from '@/domain/pendingSnooze';
 import { civilDateFromLocal, parseCivilDate, shiftMonth, type CivilDate } from '@/domain/date';
 import { methodLabel } from '@/domain/paymentMethod';
@@ -30,6 +31,7 @@ import {
 import { ScreenLayout } from '@/ui/components/layout';
 import { categoryColorMap } from '@/ui/categoryColor';
 import { MONTH_NAMES } from '@/ui/format';
+import { DailySpendingCard } from '@/ui/components/dailySpending';
 import { frequencyKeyForMonths } from '@/ui/theme';
 import { useTheme } from '@/ui/ThemeProvider';
 
@@ -37,6 +39,7 @@ import { PendingSheet } from '../pending/PendingSheet';
 import { pendingSession, usePendingSession } from '../pending/session';
 import { SnoozeNotice } from '../pending/SnoozeNotice';
 import { registeredOnLocal, usePending } from '../pending/usePending';
+import { useDailyIncludeRecurring } from './useDailyIncludeRecurring';
 import {
   useCategories,
   useChargeConfirmations,
@@ -103,6 +106,18 @@ export function BalanceScreen({
   const { sort, loaded: sortLoaded, toggle: toggleSort } = useBalanceSort();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const daily = useDailyIncludeRecurring();
+  // Día elegido en "Gasto del día a día": hoy en el mes actual, ninguno en otros meses. Se reinicia
+  // al cambiar de mes (se ajusta durante el render, como la categoría activa).
+  const monthKey = `${year}-${month}`;
+  const isCurrentMonth = year === start.year && month === start.month;
+  const [dayChoice, setDayChoice] = useState<{ key: string; day: CivilDate | null }>({
+    key: monthKey,
+    day: isCurrentMonth ? today : null,
+  });
+  if (dayChoice.key !== monthKey)
+    setDayChoice({ key: monthKey, day: isCurrentMonth ? today : null });
+  const selectedDay = dayChoice.key === monthKey ? dayChoice.day : isCurrentMonth ? today : null;
   const [list, setList] = useState<AverageListKind | null>(null);
   const editAfterClose = useRef<{ kind: 'recurring' | 'oneOff'; id: string } | null>(null);
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -240,6 +255,22 @@ export function BalanceScreen({
   ) {
     setSelectedMethod(null);
   }
+
+  // Primer uso de la app: el registro más antiguo (recurrentes y únicos, incluidos los borrados).
+  const firstUseIso = [...recurring.data, ...oneOffs.data]
+    .map((e) => e.createdAt)
+    .reduce<string | null>((min, iso) => (min === null || iso < min ? iso : min), null);
+  const dailyView = buildDailySpending({
+    recurring: recurring.data,
+    oneOffs: oneOffs.data,
+    confirmations: confirmations.data,
+    year,
+    month,
+    today,
+    registeredOn: registeredOnLocal,
+    includeRecurring: daily.includeRecurring,
+    firstUseDate: firstUseIso === null ? null : registeredOnLocal(firstUseIso),
+  });
 
   let body;
   if (view === 'this') {
@@ -379,6 +410,19 @@ export function BalanceScreen({
             />
           ) : null}
         </View>
+        {daily.loaded && dailyView.state !== 'future' ? (
+          <View testID="section-daily">
+            <DailySpendingCard
+              view={dailyView}
+              monthName={MONTH_NAMES[month - 1]}
+              selected={selectedDay}
+              today={today}
+              includeRecurring={daily.includeRecurring}
+              onToggleRecurring={daily.toggle}
+              onSelectDay={(day) => setDayChoice({ key: monthKey, day })}
+            />
+          </View>
+        ) : null}
       </>
     );
   }

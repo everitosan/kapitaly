@@ -50,3 +50,26 @@ export function formatLongDate(date: CivilDate): string {
   const { year, month, day } = parseCivilDate(date);
   return `${day} de ${MONTH_NAMES[month - 1]} de ${year}`;
 }
+
+const WEEKDAYS = [
+  'Domingo',
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
+] as const;
+
+/** `Sábado 7 nov`. El día de la semana sale de la fecha civil, sin zona horaria. */
+export function formatWeekdayDate(date: CivilDate): string {
+  const { year, month, day } = parseCivilDate(date);
+  const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+  return `${weekday} ${day} ${MONTH_SHORT[month - 1]}`;
+}
+
+/** Fecha sin año para el lector de pantalla: `7 de noviembre`. */
+export function formatDayMonth(date: CivilDate): string {
+  const { month, day } = parseCivilDate(date);
+  return `${day} de ${MONTH_NAMES[month - 1]}`;
+}
